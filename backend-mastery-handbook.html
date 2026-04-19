@@ -1,0 +1,1773 @@
+<!DOCTYPE html>
+<html lang="th" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backend Mastery Handbook — Zero to Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#eef2ff', 100: '#e0e7ff', 200: '#c7d2fe',
+                            300: '#a5b4fc', 400: '#818cf8', 500: '#6366f1',
+                            600: '#4f46e5', 700: '#4338ca', 800: '#3730a3', 900: '#312e81',
+                        },
+                        surface: {
+                            0: '#ffffff', 50: '#f8fafc', 100: '#f1f5f9',
+                            200: '#e2e8f0', 300: '#cbd5e1', 700: '#334155',
+                            800: '#1e293b', 850: '#172033', 900: '#0f172a', 950: '#020617',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * { scrollbar-width: thin; scrollbar-color: #4f46e5 transparent; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #4f46e5; border-radius: 10px; }
+
+        .code-block { position: relative; }
+        .code-block pre {
+            overflow-x: auto; padding: 1.25rem; border-radius: 0.75rem;
+            font-size: 0.85rem; line-height: 1.7;
+        }
+        .copy-btn {
+            position: absolute; top: 0.5rem; right: 0.5rem;
+            opacity: 0; transition: opacity 0.2s;
+        }
+        .code-block:hover .copy-btn { opacity: 1; }
+
+        .step-card { animation: fadeUp 0.4s ease-out; }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .sidebar-link.active {
+            background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+            color: #fff; box-shadow: 0 4px 15px rgba(79,70,229,0.4);
+        }
+        .sidebar-link.active .step-dot { background: #fff; }
+        .sidebar-link:not(.active):hover { background: rgba(99,102,241,0.08); }
+
+        .dark .code-block pre { background: #0d1117 !important; }
+        .light-code pre { background: #1e1e2e !important; color: #cdd6f4 !important; }
+
+        .progress-line { transition: height 0.5s ease; }
+        .checklist-item input:checked + span { text-decoration: line-through; opacity: 0.6; }
+
+        .mermaid svg { max-width: 100%; height: auto; }
+        .dark .mermaid { filter: invert(0.88) hue-rotate(180deg); }
+
+        /* Tooltip */
+        [data-tooltip]:hover::after {
+            content: attr(data-tooltip); position: absolute; bottom: 110%; left: 50%;
+            transform: translateX(-50%); background: #1e293b; color: #fff;
+            padding: 4px 10px; border-radius: 6px; font-size: 0.75rem;
+            white-space: nowrap; z-index: 50;
+        }
+
+        .badge-level {
+            display: inline-flex; align-items: center; gap: 4px;
+            font-size: 0.7rem; font-weight: 700; padding: 2px 10px;
+            border-radius: 9999px; letter-spacing: 0.05em; text-transform: uppercase;
+        }
+    </style>
+</head>
+
+<body class="dark bg-surface-900 text-surface-200 font-sans antialiased">
+
+<!-- ====== LAYOUT ====== -->
+<div class="flex h-screen overflow-hidden">
+
+    <!-- ======== SIDEBAR ======== -->
+    <aside id="sidebar" class="w-72 shrink-0 bg-surface-950/80 border-r border-white/5 flex flex-col transition-transform duration-300 z-30
+                lg:translate-x-0 -translate-x-full fixed lg:static h-full">
+        <!-- Logo -->
+        <div class="p-6 border-b border-white/5">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center text-white font-black text-lg shadow-lg shadow-brand-500/20">B</div>
+                <div>
+                    <h1 class="text-sm font-bold text-white leading-tight">Backend Mastery</h1>
+                    <p class="text-[11px] text-surface-300/60 font-medium">Handbook — Zero to Pro</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Nav -->
+        <nav class="flex-1 overflow-y-auto p-4 space-y-1.5" id="sidebar-nav">
+            <!-- populated by JS -->
+        </nav>
+
+        <!-- Theme Toggle -->
+        <div class="p-4 border-t border-white/5">
+            <button onclick="toggleDark()" class="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-surface-300 hover:bg-white/5 transition">
+                <span id="theme-icon">🌙</span>
+                <span id="theme-label">Dark Mode</span>
+            </button>
+            <p class="text-[10px] text-surface-300/40 mt-3 text-center">Node.js · Express · MongoDB</p>
+        </div>
+    </aside>
+
+    <!-- Mobile overlay -->
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black/60 z-20 hidden lg:hidden" onclick="closeSidebar()"></div>
+
+    <!-- ======== MAIN CONTENT ======== -->
+    <main class="flex-1 overflow-y-auto" id="main-content">
+        <!-- Top bar (mobile) -->
+        <div class="lg:hidden sticky top-0 z-10 bg-surface-900/80 backdrop-blur-xl border-b border-white/5 px-4 py-3 flex items-center gap-3">
+            <button onclick="openSidebar()" class="p-2 rounded-lg hover:bg-white/5">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+            </button>
+            <span class="text-sm font-semibold text-white" id="mobile-title">Backend Mastery Handbook</span>
+        </div>
+
+        <!-- Content area -->
+        <div class="max-w-4xl mx-auto px-6 lg:px-10 py-10" id="content-area">
+            <!-- filled by JS -->
+        </div>
+    </main>
+</div>
+
+<!-- ====== DATA & LOGIC ====== -->
+<script>
+// ───────────── STEPS DATA ─────────────
+const steps = [
+// ============================================================
+// STEP 0
+// ============================================================
+{
+    id: 0,
+    title: "The Big Picture & Setup",
+    subtitle: "เข้าใจภาพรวม Backend และเตรียมเครื่องมือ",
+    level: "Starter",
+    levelColor: "bg-emerald-500/15 text-emerald-400",
+    icon: "🗺️",
+    sections: [
+        {
+            type: "hero",
+            html: `
+                <h2 class="text-3xl lg:text-4xl font-extrabold text-white leading-tight">Welcome to <span class="bg-gradient-to-r from-brand-400 to-purple-400 bg-clip-text text-transparent">Backend Mastery</span></h2>
+                <p class="text-surface-300 mt-3 text-lg leading-relaxed">คู่มือนี้จะพาคุณจากศูนย์ไปสู่มือโปร ทีละ Step ด้วย <strong class="text-white">Node.js, Express</strong> และ <strong class="text-white">MongoDB</strong></p>
+            `
+        },
+        {
+            type: "info",
+            title: "🎯 สิ่งที่ต้องทำใน Step นี้",
+            items: [
+                "เข้าใจ Request-Response Cycle ของ Backend",
+                "ติดตั้ง Node.js, NPM และ IDE",
+                "ติดตั้ง Postman หรือ Thunder Client สำหรับทดสอบ API",
+                "ทดสอบว่าทุกอย่างพร้อมใช้งาน"
+            ]
+        },
+        {
+            type: "diagram",
+            title: "📐 Backend Architecture Diagram",
+            description: "ภาพรวมของ Request-Response Cycle ที่เกิดขึ้นเมื่อ Client ส่ง Request มาถึง Server",
+            mermaid: `graph LR
+    A["🌐 Client<br/>(Browser / App)"] -->|"HTTP Request<br/>GET /api/users"| B["⚡ Express Server<br/>(Node.js)"]
+    B -->|"Route Matching"| C["🛣️ Router<br/>/api/users"]
+    C -->|"Middleware Chain"| D["🔒 Middleware<br/>(Auth, Validation)"]
+    D -->|"Business Logic"| E["🎮 Controller<br/>(Handle Request)"]
+    E -->|"Data Operation"| F["📦 Model<br/>(Mongoose Schema)"]
+    F -->|"Query"| G["🍃 MongoDB<br/>(Database)"]
+    G -->|"Result"| F
+    F -->|"Data"| E
+    E -->|"JSON Response"| A
+
+    style A fill:#3b82f6,stroke:#1d4ed8,color:#fff
+    style B fill:#10b981,stroke:#059669,color:#fff
+    style C fill:#f59e0b,stroke:#d97706,color:#fff
+    style D fill:#ef4444,stroke:#dc2626,color:#fff
+    style E fill:#8b5cf6,stroke:#7c3aed,color:#fff
+    style F fill:#ec4899,stroke:#db2777,color:#fff
+    style G fill:#06b6d4,stroke:#0891b2,color:#fff`
+        },
+        {
+            type: "explain",
+            title: "💡 ทำไมต้องเข้าใจ Architecture ก่อน?",
+            content: `การเข้าใจ <strong>Request-Response Cycle</strong> เปรียบเหมือนการอ่านแผนที่ก่อนเดินทาง — ถ้าคุณรู้ว่าข้อมูลไหลจาก Client → Server → Database → กลับไปยัง Client อย่างไร คุณจะ Debug ได้เร็วขึ้น 10 เท่า และออกแบบ API ได้อย่างมีหลักการ<br/><br/>
+            <strong>แต่ละส่วนทำหน้าที่อะไร?</strong><br/>
+            • <strong>Router</strong> — รับ URL แล้วส่งต่อไปยัง Handler ที่ถูกต้อง<br/>
+            • <strong>Middleware</strong> — ตรวจสอบ Request ก่อนเข้า Logic หลัก (เช่น Auth, Validation)<br/>
+            • <strong>Controller</strong> — ประมวลผล Business Logic<br/>
+            • <strong>Model</strong> — จัดการข้อมูลกับ Database`
+        },
+        {
+            type: "checklist",
+            title: "✅ Checklist การเตรียมเครื่องมือ",
+            items: [
+                { text: "ติดตั้ง <strong>Node.js</strong> (LTS version) — <code>node -v</code>", id: "node" },
+                { text: "ตรวจสอบ <strong>NPM</strong> — <code>npm -v</code>", id: "npm" },
+                { text: "ติดตั้ง <strong>VS Code</strong> + Extension: Thunder Client / REST Client", id: "vscode" },
+                { text: "ติดตั้ง <strong>MongoDB Community</strong> หรือใช้ <strong>MongoDB Atlas</strong> (Cloud)", id: "mongo" },
+                { text: "ติดตั้ง <strong>Postman</strong> หรือ Thunder Client สำหรับทดสอบ API", id: "postman" },
+                { text: "(Optional) ติดตั้ง <strong>Nodemon</strong> — <code>npm i -g nodemon</code>", id: "nodemon" }
+            ]
+        },
+        {
+            type: "code",
+            title: "🧪 ทดสอบว่าทุกอย่างพร้อม",
+            filename: "terminal",
+            lang: "bash",
+            code: `# ตรวจสอบ Node.js version
+node -v
+# ควรได้ v18.x.x หรือสูงกว่า
+
+# ตรวจสอบ NPM version
+npm -v
+# ควรได้ 9.x.x หรือสูงกว่า
+
+# ติดตั้ง Nodemon (auto-restart เวลาแก้โค้ด)
+npm install -g nodemon
+
+# ทดสอบ MongoDB (ถ้าติดตั้ง local)
+mongosh --version`
+        },
+        {
+            type: "explain",
+            title: "💡 ทำไมต้องใช้เครื่องมือเหล่านี้?",
+            content: `• <strong>Node.js</strong> — Runtime ที่ทำให้ JavaScript ทำงานฝั่ง Server ได้ (ไม่ต้องอยู่ใน Browser)<br/>
+            • <strong>NPM</strong> — ตัวจัดการ Package ที่มี Library ให้ใช้กว่า 2 ล้านตัว<br/>
+            • <strong>Postman / Thunder Client</strong> — เครื่องมือทดสอบ API โดยไม่ต้องมี Frontend<br/>
+            • <strong>MongoDB</strong> — NoSQL Database ที่เก็บข้อมูลแบบ JSON-like Document เข้ากันดีกับ JavaScript<br/>
+            • <strong>Nodemon</strong> — Auto-restart server เมื่อแก้โค้ด ไม่ต้องมานั่ง restart เอง`
+        }
+    ]
+},
+
+// ============================================================
+// STEP 1
+// ============================================================
+{
+    id: 1,
+    title: "The Foundation",
+    subtitle: "Setup โปรเจกต์ & สร้าง CRUD API แรก",
+    level: "Level 0",
+    levelColor: "bg-blue-500/15 text-blue-400",
+    icon: "🏗️",
+    sections: [
+        {
+            type: "info",
+            title: "🎯 สิ่งที่ต้องทำใน Step นี้",
+            items: [
+                "สร้างโปรเจกต์ด้วย npm init และตั้งค่า package.json",
+                "จัดโครงสร้าง Folder แบบ MVC (Model-View-Controller)",
+                "สร้าง Express Server ตัวแรก",
+                "เชื่อมต่อ MongoDB ด้วย Mongoose",
+                "สร้าง CRUD API ครบ 4 Operations (GET, POST, PUT, DELETE)"
+            ]
+        },
+        {
+            type: "code",
+            title: "📁 เริ่มต้นโปรเจกต์",
+            filename: "terminal",
+            lang: "bash",
+            code: `# สร้าง Folder โปรเจกต์
+mkdir backend-mastery && cd backend-mastery
+
+# สร้าง package.json
+npm init -y
+
+# ติดตั้ง Dependencies หลัก
+npm install express mongoose dotenv
+
+# ติดตั้ง Dev Dependencies
+npm install -D nodemon`
+        },
+        {
+            type: "code",
+            title: "📂 โครงสร้าง Folder แบบ MVC",
+            filename: "project-structure",
+            lang: "text",
+            code: `backend-mastery/
+├── src/
+│   ├── controllers/     # 🎮 Business Logic
+│   │   └── product.controller.js
+│   ├── models/          # 📦 Database Schema
+│   │   └── product.model.js
+│   ├── routes/          # 🛣️ URL Routing
+│   │   └── product.routes.js
+│   ├── middleware/       # 🔒 Middleware Functions
+│   │   └── error.middleware.js
+│   └── config/          # ⚙️ Configuration
+│       └── db.js
+├── .env                 # 🔑 Environment Variables
+├── server.js            # 🚀 Entry Point
+└── package.json`
+        },
+        {
+            type: "explain",
+            title: "💡 ทำไมต้องใช้ MVC Pattern?",
+            content: `<strong>MVC (Model-View-Controller)</strong> คือรูปแบบการจัดระเบียบโค้ดที่แยกความรับผิดชอบออกจากกัน:<br/><br/>
+            • <strong>Model</strong> — กำหนดโครงสร้างข้อมูลและติดต่อ Database<br/>
+            • <strong>View</strong> — ในกรณี API จะเป็น JSON Response ที่ส่งกลับ<br/>
+            • <strong>Controller</strong> — รับ Request → ประมวลผล → ส่ง Response<br/><br/>
+            <strong>ข้อดี:</strong> โค้ดอ่านง่าย, ทดสอบง่าย, ทำงานเป็นทีมได้ดี, Scale ได้ง่าย<br/>
+            <strong>ถ้าไม่แยก:</strong> ไฟล์เดียวจะมีทุกอย่างปน → อ่านยาก → Bug เยอะ → แก้ทีนึงพังหลายจุด`
+        },
+        {
+            type: "code",
+            title: "⚙️ ตั้งค่า Environment Variables",
+            filename: ".env",
+            lang: "bash",
+            code: `PORT=5000
+MONGODB_URI=mongodb://localhost:27017/backend-mastery
+NODE_ENV=development`
+        },
+        {
+            type: "code",
+            title: "🔌 เชื่อมต่อ MongoDB",
+            filename: "src/config/db.js",
+            lang: "javascript",
+            code: `const mongoose = require('mongoose');
+
+const connectDB = async () => {
+  try {
+    const conn = await mongoose.connect(process.env.MONGODB_URI);
+    console.log(\`✅ MongoDB Connected: \${conn.connection.host}\`);
+  } catch (error) {
+    console.error(\`❌ MongoDB Error: \${error.message}\`);
+    process.exit(1);  // หยุด Server ถ้าเชื่อมต่อ DB ไม่ได้
+  }
+};
+
+module.exports = connectDB;`
+        },
+        {
+            type: "code",
+            title: "📦 สร้าง Product Model (Mongoose Schema)",
+            filename: "src/models/product.model.js",
+            lang: "javascript",
+            code: `const mongoose = require('mongoose');
+
+const productSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: [true, 'กรุณาใส่ชื่อสินค้า'],
+      trim: true,
+      maxlength: [100, 'ชื่อสินค้าต้องไม่เกิน 100 ตัวอักษร'],
+    },
+    price: {
+      type: Number,
+      required: [true, 'กรุณาใส่ราคาสินค้า'],
+      min: [0, 'ราคาต้องไม่ติดลบ'],
+    },
+    description: {
+      type: String,
+      default: '',
+    },
+    inStock: {
+      type: Boolean,
+      default: true,
+    },
+  },
+  {
+    timestamps: true,  // สร้าง createdAt & updatedAt อัตโนมัติ
+  }
+);
+
+module.exports = mongoose.model('Product', productSchema);`
+        },
+        {
+            type: "code",
+            title: "🎮 สร้าง Controller (CRUD Logic)",
+            filename: "src/controllers/product.controller.js",
+            lang: "javascript",
+            code: `const Product = require('../models/product.model');
+
+// @desc    ดึงสินค้าทั้งหมด
+// @route   GET /api/products
+exports.getProducts = async (req, res) => {
+  const products = await Product.find();
+  res.status(200).json({
+    success: true,
+    count: products.length,
+    data: products,
+  });
+};
+
+// @desc    ดึงสินค้าตาม ID
+// @route   GET /api/products/:id
+exports.getProduct = async (req, res) => {
+  const product = await Product.findById(req.params.id);
+  if (!product) {
+    return res.status(404).json({
+      success: false,
+      message: 'ไม่พบสินค้านี้',
+    });
+  }
+  res.status(200).json({ success: true, data: product });
+};
+
+// @desc    สร้างสินค้าใหม่
+// @route   POST /api/products
+exports.createProduct = async (req, res) => {
+  const product = await Product.create(req.body);
+  res.status(201).json({ success: true, data: product });
+};
+
+// @desc    อัปเดตสินค้า
+// @route   PUT /api/products/:id
+exports.updateProduct = async (req, res) => {
+  const product = await Product.findByIdAndUpdate(
+    req.params.id,
+    req.body,
+    { new: true, runValidators: true }
+  );
+  if (!product) {
+    return res.status(404).json({
+      success: false,
+      message: 'ไม่พบสินค้านี้',
+    });
+  }
+  res.status(200).json({ success: true, data: product });
+};
+
+// @desc    ลบสินค้า
+// @route   DELETE /api/products/:id
+exports.deleteProduct = async (req, res) => {
+  const product = await Product.findByIdAndDelete(req.params.id);
+  if (!product) {
+    return res.status(404).json({
+      success: false,
+      message: 'ไม่พบสินค้านี้',
+    });
+  }
+  res.status(200).json({ success: true, data: {} });
+};`
+        },
+        {
+            type: "code",
+            title: "🛣️ สร้าง Routes",
+            filename: "src/routes/product.routes.js",
+            lang: "javascript",
+            code: `const express = require('express');
+const router = express.Router();
+const {
+  getProducts,
+  getProduct,
+  createProduct,
+  updateProduct,
+  deleteProduct,
+} = require('../controllers/product.controller');
+
+router.route('/')
+  .get(getProducts)      // GET    /api/products
+  .post(createProduct);  // POST   /api/products
+
+router.route('/:id')
+  .get(getProduct)       // GET    /api/products/:id
+  .put(updateProduct)    // PUT    /api/products/:id
+  .delete(deleteProduct); // DELETE /api/products/:id
+
+module.exports = router;`
+        },
+        {
+            type: "code",
+            title: "🚀 สร้าง Server (Entry Point)",
+            filename: "server.js",
+            lang: "javascript",
+            code: `const express = require('express');
+const dotenv = require('dotenv');
+const connectDB = require('./src/config/db');
+
+// โหลด ENV ก่อนทุกอย่าง
+dotenv.config();
+
+// เชื่อมต่อ Database
+connectDB();
+
+const app = express();
+
+// Body Parser — ให้ Express อ่าน JSON ได้
+app.use(express.json());
+
+// Routes
+app.use('/api/products', require('./src/routes/product.routes'));
+
+// Health Check
+app.get('/', (req, res) => {
+  res.json({ message: '🚀 Backend Mastery API is running!' });
+});
+
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(\`🚀 Server running on http://localhost:\${PORT}\`);
+});`
+        },
+        {
+            type: "code",
+            title: "▶️ รันและทดสอบ",
+            filename: "terminal",
+            lang: "bash",
+            code: `# เพิ่ม script ใน package.json
+# "scripts": { "dev": "nodemon server.js" }
+
+# รัน Server
+npm run dev
+
+# ทดสอบด้วย curl หรือ Postman:
+# GET    → http://localhost:5000/api/products
+# POST   → http://localhost:5000/api/products  (Body: {"name":"iPhone","price":35000})
+# PUT    → http://localhost:5000/api/products/:id
+# DELETE → http://localhost:5000/api/products/:id`
+        },
+        {
+            type: "explain",
+            title: "💡 สรุป CRUD Operations",
+            content: `<table class="w-full text-sm border-collapse mt-2">
+            <thead><tr class="border-b border-white/10">
+                <th class="text-left py-2 text-brand-400">Method</th>
+                <th class="text-left py-2 text-brand-400">Route</th>
+                <th class="text-left py-2 text-brand-400">หน้าที่</th>
+            </tr></thead>
+            <tbody>
+                <tr class="border-b border-white/5"><td class="py-2 font-mono text-emerald-400">GET</td><td class="py-2 font-mono">/api/products</td><td class="py-2">ดึงสินค้าทั้งหมด</td></tr>
+                <tr class="border-b border-white/5"><td class="py-2 font-mono text-emerald-400">GET</td><td class="py-2 font-mono">/api/products/:id</td><td class="py-2">ดึงสินค้าตาม ID</td></tr>
+                <tr class="border-b border-white/5"><td class="py-2 font-mono text-blue-400">POST</td><td class="py-2 font-mono">/api/products</td><td class="py-2">สร้างสินค้าใหม่</td></tr>
+                <tr class="border-b border-white/5"><td class="py-2 font-mono text-yellow-400">PUT</td><td class="py-2 font-mono">/api/products/:id</td><td class="py-2">แก้ไขสินค้า</td></tr>
+                <tr><td class="py-2 font-mono text-red-400">DELETE</td><td class="py-2 font-mono">/api/products/:id</td><td class="py-2">ลบสินค้า</td></tr>
+            </tbody></table>`
+        }
+    ]
+},
+
+// ============================================================
+// STEP 2
+// ============================================================
+{
+    id: 2,
+    title: "Data Integrity & Safety",
+    subtitle: "Validation & Centralized Error Handling",
+    level: "Level 50",
+    levelColor: "bg-yellow-500/15 text-yellow-400",
+    icon: "🛡️",
+    sections: [
+        {
+            type: "info",
+            title: "🎯 สิ่งที่ต้องทำใน Step นี้",
+            items: [
+                "ติดตั้งและใช้ Zod เพื่อ Validate ข้อมูลก่อนเข้า Database",
+                "สร้าง Validation Middleware ที่ Reusable ได้",
+                "สร้าง Custom Error Class สำหรับ API",
+                "สร้าง Centralized Error Middleware ให้ Server ไม่ล่มและส่ง Error สวยงาม",
+                "ใช้ asyncHandler ห่อ Controller ป้องกัน Unhandled Promise Rejection"
+            ]
+        },
+        {
+            type: "code",
+            title: "📦 ติดตั้ง Zod",
+            filename: "terminal",
+            lang: "bash",
+            code: `npm install zod`
+        },
+        {
+            type: "code",
+            title: "✅ สร้าง Validation Schema ด้วย Zod",
+            filename: "src/validations/product.validation.js",
+            lang: "javascript",
+            code: `const { z } = require('zod');
+
+// Schema สำหรับสร้างสินค้าใหม่
+const createProductSchema = z.object({
+  name: z
+    .string({ required_error: 'กรุณาใส่ชื่อสินค้า' })
+    .min(1, 'ชื่อสินค้าต้องไม่ว่าง')
+    .max(100, 'ชื่อสินค้าต้องไม่เกิน 100 ตัวอักษร')
+    .trim(),
+  price: z
+    .number({ required_error: 'กรุณาใส่ราคา' })
+    .min(0, 'ราคาต้องไม่ติดลบ')
+    .max(9999999, 'ราคาสูงเกินไป'),
+  description: z
+    .string()
+    .max(500, 'คำอธิบายต้องไม่เกิน 500 ตัวอักษร')
+    .optional()
+    .default(''),
+  inStock: z
+    .boolean()
+    .optional()
+    .default(true),
+});
+
+// Schema สำหรับอัปเดต — ทุก field เป็น optional
+const updateProductSchema = createProductSchema.partial();
+
+module.exports = { createProductSchema, updateProductSchema };`
+        },
+        {
+            type: "code",
+            title: "🔗 สร้าง Validation Middleware (Reusable)",
+            filename: "src/middleware/validate.middleware.js",
+            lang: "javascript",
+            code: `/**
+ * Middleware ที่รับ Zod schema แล้วตรวจสอบ req.body
+ * ถ้าไม่ผ่าน → ส่ง 400 พร้อมรายละเอียด Error กลับไป
+ * ถ้าผ่าน → แทนที่ req.body ด้วย data ที่ผ่าน validation แล้ว (clean data)
+ */
+const validate = (schema) => (req, res, next) => {
+  const result = schema.safeParse(req.body);
+
+  if (!result.success) {
+    const errors = result.error.errors.map((err) => ({
+      field: err.path.join('.'),
+      message: err.message,
+    }));
+
+    return res.status(400).json({
+      success: false,
+      message: 'ข้อมูลไม่ถูกต้อง',
+      errors,
+    });
+  }
+
+  // แทนที่ body ด้วย data ที่ clean แล้ว
+  req.body = result.data;
+  next();
+};
+
+module.exports = validate;`
+        },
+        {
+            type: "code",
+            title: "🛣️ ใช้ Validation ใน Routes",
+            filename: "src/routes/product.routes.js (updated)",
+            lang: "javascript",
+            code: `const express = require('express');
+const router = express.Router();
+const {
+  getProducts, getProduct, createProduct,
+  updateProduct, deleteProduct,
+} = require('../controllers/product.controller');
+const validate = require('../middleware/validate.middleware');
+const {
+  createProductSchema,
+  updateProductSchema,
+} = require('../validations/product.validation');
+
+router.route('/')
+  .get(getProducts)
+  .post(validate(createProductSchema), createProduct);   // ✅ Validate ก่อนสร้าง
+
+router.route('/:id')
+  .get(getProduct)
+  .put(validate(updateProductSchema), updateProduct)     // ✅ Validate ก่อนอัปเดต
+  .delete(deleteProduct);
+
+module.exports = router;`
+        },
+        {
+            type: "explain",
+            title: "💡 ทำไมต้อง Validate ข้อมูล?",
+            content: `<strong>"Never trust user input"</strong> — กฎข้อแรกของ Backend Developer<br/><br/>
+            ถ้าไม่ Validate แล้วส่งข้อมูลตรงไป Database จะเกิดปัญหา:<br/>
+            • <strong>Data Corruption</strong> — ข้อมูลเสียหาย เช่น ราคาเป็นตัวหนังสือ<br/>
+            • <strong>Security Holes</strong> — อาจถูก Inject ข้อมูลอันตราย<br/>
+            • <strong>Bad UX</strong> — User ไม่รู้ว่าส่งข้อมูลผิดตรงไหน<br/><br/>
+            <strong>ทำไมเลือก Zod?</strong><br/>
+            • TypeScript-first แต่ใช้กับ JS ธรรมดาได้<br/>
+            • Syntax อ่านง่าย เป็น Chain method<br/>
+            • ได้ Type inference ฟรี (ถ้าใช้ TS)<br/>
+            • Error message ที่ customize ได้ละเอียด`
+        },
+        {
+            type: "code",
+            title: "🚨 สร้าง Custom Error Class",
+            filename: "src/utils/ApiError.js",
+            lang: "javascript",
+            code: `/**
+ * Custom Error ที่มี statusCode
+ * ทำให้ Error Handler รู้ว่าต้องส่ง HTTP Status อะไรกลับไป
+ */
+class ApiError extends Error {
+  constructor(message, statusCode) {
+    super(message);
+    this.statusCode = statusCode;
+    this.isOperational = true;  // แยก "Error ที่เราตั้งใจ" vs "Bug จริงๆ"
+
+    Error.captureStackTrace(this, this.constructor);
+  }
+}
+
+module.exports = ApiError;`
+        },
+        {
+            type: "code",
+            title: "🛑 สร้าง Centralized Error Middleware",
+            filename: "src/middleware/error.middleware.js",
+            lang: "javascript",
+            code: `const ApiError = require('../utils/ApiError');
+
+const errorHandler = (err, req, res, next) => {
+  // clone error info
+  let error = { ...err, message: err.message };
+
+  // Log สำหรับ Developer (ไม่ส่งไปให้ User)
+  console.error('❌ Error:', err.stack);
+
+  // Mongoose: ID format ไม่ถูกต้อง
+  if (err.name === 'CastError') {
+    error = new ApiError('ไม่พบข้อมูลที่ต้องการ (Invalid ID)', 404);
+  }
+
+  // Mongoose: Duplicate Key
+  if (err.code === 11000) {
+    const field = Object.keys(err.keyValue).join(', ');
+    error = new ApiError(\`ข้อมูลซ้ำในฟิลด์: \${field}\`, 400);
+  }
+
+  // Mongoose: Validation Error
+  if (err.name === 'ValidationError') {
+    const messages = Object.values(err.errors).map((e) => e.message);
+    error = new ApiError(messages.join(', '), 400);
+  }
+
+  res.status(error.statusCode || 500).json({
+    success: false,
+    message: error.message || 'เกิดข้อผิดพลาดภายใน Server',
+    ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
+  });
+};
+
+module.exports = errorHandler;`
+        },
+        {
+            type: "code",
+            title: "🔄 สร้าง asyncHandler Wrapper",
+            filename: "src/utils/asyncHandler.js",
+            lang: "javascript",
+            code: `/**
+ * ห่อ async function ให้ catch error อัตโนมัติ
+ * แทนที่จะต้องเขียน try-catch ทุก controller
+ *
+ * ก่อน:  try { ... } catch(err) { next(err) }
+ * หลัง:  asyncHandler(async (req, res) => { ... })
+ */
+const asyncHandler = (fn) => (req, res, next) =>
+  Promise.resolve(fn(req, res, next)).catch(next);
+
+module.exports = asyncHandler;`
+        },
+        {
+            type: "code",
+            title: "🎮 อัปเดต Controller ใช้ asyncHandler + ApiError",
+            filename: "src/controllers/product.controller.js (updated)",
+            lang: "javascript",
+            code: `const Product = require('../models/product.model');
+const asyncHandler = require('../utils/asyncHandler');
+const ApiError = require('../utils/ApiError');
+
+// ทุก function ห่อด้วย asyncHandler — ไม่ต้อง try-catch แล้ว!
+
+exports.getProducts = asyncHandler(async (req, res) => {
+  const products = await Product.find();
+  res.status(200).json({ success: true, count: products.length, data: products });
+});
+
+exports.getProduct = asyncHandler(async (req, res) => {
+  const product = await Product.findById(req.params.id);
+  if (!product) throw new ApiError('ไม่พบสินค้านี้', 404);
+  res.status(200).json({ success: true, data: product });
+});
+
+exports.createProduct = asyncHandler(async (req, res) => {
+  const product = await Product.create(req.body);
+  res.status(201).json({ success: true, data: product });
+});
+
+exports.updateProduct = asyncHandler(async (req, res) => {
+  const product = await Product.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true,
+  });
+  if (!product) throw new ApiError('ไม่พบสินค้านี้', 404);
+  res.status(200).json({ success: true, data: product });
+});
+
+exports.deleteProduct = asyncHandler(async (req, res) => {
+  const product = await Product.findByIdAndDelete(req.params.id);
+  if (!product) throw new ApiError('ไม่พบสินค้านี้', 404);
+  res.status(200).json({ success: true, data: {} });
+});`
+        },
+        {
+            type: "explain",
+            title: "💡 ทำไมต้อง Centralized Error Handling?",
+            content: `ถ้าไม่มี Error Middleware ทุกครั้งที่เกิด Error:<br/>
+            • Server อาจ <strong>Crash ทั้งตัว</strong> ถ้าเป็น Unhandled Error<br/>
+            • User ได้รับ <strong>Error message ดิบๆ</strong> จาก MongoDB ซึ่งอาจเปิดเผยข้อมูลภายใน<br/>
+            • Developer ต้อง <strong>เขียน try-catch ซ้ำทุก function</strong> → DRY Violation<br/><br/>
+            <strong>ด้วย Centralized Error Handler:</strong><br/>
+            ✅ Error ทุกตัวถูกจัดการที่จุดเดียว<br/>
+            ✅ Response format เป็นมาตรฐานเดียวกัน<br/>
+            ✅ แยก Development vs Production error message<br/>
+            ✅ Server ไม่มีวันล่มจาก Unhandled Error`
+        }
+    ]
+},
+
+// ============================================================
+// STEP 3
+// ============================================================
+{
+    id: 3,
+    title: "Security & Authentication",
+    subtitle: "Password Hashing, JWT & Protected Routes",
+    level: "The Pro Gap",
+    levelColor: "bg-red-500/15 text-red-400",
+    icon: "🔐",
+    sections: [
+        {
+            type: "info",
+            title: "🎯 สิ่งที่ต้องทำใน Step นี้",
+            items: [
+                "สร้าง User Model พร้อม Hash Password ด้วย bcrypt",
+                "สร้าง Register & Login API",
+                "สร้าง JWT Token สำหรับ Authentication",
+                "สร้าง Auth Middleware เพื่อคุ้มครอง Protected Routes",
+                "เข้าใจ Flow: Register → Login → ได้ Token → ใช้ Token เข้าถึง Protected Route"
+            ]
+        },
+        {
+            type: "code",
+            title: "📦 ติดตั้ง Dependencies",
+            filename: "terminal",
+            lang: "bash",
+            code: `npm install bcryptjs jsonwebtoken`
+        },
+        {
+            type: "code",
+            title: "👤 สร้าง User Model พร้อม Password Hashing",
+            filename: "src/models/user.model.js",
+            lang: "javascript",
+            code: `const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
+
+const userSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: [true, 'กรุณาใส่ชื่อ'],
+      trim: true,
+    },
+    email: {
+      type: String,
+      required: [true, 'กรุณาใส่อีเมล'],
+      unique: true,
+      lowercase: true,
+      match: [/^\\S+@\\S+\\.\\S+$/, 'รูปแบบอีเมลไม่ถูกต้อง'],
+    },
+    password: {
+      type: String,
+      required: [true, 'กรุณาใส่รหัสผ่าน'],
+      minlength: [6, 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร'],
+      select: false, // ไม่ส่ง password กลับเมื่อ query
+    },
+    role: {
+      type: String,
+      enum: ['user', 'admin'],
+      default: 'user',
+    },
+  },
+  { timestamps: true }
+);
+
+// 🔐 Hash password ก่อน save ทุกครั้ง
+userSchema.pre('save', async function (next) {
+  // Hash เฉพาะเมื่อ password ถูกแก้ไข
+  if (!this.isModified('password')) return next();
+
+  const salt = await bcrypt.genSalt(12);
+  this.password = await bcrypt.hash(this.password, salt);
+  next();
+});
+
+// 🔑 Method เปรียบเทียบ password
+userSchema.methods.comparePassword = async function (candidatePassword) {
+  return await bcrypt.compare(candidatePassword, this.password);
+};
+
+module.exports = mongoose.model('User', userSchema);`
+        },
+        {
+            type: "explain",
+            title: "💡 ทำไมต้อง Hash Password?",
+            content: `<strong>ห้ามเก็บ password เป็น plain text เด็ดขาด!</strong><br/><br/>
+            ถ้า Database ถูก Hack และ password เป็น plain text → User ทุกคนในระบบถูก compromised ทันที<br/><br/>
+            <strong>bcrypt ทำงานอย่างไร?</strong><br/>
+            1. สร้าง <strong>Salt</strong> (ข้อมูลสุ่ม) → ทำให้ password เดียวกัน hash ออกมาไม่เหมือนกัน<br/>
+            2. <strong>Hash</strong> password + salt → ได้ string ที่ไม่สามารถย้อนกลับได้ (one-way function)<br/>
+            3. ตอน Login → hash password ที่ user ส่งมา แล้วเทียบกับ hash ใน DB<br/><br/>
+            <strong>Salt Round = 12</strong> หมายถึง hash 2¹² = 4,096 รอบ → ยากต่อการ brute-force<br/>
+            <strong>select: false</strong> → Mongoose จะไม่ส่ง password กลับมาเมื่อ query (ต้องใช้ <code>.select('+password')</code> อย่างจงใจ)`
+        },
+        {
+            type: "code",
+            title: "🔑 สร้าง JWT Utility",
+            filename: "src/utils/generateToken.js",
+            lang: "javascript",
+            code: `const jwt = require('jsonwebtoken');
+
+/**
+ * สร้าง JWT Token จาก user ID
+ * Token มีอายุ 30 วัน (ปรับได้ตาม requirement)
+ */
+const generateToken = (userId) => {
+  return jwt.sign(
+    { id: userId },
+    process.env.JWT_SECRET,
+    { expiresIn: process.env.JWT_EXPIRE || '30d' }
+  );
+};
+
+module.exports = generateToken;`
+        },
+        {
+            type: "code",
+            title: "📝 เพิ่ม JWT config ใน .env",
+            filename: ".env (เพิ่มเติม)",
+            lang: "bash",
+            code: `JWT_SECRET=your-super-secret-key-change-this-in-production-1234567890
+JWT_EXPIRE=30d`
+        },
+        {
+            type: "code",
+            title: "🎮 Auth Controller (Register & Login)",
+            filename: "src/controllers/auth.controller.js",
+            lang: "javascript",
+            code: `const User = require('../models/user.model');
+const asyncHandler = require('../utils/asyncHandler');
+const ApiError = require('../utils/ApiError');
+const generateToken = require('../utils/generateToken');
+
+// @desc    สมัครสมาชิก
+// @route   POST /api/auth/register
+exports.register = asyncHandler(async (req, res) => {
+  const { name, email, password } = req.body;
+
+  // ตรวจสอบว่า email ซ้ำไหม
+  const existingUser = await User.findOne({ email });
+  if (existingUser) {
+    throw new ApiError('อีเมลนี้ถูกใช้แล้ว', 400);
+  }
+
+  // สร้าง User (password จะถูก hash อัตโนมัติจาก pre-save hook)
+  const user = await User.create({ name, email, password });
+
+  // ส่ง Token กลับ
+  const token = generateToken(user._id);
+
+  res.status(201).json({
+    success: true,
+    data: {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    },
+    token,
+  });
+});
+
+// @desc    เข้าสู่ระบบ
+// @route   POST /api/auth/login
+exports.login = asyncHandler(async (req, res) => {
+  const { email, password } = req.body;
+
+  // ตรวจสอบว่าส่งมาครบไหม
+  if (!email || !password) {
+    throw new ApiError('กรุณาใส่อีเมลและรหัสผ่าน', 400);
+  }
+
+  // หา user และดึง password มาด้วย (ปกติ select: false)
+  const user = await User.findOne({ email }).select('+password');
+
+  if (!user) {
+    throw new ApiError('อีเมลหรือรหัสผ่านไม่ถูกต้อง', 401);
+  }
+
+  // เปรียบเทียบ password
+  const isMatch = await user.comparePassword(password);
+  if (!isMatch) {
+    throw new ApiError('อีเมลหรือรหัสผ่านไม่ถูกต้อง', 401);
+  }
+
+  // สร้าง Token
+  const token = generateToken(user._id);
+
+  res.status(200).json({
+    success: true,
+    data: {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    },
+    token,
+  });
+});
+
+// @desc    ดึงข้อมูล User ปัจจุบัน
+// @route   GET /api/auth/me
+exports.getMe = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user.id);
+  res.status(200).json({ success: true, data: user });
+});`
+        },
+        {
+            type: "code",
+            title: "🔒 Auth Middleware (Protected Routes)",
+            filename: "src/middleware/auth.middleware.js",
+            lang: "javascript",
+            code: `const jwt = require('jsonwebtoken');
+const User = require('../models/user.model');
+const asyncHandler = require('../utils/asyncHandler');
+const ApiError = require('../utils/ApiError');
+
+/**
+ * Middleware ตรวจสอบ JWT Token
+ * ดึง Token จาก Header: Authorization: Bearer <token>
+ */
+const protect = asyncHandler(async (req, res, next) => {
+  let token;
+
+  // ดึง Token จาก Header
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer')) {
+    token = authHeader.split(' ')[1];
+  }
+
+  if (!token) {
+    throw new ApiError('กรุณาเข้าสู่ระบบก่อน', 401);
+  }
+
+  // Verify Token
+  const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+  // หา User จาก Token payload
+  const user = await User.findById(decoded.id);
+  if (!user) {
+    throw new ApiError('ไม่พบผู้ใช้ที่เชื่อมกับ Token นี้', 401);
+  }
+
+  // แนบ user ไว้ใน request เพื่อให้ controller ใช้ต่อ
+  req.user = user;
+  next();
+});
+
+/**
+ * Middleware จำกัด Role
+ * ใช้ต่อจาก protect เช่น: protect, authorize('admin')
+ */
+const authorize = (...roles) => {
+  return (req, res, next) => {
+    if (!roles.includes(req.user.role)) {
+      throw new ApiError('คุณไม่มีสิทธิ์เข้าถึงส่วนนี้', 403);
+    }
+    next();
+  };
+};
+
+module.exports = { protect, authorize };`
+        },
+        {
+            type: "code",
+            title: "🛣️ Auth Routes + Protected Product Routes",
+            filename: "src/routes/auth.routes.js",
+            lang: "javascript",
+            code: `const express = require('express');
+const router = express.Router();
+const { register, login, getMe } = require('../controllers/auth.controller');
+const { protect } = require('../middleware/auth.middleware');
+
+router.post('/register', register);
+router.post('/login', login);
+router.get('/me', protect, getMe);  // 🔒 ต้อง Login ก่อน
+
+module.exports = router;
+
+// ──────────────────────────────────────────
+// อัปเดต product.routes.js เพื่อ protect routes:
+// ──────────────────────────────────────────
+// const { protect, authorize } = require('../middleware/auth.middleware');
+//
+// router.route('/')
+//   .get(getProducts)                                    // Public
+//   .post(protect, validate(createProductSchema), createProduct);  // 🔒 Login
+//
+// router.route('/:id')
+//   .get(getProduct)                                     // Public
+//   .put(protect, validate(updateProductSchema), updateProduct)    // 🔒 Login
+//   .delete(protect, authorize('admin'), deleteProduct);           // 🔒 Admin only`
+        },
+        {
+            type: "explain",
+            title: "💡 JWT Authentication Flow",
+            content: `<strong>Flow ทั้งหมด:</strong><br/><br/>
+            <strong>1. Register:</strong> User ส่ง name + email + password → Server hash password → เก็บ DB → สร้าง Token → ส่งกลับ<br/><br/>
+            <strong>2. Login:</strong> User ส่ง email + password → Server ดึง user จาก DB → เทียบ password ด้วย bcrypt → ถ้าตรง สร้าง Token ส่งกลับ<br/><br/>
+            <strong>3. Access Protected Route:</strong> Client แนบ Token ใน Header → Auth Middleware ตรวจ Token → ถ้าถูกต้อง แนบ user ใน req → Controller ทำงานต่อ<br/><br/>
+            <strong>ทำไมใช้ JWT?</strong><br/>
+            • <strong>Stateless</strong> — Server ไม่ต้องเก็บ Session → Scale ง่าย<br/>
+            • <strong>Self-contained</strong> — Token มีข้อมูล user ID อยู่ในตัว<br/>
+            • <strong>Cross-domain</strong> — ใช้ข้ามหลาย Service ได้`
+        }
+    ]
+},
+
+// ============================================================
+// STEP 4
+// ============================================================
+{
+    id: 4,
+    title: "Production Optimization",
+    subtitle: "Caching, Indexing & Environment Variables",
+    level: "Level 100",
+    levelColor: "bg-purple-500/15 text-purple-400",
+    icon: "🚀",
+    sections: [
+        {
+            type: "info",
+            title: "🎯 สิ่งที่ต้องทำใน Step นี้",
+            items: [
+                "เข้าใจและติดตั้ง Redis เพื่อทำ Caching",
+                "สร้าง Cache Middleware ที่ Reusable ได้",
+                "เข้าใจ Database Indexing และสร้าง Index ใน MongoDB",
+                "จัดการ Environment Variables อย่างปลอดภัย",
+                "ปรับแต่ง Production Configuration"
+            ]
+        },
+        {
+            type: "code",
+            title: "📦 ติดตั้ง Redis Client",
+            filename: "terminal",
+            lang: "bash",
+            code: `# ติดตั้ง Redis client สำหรับ Node.js
+npm install ioredis
+
+# ถ้ายังไม่มี Redis:
+# macOS:   brew install redis && brew services start redis
+# Ubuntu:  sudo apt install redis-server
+# Windows: ใช้ Docker → docker run -d -p 6379:6379 redis
+# หรือใช้ Redis Cloud (free tier): https://redis.com/try-free/`
+        },
+        {
+            type: "code",
+            title: "⚡ ตั้งค่า Redis Connection",
+            filename: "src/config/redis.js",
+            lang: "javascript",
+            code: `const Redis = require('ioredis');
+
+const redis = new Redis({
+  host: process.env.REDIS_HOST || '127.0.0.1',
+  port: process.env.REDIS_PORT || 6379,
+  password: process.env.REDIS_PASSWORD || undefined,
+  retryStrategy: (times) => {
+    if (times > 3) {
+      console.warn('⚠️ Redis: ไม่สามารถเชื่อมต่อได้ — ระบบจะทำงานต่อโดยไม่มี Cache');
+      return null;  // หยุดพยายาม
+    }
+    return Math.min(times * 200, 2000);
+  },
+});
+
+redis.on('connect', () => console.log('✅ Redis Connected'));
+redis.on('error', (err) => console.warn('⚠️ Redis Error:', err.message));
+
+module.exports = redis;`
+        },
+        {
+            type: "code",
+            title: "🗄️ Cache Middleware (Reusable)",
+            filename: "src/middleware/cache.middleware.js",
+            lang: "javascript",
+            code: `const redis = require('../config/redis');
+
+/**
+ * Cache Middleware
+ * @param {number} ttl - Time to live in seconds (default: 1 ชม.)
+ *
+ * Flow:
+ * 1. สร้าง Cache Key จาก URL (เช่น /api/products)
+ * 2. เช็ค Redis → ถ้ามี → ส่ง cached data กลับทันที
+ * 3. ถ้าไม่มี → ไปต่อ controller → แต่ดัก res.json() ไว้เพื่อ save cache
+ */
+const cache = (ttl = 3600) => async (req, res, next) => {
+  // ไม่ Cache ถ้าไม่ใช่ GET request
+  if (req.method !== 'GET') return next();
+
+  const key = \`cache:\${req.originalUrl}\`;
+
+  try {
+    const cached = await redis.get(key);
+    if (cached) {
+      console.log(\`⚡ Cache HIT: \${key}\`);
+      return res.status(200).json(JSON.parse(cached));
+    }
+  } catch (err) {
+    console.warn('⚠️ Cache read error:', err.message);
+  }
+
+  // ดัก res.json เพื่อ save cache
+  const originalJson = res.json.bind(res);
+  res.json = async (data) => {
+    try {
+      await redis.setex(key, ttl, JSON.stringify(data));
+      console.log(\`💾 Cache SET: \${key} (TTL: \${ttl}s)\`);
+    } catch (err) {
+      console.warn('⚠️ Cache write error:', err.message);
+    }
+    return originalJson(data);
+  };
+
+  next();
+};
+
+/**
+ * ลบ Cache ที่เกี่ยวข้อง (เรียกหลัง Create/Update/Delete)
+ */
+const clearCache = (pattern) => async (req, res, next) => {
+  try {
+    const keys = await redis.keys(\`cache:\${pattern}\`);
+    if (keys.length > 0) {
+      await redis.del(...keys);
+      console.log(\`🗑️ Cache CLEARED: \${keys.length} keys\`);
+    }
+  } catch (err) {
+    console.warn('⚠️ Cache clear error:', err.message);
+  }
+  next();
+};
+
+module.exports = { cache, clearCache };`
+        },
+        {
+            type: "code",
+            title: "🛣️ ใช้ Cache ใน Routes",
+            filename: "src/routes/product.routes.js (with cache)",
+            lang: "javascript",
+            code: `const { cache, clearCache } = require('../middleware/cache.middleware');
+
+router.route('/')
+  .get(cache(300), getProducts)           // ⚡ Cache 5 นาที
+  .post(
+    protect,
+    validate(createProductSchema),
+    clearCache('/api/products*'),          // 🗑️ ลบ cache เมื่อสร้างใหม่
+    createProduct
+  );
+
+router.route('/:id')
+  .get(cache(600), getProduct)            // ⚡ Cache 10 นาที
+  .put(
+    protect,
+    validate(updateProductSchema),
+    clearCache('/api/products*'),
+    updateProduct
+  )
+  .delete(
+    protect,
+    authorize('admin'),
+    clearCache('/api/products*'),
+    deleteProduct
+  );`
+        },
+        {
+            type: "explain",
+            title: "💡 ทำไมต้องใช้ Redis Cache?",
+            content: `<strong>ปัญหา:</strong> ทุกครั้งที่ User เรียก GET /api/products → Server ต้อง query MongoDB → ใช้เวลา 50-200ms<br/>
+            ถ้ามี 1,000 requests/วินาที → Database รับภาระหนักมาก<br/><br/>
+            <strong>วิธีแก้ — Redis Cache:</strong><br/>
+            • Redis เก็บข้อมูลใน <strong>Memory (RAM)</strong> → อ่านได้ใน <strong>< 1ms</strong><br/>
+            • ครั้งแรก: Query DB → เก็บผลลัพธ์ใน Redis → ส่งกลับ<br/>
+            • ครั้งต่อไป: อ่านจาก Redis → ส่งกลับทันที (ไม่ต้องแตะ DB)<br/><br/>
+            <strong>TTL (Time to Live):</strong> กำหนดอายุ Cache เช่น 300 วินาที → หลังหมดอายุจะ query DB ใหม่<br/>
+            <strong>Cache Invalidation:</strong> เมื่อ Create/Update/Delete ต้องลบ Cache ที่เกี่ยวข้องออก → ข้อมูลไม่ stale<br/><br/>
+            <div class="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-3 mt-3">
+                <strong class="text-emerald-400">ผลลัพธ์:</strong> Response time ลดจาก ~150ms เหลือ ~2ms = <strong>เร็วขึ้น 75 เท่า!</strong>
+            </div>`
+        },
+        {
+            type: "code",
+            title: "📊 Database Indexing ใน MongoDB",
+            filename: "src/models/product.model.js (เพิ่ม Index)",
+            lang: "javascript",
+            code: `const productSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true,
+    trim: true,
+    index: true,        // 🔍 Single Field Index
+  },
+  price: {
+    type: Number,
+    required: true,
+    min: 0,
+  },
+  category: {
+    type: String,
+    index: true,        // 🔍 Index สำหรับ filter by category
+  },
+  inStock: Boolean,
+}, { timestamps: true });
+
+// 🔍 Compound Index — ค้นหา category + price range พร้อมกัน
+productSchema.index({ category: 1, price: -1 });
+
+// 🔍 Text Index — สำหรับค้นหาด้วยคำ (full-text search)
+productSchema.index({ name: 'text', description: 'text' });
+
+module.exports = mongoose.model('Product', productSchema);`
+        },
+        {
+            type: "code",
+            title: "🔍 ใช้ Index กับ Query",
+            filename: "src/controllers/product.controller.js (query ตัวอย่าง)",
+            lang: "javascript",
+            code: `// ✅ ใช้ Index — เร็ว! O(log n)
+const cheap = await Product.find({ category: 'electronics', price: { $lte: 1000 } });
+
+// ✅ Full-text search — ใช้ Text Index
+const results = await Product.find({ $text: { $search: 'wireless headphone' } });
+
+// ✅ ตรวจสอบว่า query ใช้ Index ไหม
+const explained = await Product.find({ category: 'electronics' }).explain('executionStats');
+console.log(explained.executionStats);
+// ดูที่: totalDocsExamined vs totalKeysExamined
+// ถ้า totalDocsExamined น้อย = Index ทำงานดี 👍
+
+// ❌ ไม่มี Index — ช้า! O(n) ต้อง scan ทุก document
+const slow = await Product.find({ description: /wireless/i });
+// → ต้อง scan ทีละ document → ถ้ามี 1 ล้าน records = ช้ามาก`
+        },
+        {
+            type: "explain",
+            title: "💡 ทำไมต้องทำ Database Index?",
+            content: `<strong>เปรียบเทียบ:</strong> Index เหมือนสารบัญหนังสือ<br/>
+            • <strong>ไม่มี Index:</strong> หาคำว่า "MongoDB" → ต้องอ่านทุกหน้า (Full Collection Scan)<br/>
+            • <strong>มี Index:</strong> เปิดสารบัญ → เจอหน้า 42 → ไปตรง!<br/><br/>
+            <table class="w-full text-sm border-collapse">
+            <thead><tr class="border-b border-white/10">
+                <th class="text-left py-2 text-brand-400">จำนวน Documents</th>
+                <th class="text-left py-2 text-emerald-400">มี Index</th>
+                <th class="text-left py-2 text-red-400">ไม่มี Index</th>
+            </tr></thead>
+            <tbody>
+                <tr class="border-b border-white/5"><td class="py-1.5">1,000</td><td class="py-1.5">~1ms</td><td class="py-1.5">~5ms</td></tr>
+                <tr class="border-b border-white/5"><td class="py-1.5">100,000</td><td class="py-1.5">~2ms</td><td class="py-1.5">~200ms</td></tr>
+                <tr class="border-b border-white/5"><td class="py-1.5">1,000,000</td><td class="py-1.5">~3ms</td><td class="py-1.5">~2,000ms</td></tr>
+                <tr><td class="py-1.5">10,000,000</td><td class="py-1.5">~5ms</td><td class="py-1.5">~20,000ms 💀</td></tr>
+            </tbody></table><br/>
+            <strong>⚠️ ข้อควรระวัง:</strong> Index ใช้ RAM → อย่าสร้างมากเกินไป, สร้างเฉพาะ field ที่ Query บ่อย`
+        },
+        {
+            type: "code",
+            title: "🔑 จัดการ Environment Variables อย่างปลอดภัย",
+            filename: ".env (Production-ready)",
+            lang: "bash",
+            code: `# ===== Server =====
+PORT=5000
+NODE_ENV=production
+
+# ===== Database =====
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/mydb
+
+# ===== Auth =====
+JWT_SECRET=a1b2c3d4e5f6-change-me-in-production-please!
+JWT_EXPIRE=30d
+
+# ===== Redis =====
+REDIS_HOST=127.0.0.1
+REDIS_PORT=6379
+REDIS_PASSWORD=your-redis-password
+
+# ===== Rate Limiting =====
+RATE_LIMIT_WINDOW=15
+RATE_LIMIT_MAX=100`
+        },
+        {
+            type: "code",
+            title: "📋 .env.example (สำหรับ commit ขึ้น Git)",
+            filename: ".env.example",
+            lang: "bash",
+            code: `# คัดลอกไฟล์นี้เป็น .env แล้วใส่ค่าจริง
+# cp .env.example .env
+
+PORT=5000
+NODE_ENV=development
+MONGODB_URI=mongodb://localhost:27017/your-db-name
+JWT_SECRET=change-me
+JWT_EXPIRE=30d
+REDIS_HOST=127.0.0.1
+REDIS_PORT=6379
+REDIS_PASSWORD=`
+        },
+        {
+            type: "code",
+            title: "🚫 อย่าลืมเพิ่ม .gitignore",
+            filename: ".gitignore",
+            lang: "text",
+            code: `node_modules/
+.env
+*.log
+dist/
+coverage/`
+        },
+        {
+            type: "explain",
+            title: "💡 ทำไมต้องใช้ Environment Variables?",
+            content: `<strong>ถ้าเขียน Secret ตรงในโค้ด:</strong><br/>
+            • Push ขึ้น GitHub → <strong>คนทั้งโลกเห็น password ของคุณ</strong><br/>
+            • ต้องแก้โค้ดทุกครั้งที่เปลี่ยน config (dev → staging → production)<br/>
+            • ไม่สามารถให้แต่ละ environment ใช้ค่าต่างกันได้<br/><br/>
+            <strong>ด้วย .env:</strong><br/>
+            ✅ Secret ไม่ถูก commit ขึ้น Git (อยู่ใน .gitignore)<br/>
+            ✅ เปลี่ยน config โดยไม่ต้องแก้โค้ด<br/>
+            ✅ Dev/Staging/Production ใช้ค่าต่างกันได้<br/>
+            ✅ ใช้ <code>.env.example</code> เป็น template ให้คนอื่นในทีม<br/><br/>
+            <div class="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                <strong class="text-red-400">⚠️ กฎเหล็ก:</strong> ห้าม commit ไฟล์ .env ขึ้น Git เด็ดขาด!
+            </div>`
+        },
+        {
+            type: "code",
+            title: "🏁 Production-Ready server.js (Final Version)",
+            filename: "server.js (Final)",
+            lang: "javascript",
+            code: `const express = require('express');
+const dotenv = require('dotenv');
+const helmet = require('helmet');
+const cors = require('cors');
+const rateLimit = require('express-rate-limit');
+const connectDB = require('./src/config/db');
+const errorHandler = require('./src/middleware/error.middleware');
+
+// Load ENV
+dotenv.config();
+
+// Connect Database
+connectDB();
+
+const app = express();
+
+// ===== Security Middleware =====
+app.use(helmet());                         // Security headers
+app.use(cors());                           // Cross-Origin Resource Sharing
+app.use(express.json({ limit: '10mb' }));  // Body parser with size limit
+
+// Rate Limiting — ป้องกัน DDoS/Brute-force
+const limiter = rateLimit({
+  windowMs: (process.env.RATE_LIMIT_WINDOW || 15) * 60 * 1000,
+  max: process.env.RATE_LIMIT_MAX || 100,
+  message: { success: false, message: 'คำขอมากเกินไป กรุณารอสักครู่' },
+});
+app.use('/api', limiter);
+
+// ===== Routes =====
+app.use('/api/auth', require('./src/routes/auth.routes'));
+app.use('/api/products', require('./src/routes/product.routes'));
+
+// Health Check
+app.get('/', (req, res) => {
+  res.json({ status: 'ok', environment: process.env.NODE_ENV });
+});
+
+// ===== Error Handler (ต้องอยู่หลัง Routes) =====
+app.use(errorHandler);
+
+// ===== Start Server =====
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(\`🚀 Server running in \${process.env.NODE_ENV} mode on port \${PORT}\`);
+});
+
+// Handle Unhandled Promise Rejections
+process.on('unhandledRejection', (err) => {
+  console.error(\`❌ Unhandled Rejection: \${err.message}\`);
+  // ปิด server อย่างสวยงาม
+  process.exit(1);
+});`
+        },
+        {
+            type: "explain",
+            title: "🎓 สรุปทั้งหมด — จาก Zero to Pro",
+            content: `<div class="space-y-3">
+            <div class="flex items-start gap-3 bg-emerald-500/5 border border-emerald-500/10 rounded-lg p-3">
+                <span class="text-xl">🏗️</span>
+                <div><strong class="text-emerald-400">Step 1 — Foundation:</strong> MVC Structure + CRUD API พื้นฐาน</div>
+            </div>
+            <div class="flex items-start gap-3 bg-yellow-500/5 border border-yellow-500/10 rounded-lg p-3">
+                <span class="text-xl">🛡️</span>
+                <div><strong class="text-yellow-400">Step 2 — Data Safety:</strong> Zod Validation + Centralized Error Handling</div>
+            </div>
+            <div class="flex items-start gap-3 bg-red-500/5 border border-red-500/10 rounded-lg p-3">
+                <span class="text-xl">🔐</span>
+                <div><strong class="text-red-400">Step 3 — Security:</strong> bcrypt + JWT + Protected Routes</div>
+            </div>
+            <div class="flex items-start gap-3 bg-purple-500/5 border border-purple-500/10 rounded-lg p-3">
+                <span class="text-xl">🚀</span>
+                <div><strong class="text-purple-400">Step 4 — Production:</strong> Redis Cache + DB Index + Environment Config</div>
+            </div>
+            </div><br/>
+            <strong>Next Steps:</strong> API Documentation (Swagger), Testing (Jest), Docker, CI/CD, Monitoring (PM2/Sentry)`
+        }
+    ]
+}
+];
+
+// ───────────── APP STATE ─────────────
+let currentStep = 0;
+let isDark = true;
+
+// ───────────── RENDER SIDEBAR ─────────────
+function renderSidebar() {
+    const nav = document.getElementById('sidebar-nav');
+    nav.innerHTML = steps.map((s, i) => `
+        <button onclick="goToStep(${s.id})" class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-sm transition-all duration-200 group ${currentStep === s.id ? 'active' : 'text-surface-300'}">
+            <span class="text-lg">${s.icon}</span>
+            <div class="flex-1 min-w-0">
+                <div class="font-semibold truncate">Step ${s.id}: ${s.title}</div>
+                <div class="text-[11px] opacity-60 truncate mt-0.5">${s.subtitle}</div>
+            </div>
+        </button>
+    `).join('');
+}
+
+// ───────────── RENDER CONTENT ─────────────
+function renderContent() {
+    const step = steps[currentStep];
+    const area = document.getElementById('content-area');
+
+    let html = `
+        <div class="step-card">
+            <!-- Step Header -->
+            <div class="mb-10">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="badge-level ${step.levelColor}">${step.level}</span>
+                    <span class="text-surface-300/40 text-sm">Step ${step.id} of ${steps.length - 1}</span>
+                </div>
+                <h1 class="text-3xl lg:text-4xl font-extrabold text-white flex items-center gap-3">
+                    <span>${step.icon}</span> ${step.title}
+                </h1>
+                <p class="text-surface-300 mt-2 text-lg">${step.subtitle}</p>
+                <div class="h-1 w-24 bg-gradient-to-r from-brand-500 to-brand-300 rounded-full mt-4"></div>
+            </div>
+
+            <!-- Sections -->
+            <div class="space-y-8">
+    `;
+
+    for (const sec of step.sections) {
+        html += renderSection(sec);
+    }
+
+    html += `
+            </div>
+
+            <!-- Navigation -->
+            <div class="flex items-center justify-between mt-14 pt-8 border-t border-white/5">
+                ${currentStep > 0 ? `
+                <button onclick="goToStep(${currentStep - 1})" class="flex items-center gap-2 px-5 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-surface-300 hover:text-white transition font-medium text-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                    Step ${currentStep - 1}: ${steps[currentStep - 1].title}
+                </button>` : '<div></div>'}
+                ${currentStep < steps.length - 1 ? `
+                <button onclick="goToStep(${currentStep + 1})" class="flex items-center gap-2 px-5 py-3 rounded-xl bg-brand-600 hover:bg-brand-500 text-white transition font-medium text-sm shadow-lg shadow-brand-600/20">
+                    Step ${currentStep + 1}: ${steps[currentStep + 1].title}
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </button>` : `
+                <div class="text-sm text-surface-300/60 italic">🎉 คุณเรียนจบแล้ว!</div>`}
+            </div>
+        </div>
+    `;
+
+    area.innerHTML = html;
+
+    // Render Mermaid diagrams
+    if (typeof mermaid !== 'undefined') {
+        mermaid.run({ nodes: document.querySelectorAll('.mermaid') });
+    }
+
+    // Scroll to top
+    document.getElementById('main-content').scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ───────────── RENDER SECTION ─────────────
+function renderSection(sec) {
+    switch (sec.type) {
+        case 'hero':
+            return `<div class="bg-gradient-to-br from-brand-600/10 to-purple-600/10 border border-brand-500/10 rounded-2xl p-8">${sec.html}</div>`;
+
+        case 'info':
+            return `
+                <div class="bg-blue-500/5 border border-blue-500/15 rounded-2xl p-6">
+                    <h3 class="text-lg font-bold text-blue-400 mb-4">${sec.title}</h3>
+                    <ul class="space-y-2">
+                        ${sec.items.map((item, i) => `
+                            <li class="flex items-start gap-3 text-surface-200">
+                                <span class="bg-blue-500/20 text-blue-400 text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center shrink-0 mt-0.5">${i + 1}</span>
+                                <span>${item}</span>
+                            </li>
+                        `).join('')}
+                    </ul>
+                </div>`;
+
+        case 'diagram':
+            return `
+                <div class="bg-surface-850 border border-white/5 rounded-2xl p-6 overflow-hidden">
+                    <h3 class="text-lg font-bold text-white mb-2">${sec.title}</h3>
+                    <p class="text-surface-300 text-sm mb-5">${sec.description}</p>
+                    <div class="mermaid bg-white/[0.02] rounded-xl p-4 overflow-x-auto">
+${sec.mermaid}
+                    </div>
+                </div>`;
+
+        case 'checklist':
+            return `
+                <div class="bg-emerald-500/5 border border-emerald-500/15 rounded-2xl p-6">
+                    <h3 class="text-lg font-bold text-emerald-400 mb-4">${sec.title}</h3>
+                    <div class="space-y-3">
+                        ${sec.items.map(item => `
+                            <label class="checklist-item flex items-center gap-3 cursor-pointer group">
+                                <input type="checkbox" id="chk-${item.id}" onchange="saveChecklist()" class="w-5 h-5 rounded border-2 border-emerald-500/30 bg-transparent text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0 cursor-pointer">
+                                <span class="text-surface-200 transition">${item.text}</span>
+                            </label>
+                        `).join('')}
+                    </div>
+                </div>`;
+
+        case 'code':
+            return `
+                <div class="code-block">
+                    <div class="flex items-center justify-between bg-surface-800/80 border border-white/5 rounded-t-xl px-4 py-2.5">
+                        <div class="flex items-center gap-2">
+                            <div class="flex gap-1.5">
+                                <span class="w-3 h-3 rounded-full bg-red-500/60"></span>
+                                <span class="w-3 h-3 rounded-full bg-yellow-500/60"></span>
+                                <span class="w-3 h-3 rounded-full bg-green-500/60"></span>
+                            </div>
+                            <span class="text-xs text-surface-300/60 font-mono ml-2">${sec.filename}</span>
+                        </div>
+                        <button onclick="copyCode(this)" class="copy-btn text-xs px-3 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-surface-300 transition">
+                            📋 Copy
+                        </button>
+                    </div>
+                    <pre class="!rounded-t-none border border-t-0 border-white/5 bg-surface-950 text-surface-200 font-mono"><code>${escapeHtml(sec.code)}</code></pre>
+                </div>`;
+
+        case 'explain':
+            return `
+                <div class="bg-gradient-to-br from-amber-500/5 to-orange-500/5 border border-amber-500/10 rounded-2xl p-6">
+                    <h3 class="text-lg font-bold text-amber-400 mb-3">${sec.title}</h3>
+                    <div class="text-surface-200 leading-relaxed space-y-2 [&_strong]:text-white [&_code]:bg-white/10 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-brand-300 [&_code]:text-sm [&_code]:font-mono">${sec.content}</div>
+                </div>`;
+
+        default:
+            return '';
+    }
+}
+
+// ───────────── UTILITIES ─────────────
+function escapeHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function copyCode(btn) {
+    const code = btn.closest('.code-block').querySelector('code').textContent;
+    navigator.clipboard.writeText(code).then(() => {
+        btn.textContent = '✅ Copied!';
+        setTimeout(() => btn.textContent = '📋 Copy', 2000);
+    });
+}
+
+function goToStep(id) {
+    currentStep = id;
+    renderSidebar();
+    renderContent();
+    closeSidebar();
+}
+
+function openSidebar() {
+    document.getElementById('sidebar').classList.remove('-translate-x-full');
+    document.getElementById('sidebar-overlay').classList.remove('hidden');
+}
+
+function closeSidebar() {
+    document.getElementById('sidebar').classList.add('-translate-x-full');
+    document.getElementById('sidebar-overlay').classList.add('hidden');
+}
+
+function toggleDark() {
+    isDark = !isDark;
+    document.documentElement.classList.toggle('dark', isDark);
+    document.body.classList.toggle('bg-surface-900', isDark);
+    document.body.classList.toggle('text-surface-200', isDark);
+    document.body.classList.toggle('bg-white', !isDark);
+    document.body.classList.toggle('text-surface-800', !isDark);
+    document.getElementById('theme-icon').textContent = isDark ? '🌙' : '☀️';
+    document.getElementById('theme-label').textContent = isDark ? 'Dark Mode' : 'Light Mode';
+}
+
+function saveChecklist() {
+    const checks = {};
+    document.querySelectorAll('.checklist-item input').forEach(cb => {
+        checks[cb.id] = cb.checked;
+    });
+    localStorage.setItem('bm-checklist', JSON.stringify(checks));
+}
+
+function loadChecklist() {
+    try {
+        const saved = JSON.parse(localStorage.getItem('bm-checklist') || '{}');
+        Object.entries(saved).forEach(([id, checked]) => {
+            const el = document.getElementById(id);
+            if (el) el.checked = checked;
+        });
+    } catch {}
+}
+
+// ───────────── KEYBOARD NAV ─────────────
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' && currentStep < steps.length - 1) goToStep(currentStep + 1);
+    if (e.key === 'ArrowLeft' && currentStep > 0) goToStep(currentStep - 1);
+});
+
+// ───────────── INIT ─────────────
+mermaid.initialize({
+    startOnLoad: false,
+    theme: 'dark',
+    themeVariables: {
+        primaryColor: '#4f46e5',
+        primaryTextColor: '#fff',
+        primaryBorderColor: '#6366f1',
+        lineColor: '#94a3b8',
+        secondaryColor: '#1e293b',
+        tertiaryColor: '#0f172a',
+    }
+});
+
+renderSidebar();
+renderContent();
+
+// Load checklist after render
+setTimeout(loadChecklist, 100);
+</script>
+
+</body>
+</html>
