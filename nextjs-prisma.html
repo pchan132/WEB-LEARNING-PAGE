@@ -1,0 +1,2249 @@
+<!DOCTYPE html>
+<html lang="th" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Next.js & Prisma Masterclass: From Simple to Professional</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['IBM Plex Sans Thai', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#eef2ff', 100: '#e0e7ff', 200: '#c7d2fe',
+                            300: '#a5b4fc', 400: '#818cf8', 500: '#6366f1',
+                            600: '#4f46e5', 700: '#4338ca', 800: '#3730a3', 900: '#312e81',
+                        },
+                        surface: {
+                            50: '#f8fafc', 100: '#f1f5f9', 200: '#e2e8f0',
+                            700: '#1e293b', 750: '#172033', 800: '#0f172a', 900: '#020617',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * { scrollbar-width: thin; scrollbar-color: #334155 transparent; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+        .code-block { counter-reset: line; }
+        .code-block .line { counter-increment: line; }
+        .code-block .line::before {
+            content: counter(line);
+            display: inline-block;
+            width: 2.5rem;
+            text-align: right;
+            margin-right: 1rem;
+            color: #475569;
+            font-size: 0.75rem;
+            user-select: none;
+        }
+        .phase-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .phase-card:hover { transform: translateY(-2px); }
+        .sidebar-link.active {
+            background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(99,102,241,0.05));
+            border-left-color: #6366f1;
+            color: #a5b4fc;
+        }
+        .sidebar-link { transition: all 0.2s ease; }
+        .fade-in { animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .glow-border { box-shadow: 0 0 0 1px rgba(99,102,241,0.3), 0 0 20px rgba(99,102,241,0.1); }
+        .checklist-item input:checked + span { text-decoration: line-through; color: #64748b; }
+        .tag { font-size: 0.65rem; padding: 2px 8px; border-radius: 9999px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+        pre code { font-size: 0.8rem; line-height: 1.7; }
+        .tooltip { position: relative; }
+        .tooltip:hover::after {
+            content: attr(data-tip);
+            position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
+            background: #1e293b; color: #e2e8f0; padding: 4px 10px; border-radius: 6px;
+            font-size: 0.7rem; white-space: nowrap; z-index: 50;
+        }
+        .mobile-overlay { transition: opacity 0.3s ease; }
+        .progress-ring { transition: stroke-dashoffset 0.5s ease; }
+        mark { background: rgba(99,102,241,0.25); color: #c7d2fe; padding: 1px 4px; border-radius: 3px; }
+    </style>
+</head>
+<body class="bg-surface-900 text-slate-300 font-sans antialiased">
+
+<!-- Mobile Menu Button -->
+<button id="mobileMenuBtn" class="fixed top-4 left-4 z-50 lg:hidden bg-surface-800 border border-slate-700 rounded-lg p-2 hover:bg-surface-700 transition-colors">
+    <svg class="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+</button>
+
+<!-- Mobile Overlay -->
+<div id="mobileOverlay" class="mobile-overlay fixed inset-0 bg-black/60 z-30 hidden lg:hidden" onclick="toggleSidebar()"></div>
+
+<!-- Sidebar -->
+<aside id="sidebar" class="fixed left-0 top-0 h-full w-72 bg-surface-800 border-r border-slate-700/50 z-40 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 flex flex-col">
+    <!-- Logo -->
+    <div class="p-5 border-b border-slate-700/50">
+        <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            </div>
+            <div>
+                <h1 class="text-sm font-bold text-white leading-tight">Next.js & Prisma</h1>
+                <p class="text-[0.65rem] text-slate-500 font-medium">MASTERCLASS</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search -->
+    <div class="p-4">
+        <div class="relative">
+            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <input id="searchInput" type="text" placeholder="ค้นหาเนื้อหา..." class="w-full bg-surface-900 border border-slate-700 rounded-lg pl-9 pr-3 py-2 text-sm text-slate-300 placeholder-slate-500 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/30 transition-colors" oninput="handleSearch(this.value)">
+        </div>
+    </div>
+
+    <!-- Progress -->
+    <div class="px-5 pb-3">
+        <div class="flex items-center justify-between text-xs mb-2">
+            <span class="text-slate-500">ความคืบหน้า</span>
+            <span id="progressText" class="text-brand-400 font-semibold">0 / 6</span>
+        </div>
+        <div class="w-full bg-surface-900 rounded-full h-1.5">
+            <div id="progressBar" class="bg-gradient-to-r from-brand-500 to-brand-400 h-1.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="flex-1 overflow-y-auto px-3 py-2 space-y-1" id="sidebarNav">
+        <a href="#" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg border-l-2 border-transparent text-sm text-slate-400 hover:text-slate-200 hover:bg-surface-700/50" data-phase="0" onclick="showPhase(0); return false;">
+            <span class="w-6 h-6 rounded-md bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 flex items-center justify-center text-xs font-bold text-emerald-400">⚡</span>
+            <span>หน้าแรก</span>
+        </a>
+        <a href="#" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg border-l-2 border-transparent text-sm text-slate-400 hover:text-slate-200 hover:bg-surface-700/50" data-phase="1" onclick="showPhase(1); return false;">
+            <span class="w-6 h-6 rounded-md bg-gradient-to-br from-green-500/20 to-green-600/20 flex items-center justify-center text-xs font-bold text-green-400">1</span>
+            <div class="flex-1 min-w-0">
+                <span class="block truncate">Simple CRUD</span>
+                <span class="text-[0.6rem] text-slate-600">เริ่มต้นให้เป็น</span>
+            </div>
+        </a>
+        <a href="#" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg border-l-2 border-transparent text-sm text-slate-400 hover:text-slate-200 hover:bg-surface-700/50" data-phase="2" onclick="showPhase(2); return false;">
+            <span class="w-6 h-6 rounded-md bg-gradient-to-br from-blue-500/20 to-blue-600/20 flex items-center justify-center text-xs font-bold text-blue-400">2</span>
+            <div class="flex-1 min-w-0">
+                <span class="block truncate">Database Design</span>
+                <span class="text-[0.6rem] text-slate-600">Prisma Schema</span>
+            </div>
+        </a>
+        <a href="#" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg border-l-2 border-transparent text-sm text-slate-400 hover:text-slate-200 hover:bg-surface-700/50" data-phase="3" onclick="showPhase(3); return false;">
+            <span class="w-6 h-6 rounded-md bg-gradient-to-br from-amber-500/20 to-amber-600/20 flex items-center justify-center text-xs font-bold text-amber-400">3</span>
+            <div class="flex-1 min-w-0">
+                <span class="block truncate">Zod Validation</span>
+                <span class="text-[0.6rem] text-slate-600">หัวข้อพิเศษ</span>
+            </div>
+        </a>
+        <a href="#" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg border-l-2 border-transparent text-sm text-slate-400 hover:text-slate-200 hover:bg-surface-700/50" data-phase="4" onclick="showPhase(4); return false;">
+            <span class="w-6 h-6 rounded-md bg-gradient-to-br from-purple-500/20 to-purple-600/20 flex items-center justify-center text-xs font-bold text-purple-400">4</span>
+            <div class="flex-1 min-w-0">
+                <span class="block truncate">Professional Flow</span>
+                <span class="text-[0.6rem] text-slate-600">Error & Revalidation</span>
+            </div>
+        </a>
+        <a href="#" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg border-l-2 border-transparent text-sm text-slate-400 hover:text-slate-200 hover:bg-surface-700/50" data-phase="5" onclick="showPhase(5); return false;">
+            <span class="w-6 h-6 rounded-md bg-gradient-to-br from-pink-500/20 to-pink-600/20 flex items-center justify-center text-xs font-bold text-pink-400">5</span>
+            <div class="flex-1 min-w-0">
+                <span class="block truncate">Advanced UX</span>
+                <span class="text-[0.6rem] text-slate-600">Optimistic Updates</span>
+            </div>
+        </a>
+        <a href="#" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg border-l-2 border-transparent text-sm text-slate-400 hover:text-slate-200 hover:bg-surface-700/50" data-phase="6" onclick="showPhase(6); return false;">
+            <span class="w-6 h-6 rounded-md bg-gradient-to-br from-brand-500/20 to-brand-600/20 flex items-center justify-center text-xs font-bold text-brand-400">6</span>
+            <div class="flex-1 min-w-0">
+                <span class="block truncate">Ultimate Integration</span>
+                <span class="text-[0.6rem] text-slate-600">⭐ Zod + CRUD</span>
+            </div>
+        </a>
+    </nav>
+
+    <!-- Footer -->
+    <div class="p-4 border-t border-slate-700/50">
+        <div class="text-[0.65rem] text-slate-600 text-center">
+            Built with ❤️ for Thai Developers<br>
+            Next.js 14 + Prisma + Zod
+        </div>
+    </div>
+</aside>
+
+<!-- Main Content -->
+<main class="lg:ml-72 min-h-screen">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+
+        <!-- ============ PHASE 0: HOME ============ -->
+        <section id="phase-0" class="phase-content fade-in">
+            <!-- Hero -->
+            <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-brand-900/50 via-surface-800 to-purple-900/30 border border-brand-500/20 p-8 sm:p-12 mb-10">
+                <div class="absolute top-0 right-0 w-64 h-64 bg-brand-500/5 rounded-full blur-3xl"></div>
+                <div class="absolute bottom-0 left-0 w-48 h-48 bg-purple-500/5 rounded-full blur-3xl"></div>
+                <div class="relative">
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="tag bg-brand-500/20 text-brand-300">Masterclass</span>
+                        <span class="tag bg-emerald-500/20 text-emerald-300">2024 Edition</span>
+                    </div>
+                    <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4 leading-tight">
+                        The Next.js & Prisma<br>
+                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 to-purple-400">Masterclass</span>
+                    </h1>
+                    <p class="text-lg text-slate-400 mb-6 max-w-2xl">จาก CRUD ง่ายๆ สู่ระบบระดับมืออาชีพ — เรียนรู้ทุกขั้นตอน<br>ตั้งแต่ Server Actions, Prisma ORM, Zod Validation ไปจนถึง Optimistic Updates</p>
+                    <div class="flex flex-wrap gap-3">
+                        <button onclick="showPhase(1)" class="px-5 py-2.5 bg-brand-600 hover:bg-brand-500 text-white font-semibold rounded-lg transition-colors text-sm">
+                            🚀 เริ่มเรียนเลย
+                        </button>
+                        <button onclick="showPhase(6)" class="px-5 py-2.5 bg-surface-700 hover:bg-surface-600 text-slate-300 font-medium rounded-lg border border-slate-600 transition-colors text-sm">
+                            ⭐ ดู Ultimate Integration
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Phase Cards -->
+            <h2 class="text-xl font-bold text-white mb-6">📚 เนื้อหาทั้งหมด 6 Phases</h2>
+            <div class="grid sm:grid-cols-2 gap-4 mb-10">
+                <div onclick="showPhase(1)" class="phase-card cursor-pointer bg-surface-800 border border-slate-700/50 rounded-xl p-5 hover:border-green-500/30">
+                    <div class="flex items-center gap-3 mb-3">
+                        <span class="w-8 h-8 rounded-lg bg-green-500/10 flex items-center justify-center text-sm font-bold text-green-400">1</span>
+                        <h3 class="font-semibold text-white text-sm">Simple CRUD</h3>
+                        <span class="tag bg-green-500/20 text-green-300 ml-auto">Beginner</span>
+                    </div>
+                    <p class="text-xs text-slate-500 leading-relaxed">เริ่มจากศูนย์! สร้างฟอร์ม → Server Action → Save DB แบบสั้นที่สุด</p>
+                </div>
+                <div onclick="showPhase(2)" class="phase-card cursor-pointer bg-surface-800 border border-slate-700/50 rounded-xl p-5 hover:border-blue-500/30">
+                    <div class="flex items-center gap-3 mb-3">
+                        <span class="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-sm font-bold text-blue-400">2</span>
+                        <h3 class="font-semibold text-white text-sm">Database Design</h3>
+                        <span class="tag bg-blue-500/20 text-blue-300 ml-auto">Prisma</span>
+                    </div>
+                    <p class="text-xs text-slate-500 leading-relaxed">ออกแบบ Schema ระบบ Project Tracker พร้อม Migration จริง</p>
+                </div>
+                <div onclick="showPhase(3)" class="phase-card cursor-pointer bg-surface-800 border border-slate-700/50 rounded-xl p-5 hover:border-amber-500/30">
+                    <div class="flex items-center gap-3 mb-3">
+                        <span class="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center text-sm font-bold text-amber-400">3</span>
+                        <h3 class="font-semibold text-white text-sm">Zod Validation</h3>
+                        <span class="tag bg-amber-500/20 text-amber-300 ml-auto">Special</span>
+                    </div>
+                    <p class="text-xs text-slate-500 leading-relaxed">ทำไมต้อง Validate? เรียนรู้ Zod Schema แบบจับมือทำ</p>
+                </div>
+                <div onclick="showPhase(4)" class="phase-card cursor-pointer bg-surface-800 border border-slate-700/50 rounded-xl p-5 hover:border-purple-500/30">
+                    <div class="flex items-center gap-3 mb-3">
+                        <span class="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center text-sm font-bold text-purple-400">4</span>
+                        <h3 class="font-semibold text-white text-sm">Professional Flow</h3>
+                        <span class="tag bg-purple-500/20 text-purple-300 ml-auto">Pro</span>
+                    </div>
+                    <p class="text-xs text-slate-500 leading-relaxed">Error Handling, try...catch และ revalidatePath แบบมืออาชีพ</p>
+                </div>
+                <div onclick="showPhase(5)" class="phase-card cursor-pointer bg-surface-800 border border-slate-700/50 rounded-xl p-5 hover:border-pink-500/30">
+                    <div class="flex items-center gap-3 mb-3">
+                        <span class="w-8 h-8 rounded-lg bg-pink-500/10 flex items-center justify-center text-sm font-bold text-pink-400">5</span>
+                        <h3 class="font-semibold text-white text-sm">Advanced UX</h3>
+                        <span class="tag bg-pink-500/20 text-pink-300 ml-auto">UX</span>
+                    </div>
+                    <p class="text-xs text-slate-500 leading-relaxed">Optimistic Updates, Loading States และ Skeleton UI</p>
+                </div>
+                <div onclick="showPhase(6)" class="phase-card cursor-pointer bg-surface-800 border border-brand-500/30 rounded-xl p-5 hover:border-brand-400/50 glow-border">
+                    <div class="flex items-center gap-3 mb-3">
+                        <span class="w-8 h-8 rounded-lg bg-brand-500/10 flex items-center justify-center text-sm font-bold text-brand-400">6</span>
+                        <h3 class="font-semibold text-white text-sm">Ultimate Integration</h3>
+                        <span class="tag bg-brand-500/20 text-brand-300 ml-auto">⭐ เน้น</span>
+                    </div>
+                    <p class="text-xs text-slate-500 leading-relaxed">รวมร่าง Zod + Prisma + Server Actions แบบ Production-Ready</p>
+                </div>
+            </div>
+
+            <!-- Tech Stack -->
+            <div class="bg-surface-800 border border-slate-700/50 rounded-xl p-6">
+                <h3 class="font-semibold text-white mb-4">🛠️ Tech Stack ที่ใช้ในคอร์สนี้</h3>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div class="bg-surface-900 rounded-lg p-3 text-center">
+                        <div class="text-2xl mb-1">▲</div>
+                        <div class="text-xs font-semibold text-white">Next.js 14</div>
+                        <div class="text-[0.6rem] text-slate-500">App Router</div>
+                    </div>
+                    <div class="bg-surface-900 rounded-lg p-3 text-center">
+                        <div class="text-2xl mb-1">◆</div>
+                        <div class="text-xs font-semibold text-white">Prisma</div>
+                        <div class="text-[0.6rem] text-slate-500">ORM</div>
+                    </div>
+                    <div class="bg-surface-900 rounded-lg p-3 text-center">
+                        <div class="text-2xl mb-1">🛡️</div>
+                        <div class="text-xs font-semibold text-white">Zod</div>
+                        <div class="text-[0.6rem] text-slate-500">Validation</div>
+                    </div>
+                    <div class="bg-surface-900 rounded-lg p-3 text-center">
+                        <div class="text-2xl mb-1">⚛️</div>
+                        <div class="text-xs font-semibold text-white">React 18</div>
+                        <div class="text-[0.6rem] text-slate-500">Server Components</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============ PHASE 1: SIMPLE CRUD ============ -->
+        <section id="phase-1" class="phase-content hidden fade-in">
+            <div class="flex items-center gap-3 mb-2">
+                <span class="tag bg-green-500/20 text-green-300">Phase 1</span>
+                <span class="tag bg-slate-700 text-slate-400">Beginner</span>
+            </div>
+            <h2 class="text-3xl font-bold text-white mb-2">The Simple CRUD</h2>
+            <p class="text-slate-400 mb-8">เริ่มต้นให้เป็น — เห็น Data Flow จาก UI → DB ในแบบที่สั้นที่สุด</p>
+
+            <!-- Concept -->
+            <div class="bg-surface-800 border border-slate-700/50 rounded-xl p-6 mb-6">
+                <h3 class="text-lg font-semibold text-white mb-4">🧠 แนวคิดหลัก</h3>
+                <p class="text-sm text-slate-400 leading-relaxed mb-4">
+                    เฮ้! ก่อนอื่นเลยนะ — ลืมเรื่อง Library เสริมไปก่อน ลืม Validation ไปก่อน ลืมทุกอย่างไปก่อน 
+                    เรากำลังจะทำ CRUD ที่ <strong class="text-white">ง่ายที่สุดในโลก</strong> ครบทั้ง 4 ตัว:
+                </p>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center mb-4">
+                    <div class="bg-green-500/10 border border-green-500/20 rounded-lg px-3 py-3">
+                        <div class="text-green-400 font-bold text-lg mb-1">C</div>
+                        <div class="text-green-400 font-semibold text-xs">Create</div>
+                        <div class="text-[0.6rem] text-slate-500 mt-0.5">prisma.create()</div>
+                    </div>
+                    <div class="bg-blue-500/10 border border-blue-500/20 rounded-lg px-3 py-3">
+                        <div class="text-blue-400 font-bold text-lg mb-1">R</div>
+                        <div class="text-blue-400 font-semibold text-xs">Read</div>
+                        <div class="text-[0.6rem] text-slate-500 mt-0.5">prisma.findMany()</div>
+                    </div>
+                    <div class="bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-3">
+                        <div class="text-amber-400 font-bold text-lg mb-1">U</div>
+                        <div class="text-amber-400 font-semibold text-xs">Update</div>
+                        <div class="text-[0.6rem] text-slate-500 mt-0.5">prisma.update()</div>
+                    </div>
+                    <div class="bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-3">
+                        <div class="text-red-400 font-bold text-lg mb-1">D</div>
+                        <div class="text-red-400 font-semibold text-xs">Delete</div>
+                        <div class="text-[0.6rem] text-slate-500 mt-0.5">prisma.delete()</div>
+                    </div>
+                </div>
+                <div class="flex flex-col sm:flex-row items-center gap-3 text-center mb-4">
+                    <div class="bg-green-500/10 border border-green-500/20 rounded-lg px-4 py-3 flex-1">
+                        <div class="text-green-400 font-semibold text-sm">1. ฟอร์ม HTML</div>
+                        <div class="text-xs text-slate-500">User กรอกข้อมูล</div>
+                    </div>
+                    <svg class="w-5 h-5 text-slate-600 rotate-90 sm:rotate-0 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                    <div class="bg-blue-500/10 border border-blue-500/20 rounded-lg px-4 py-3 flex-1">
+                        <div class="text-blue-400 font-semibold text-sm">2. Server Action</div>
+                        <div class="text-xs text-slate-500">รับค่าจากฟอร์ม</div>
+                    </div>
+                    <svg class="w-5 h-5 text-slate-600 rotate-90 sm:rotate-0 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                    <div class="bg-purple-500/10 border border-purple-500/20 rounded-lg px-4 py-3 flex-1">
+                        <div class="text-purple-400 font-semibold text-sm">3. Prisma</div>
+                        <div class="text-xs text-slate-500">จัดการ Database</div>
+                    </div>
+                </div>
+                <div class="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3">
+                    <p class="text-xs text-amber-300">💡 <strong>จุดสำคัญ:</strong> ใน Next.js App Router เราใช้ <code class="bg-amber-500/20 px-1.5 py-0.5 rounded text-xs">Server Actions</code> แทน API Route แบบเดิม — มันคือฟังก์ชันที่รันบน Server โดยตรง ไม่ต้อง fetch ไป /api เอง!</p>
+                </div>
+            </div>
+
+            <!-- Code: Server Action -->
+            <div class="bg-surface-800 border border-slate-700/50 rounded-xl overflow-hidden mb-6">
+                <div class="flex items-center justify-between px-4 py-3 bg-surface-900/50 border-b border-slate-700/50">
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-red-500/60"></span>
+                        <span class="w-3 h-3 rounded-full bg-yellow-500/60"></span>
+                        <span class="w-3 h-3 rounded-full bg-green-500/60"></span>
+                        <span class="text-xs text-slate-500 ml-2 font-mono">app/actions.ts</span>
+                    </div>
+                    <button onclick="copyCode(this)" class="text-xs text-slate-500 hover:text-brand-400 transition-colors flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                        Copy
+                    </button>
+                </div>
+                <pre class="p-4 overflow-x-auto"><code class="text-sm font-mono code-block"><span class="line"><span class="text-slate-500">// app/actions.ts</span></span>
+<span class="line"><span class="text-purple-400">"use server"</span>  <span class="text-slate-500">// ← บอก Next.js ว่านี่คือ Server-side code</span></span>
+<span class="line"></span>
+<span class="line"><span class="text-blue-400">import</span> { prisma } <span class="text-blue-400">from</span> <span class="text-green-400">"@/lib/prisma"</span></span>
+<span class="line"><span class="text-blue-400">import</span> { revalidatePath } <span class="text-blue-400">from</span> <span class="text-green-400">"next/cache"</span></span>
+<span class="line"></span>
+<span class="line"><span class="text-slate-500">// ✅ CREATE — เพิ่ม Project ใหม่</span></span>
+<span class="line"><span class="text-blue-400">export async function</span> <span class="text-yellow-300">createProject</span>(<span class="text-orange-300">formData</span>: <span class="text-green-300">FormData</span>) {</span>
+<span class="line">  <span class="text-blue-400">const</span> name = formData.<span class="text-yellow-300">get</span>(<span class="text-green-400">"name"</span>) <span class="text-blue-400">as</span> <span class="text-green-300">string</span></span>
+<span class="line">  <span class="text-blue-400">const</span> description = formData.<span class="text-yellow-300">get</span>(<span class="text-green-400">"description"</span>) <span class="text-blue-400">as</span> <span class="text-green-300">string</span></span>
+<span class="line"></span>
+<span class="line">  <span class="text-blue-400">await</span> prisma.project.<span class="text-yellow-300">create</span>({</span>
+<span class="line">    data: { name, description }</span>
+<span class="line">  })</span>
+<span class="line"></span>
+<span class="line">  <span class="text-yellow-300">revalidatePath</span>(<span class="text-green-400">"/"</span>)</span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line"><span class="text-slate-500">// ✏️ UPDATE — แก้ไข Project</span></span>
+<span class="line"><span class="text-blue-400">export async function</span> <span class="text-yellow-300">updateProject</span>(<span class="text-orange-300">formData</span>: <span class="text-green-300">FormData</span>) {</span>
+<span class="line">  <span class="text-blue-400">const</span> id = formData.<span class="text-yellow-300">get</span>(<span class="text-green-400">"id"</span>) <span class="text-blue-400">as</span> <span class="text-green-300">string</span></span>
+<span class="line">  <span class="text-blue-400">const</span> name = formData.<span class="text-yellow-300">get</span>(<span class="text-green-400">"name"</span>) <span class="text-blue-400">as</span> <span class="text-green-300">string</span></span>
+<span class="line">  <span class="text-blue-400">const</span> description = formData.<span class="text-yellow-300">get</span>(<span class="text-green-400">"description"</span>) <span class="text-blue-400">as</span> <span class="text-green-300">string</span></span>
+<span class="line"></span>
+<span class="line">  <span class="text-blue-400">await</span> prisma.project.<span class="text-yellow-300">update</span>({</span>
+<span class="line">    where: { id },          <span class="text-slate-500">// ← หา record ที่ต้องการแก้</span></span>
+<span class="line">    data: { name, description }  <span class="text-slate-500">// ← ข้อมูลใหม่</span></span>
+<span class="line">  })</span>
+<span class="line"></span>
+<span class="line">  <span class="text-yellow-300">revalidatePath</span>(<span class="text-green-400">"/"</span>)</span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line"><span class="text-slate-500">// 🗑️ DELETE — ลบ Project</span></span>
+<span class="line"><span class="text-blue-400">export async function</span> <span class="text-yellow-300">deleteProject</span>(<span class="text-orange-300">formData</span>: <span class="text-green-300">FormData</span>) {</span>
+<span class="line">  <span class="text-blue-400">const</span> id = formData.<span class="text-yellow-300">get</span>(<span class="text-green-400">"id"</span>) <span class="text-blue-400">as</span> <span class="text-green-300">string</span></span>
+<span class="line"></span>
+<span class="line">  <span class="text-blue-400">await</span> prisma.project.<span class="text-yellow-300">delete</span>({</span>
+<span class="line">    where: { id }  <span class="text-slate-500">// ← ลบตาม id</span></span>
+<span class="line">  })</span>
+<span class="line"></span>
+<span class="line">  <span class="text-yellow-300">revalidatePath</span>(<span class="text-green-400">"/"</span>)</span>
+<span class="line">}</span></code></pre>
+            </div>
+
+            <!-- Code: Form Component -->
+            <div class="bg-surface-800 border border-slate-700/50 rounded-xl overflow-hidden mb-6">
+                <div class="flex items-center justify-between px-4 py-3 bg-surface-900/50 border-b border-slate-700/50">
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-red-500/60"></span>
+                        <span class="w-3 h-3 rounded-full bg-yellow-500/60"></span>
+                        <span class="w-3 h-3 rounded-full bg-green-500/60"></span>
+                        <span class="text-xs text-slate-500 ml-2 font-mono">app/page.tsx</span>
+                    </div>
+                    <button onclick="copyCode(this)" class="text-xs text-slate-500 hover:text-brand-400 transition-colors flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                        Copy
+                    </button>
+                </div>
+                <pre class="p-4 overflow-x-auto"><code class="text-sm font-mono code-block"><span class="line"><span class="text-slate-500">// app/page.tsx — Server Component (ค่า default)</span></span>
+<span class="line"><span class="text-blue-400">import</span> { prisma } <span class="text-blue-400">from</span> <span class="text-green-400">"@/lib/prisma"</span></span>
+<span class="line"><span class="text-blue-400">import</span> { createProject, deleteProject } <span class="text-blue-400">from</span> <span class="text-green-400">"./actions"</span></span>
+<span class="line"></span>
+<span class="line"><span class="text-blue-400">export default async function</span> <span class="text-yellow-300">HomePage</span>() {</span>
+<span class="line">  <span class="text-slate-500">// ✅ READ — ดึงข้อมูลบน Server ได้เลย! ไม่ต้อง useEffect</span></span>
+<span class="line">  <span class="text-blue-400">const</span> projects = <span class="text-blue-400">await</span> prisma.project.<span class="text-yellow-300">findMany</span>({</span>
+<span class="line">    orderBy: { createdAt: <span class="text-green-400">"desc"</span> }</span>
+<span class="line">  })</span>
+<span class="line"></span>
+<span class="line">  <span class="text-blue-400">return</span> (</span>
+<span class="line">    &lt;<span class="text-red-400">div</span> <span class="text-yellow-300">className</span>=<span class="text-green-400">"max-w-2xl mx-auto p-8"</span>&gt;</span>
+<span class="line">      <span class="text-slate-500">{/* 📝 CREATE — ฟอร์มเพิ่ม Project */}</span></span>
+<span class="line">      &lt;<span class="text-red-400">form</span> <span class="text-yellow-300">action</span>={<span class="text-yellow-300">createProject</span>} <span class="text-yellow-300">className</span>=<span class="text-green-400">"space-y-4 mb-8"</span>&gt;</span>
+<span class="line">        &lt;<span class="text-red-400">input</span></span>
+<span class="line">          <span class="text-yellow-300">name</span>=<span class="text-green-400">"name"</span></span>
+<span class="line">          <span class="text-yellow-300">placeholder</span>=<span class="text-green-400">"ชื่อโปรเจกต์"</span></span>
+<span class="line">          <span class="text-yellow-300">className</span>=<span class="text-green-400">"border p-2 rounded w-full"</span></span>
+<span class="line">          <span class="text-yellow-300">required</span></span>
+<span class="line">        /&gt;</span>
+<span class="line">        &lt;<span class="text-red-400">textarea</span></span>
+<span class="line">          <span class="text-yellow-300">name</span>=<span class="text-green-400">"description"</span></span>
+<span class="line">          <span class="text-yellow-300">placeholder</span>=<span class="text-green-400">"รายละเอียด"</span></span>
+<span class="line">          <span class="text-yellow-300">className</span>=<span class="text-green-400">"border p-2 rounded w-full"</span></span>
+<span class="line">        /&gt;</span>
+<span class="line">        &lt;<span class="text-red-400">button</span> <span class="text-yellow-300">type</span>=<span class="text-green-400">"submit"</span> <span class="text-yellow-300">className</span>=<span class="text-green-400">"bg-blue-500 text-white px-4 py-2 rounded"</span>&gt;</span>
+<span class="line">          สร้างโปรเจกต์</span>
+<span class="line">        &lt;/<span class="text-red-400">button</span>&gt;</span>
+<span class="line">      &lt;/<span class="text-red-400">form</span>&gt;</span>
+<span class="line"></span>
+<span class="line">      <span class="text-slate-500">{/* 📋 READ — แสดงรายการ + ปุ่มแก้ไข/ลบ */}</span></span>
+<span class="line">      &lt;<span class="text-red-400">ul</span> <span class="text-yellow-300">className</span>=<span class="text-green-400">"space-y-2"</span>&gt;</span>
+<span class="line">        {projects.<span class="text-yellow-300">map</span>((p) =&gt; (</span>
+<span class="line">          &lt;<span class="text-red-400">li</span> <span class="text-yellow-300">key</span>={p.id} <span class="text-yellow-300">className</span>=<span class="text-green-400">"border p-4 rounded"</span>&gt;</span>
+<span class="line">            &lt;<span class="text-red-400">h3</span> <span class="text-yellow-300">className</span>=<span class="text-green-400">"font-bold"</span>&gt;{p.name}&lt;/<span class="text-red-400">h3</span>&gt;</span>
+<span class="line">            &lt;<span class="text-red-400">p</span> <span class="text-yellow-300">className</span>=<span class="text-green-400">"text-gray-500"</span>&gt;{p.description}&lt;/<span class="text-red-400">p</span>&gt;</span>
+<span class="line"></span>
+<span class="line">            <span class="text-slate-500">{/* 🗑️ DELETE — ปุ่มลบ (ง่ายที่สุด!) */}</span></span>
+<span class="line">            &lt;<span class="text-red-400">form</span> <span class="text-yellow-300">action</span>={<span class="text-yellow-300">deleteProject</span>} <span class="text-yellow-300">className</span>=<span class="text-green-400">"mt-2"</span>&gt;</span>
+<span class="line">              &lt;<span class="text-red-400">input</span> <span class="text-yellow-300">type</span>=<span class="text-green-400">"hidden"</span> <span class="text-yellow-300">name</span>=<span class="text-green-400">"id"</span> <span class="text-yellow-300">value</span>={p.id} /&gt;</span>
+<span class="line">              &lt;<span class="text-red-400">button</span> <span class="text-yellow-300">className</span>=<span class="text-green-400">"text-red-500 text-sm hover:underline"</span>&gt;</span>
+<span class="line">                ลบ</span>
+<span class="line">              &lt;/<span class="text-red-400">button</span>&gt;</span>
+<span class="line">            &lt;/<span class="text-red-400">form</span>&gt;</span>
+<span class="line">          &lt;/<span class="text-red-400">li</span>&gt;</span>
+<span class="line">        ))}</span>
+<span class="line">      &lt;/<span class="text-red-400">ul</span>&gt;</span>
+<span class="line">    &lt;/<span class="text-red-400">div</span>&gt;</span>
+<span class="line">  )</span>
+<span class="line">}</span></code></pre>
+            </div>
+
+            <!-- Code: Edit Form Component -->
+            <div class="bg-surface-800 border border-slate-700/50 rounded-xl overflow-hidden mb-6">
+                <div class="flex items-center justify-between px-4 py-3 bg-surface-900/50 border-b border-slate-700/50">
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-red-500/60"></span>
+                        <span class="w-3 h-3 rounded-full bg-yellow-500/60"></span>
+                        <span class="w-3 h-3 rounded-full bg-green-500/60"></span>
+                        <span class="text-xs text-slate-500 ml-2 font-mono">app/projects/[id]/edit/page.tsx — UPDATE</span>
+                    </div>
+                    <button onclick="copyCode(this)" class="text-xs text-slate-500 hover:text-brand-400 transition-colors flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                        Copy
+                    </button>
+                </div>
+                <pre class="p-4 overflow-x-auto"><code class="text-sm font-mono code-block"><span class="line"><span class="text-slate-500">// app/projects/[id]/edit/page.tsx</span></span>
+<span class="line"><span class="text-slate-500">// ✏️ หน้าฟอร์มแก้ไข — ใช้ Dynamic Route [id]</span></span>
+<span class="line"></span>
+<span class="line"><span class="text-blue-400">import</span> { prisma } <span class="text-blue-400">from</span> <span class="text-green-400">"@/lib/prisma"</span></span>
+<span class="line"><span class="text-blue-400">import</span> { updateProject } <span class="text-blue-400">from</span> <span class="text-green-400">"@/app/actions"</span></span>
+<span class="line"><span class="text-blue-400">import</span> { notFound } <span class="text-blue-400">from</span> <span class="text-green-400">"next/navigation"</span></span>
+<span class="line"></span>
+<span class="line"><span class="text-blue-400">export default async function</span> <span class="text-yellow-300">EditPage</span>({</span>
+<span class="line">  params,</span>
+<span class="line">}: {</span>
+<span class="line">  params: { id: <span class="text-green-300">string</span> }</span>
+<span class="line">}) {</span>
+<span class="line">  <span class="text-slate-500">// ดึงข้อมูลเดิมมาแสดงในฟอร์ม</span></span>
+<span class="line">  <span class="text-blue-400">const</span> project = <span class="text-blue-400">await</span> prisma.project.<span class="text-yellow-300">findUnique</span>({</span>
+<span class="line">    where: { id: params.id }</span>
+<span class="line">  })</span>
+<span class="line"></span>
+<span class="line">  <span class="text-blue-400">if</span> (!project) <span class="text-yellow-300">notFound</span>()  <span class="text-slate-500">// ← ถ้าไม่เจอ → 404</span></span>
+<span class="line"></span>
+<span class="line">  <span class="text-blue-400">return</span> (</span>
+<span class="line">    &lt;<span class="text-red-400">form</span> <span class="text-yellow-300">action</span>={<span class="text-yellow-300">updateProject</span>} <span class="text-yellow-300">className</span>=<span class="text-green-400">"space-y-4 max-w-lg mx-auto p-8"</span>&gt;</span>
+<span class="line">      <span class="text-slate-500">{/* ส่ง id ไปด้วย (ซ่อนไว้) */}</span></span>
+<span class="line">      &lt;<span class="text-red-400">input</span> <span class="text-yellow-300">type</span>=<span class="text-green-400">"hidden"</span> <span class="text-yellow-300">name</span>=<span class="text-green-400">"id"</span> <span class="text-yellow-300">value</span>={project.id} /&gt;</span>
+<span class="line"></span>
+<span class="line">      &lt;<span class="text-red-400">input</span></span>
+<span class="line">        <span class="text-yellow-300">name</span>=<span class="text-green-400">"name"</span></span>
+<span class="line">        <span class="text-yellow-300">defaultValue</span>={project.name}  <span class="text-slate-500">// ← แสดงค่าเดิม!</span></span>
+<span class="line">        <span class="text-yellow-300">className</span>=<span class="text-green-400">"border p-2 rounded w-full"</span></span>
+<span class="line">        <span class="text-yellow-300">required</span></span>
+<span class="line">      /&gt;</span>
+<span class="line">      &lt;<span class="text-red-400">textarea</span></span>
+<span class="line">        <span class="text-yellow-300">name</span>=<span class="text-green-400">"description"</span></span>
+<span class="line">        <span class="text-yellow-300">defaultValue</span>={project.description ?? <span class="text-green-400">""</span>}</span>
+<span class="line">        <span class="text-yellow-300">className</span>=<span class="text-green-400">"border p-2 rounded w-full"</span></span>
+<span class="line">      /&gt;</span>
+<span class="line">      &lt;<span class="text-red-400">button</span> <span class="text-yellow-300">type</span>=<span class="text-green-400">"submit"</span> <span class="text-yellow-300">className</span>=<span class="text-green-400">"bg-amber-500 text-white px-4 py-2 rounded"</span>&gt;</span>
+<span class="line">        บันทึกการแก้ไข</span>
+<span class="line">      &lt;/<span class="text-red-400">button</span>&gt;</span>
+<span class="line">    &lt;/<span class="text-red-400">form</span>&gt;</span>
+<span class="line">  )</span>
+<span class="line">}</span></code></pre>
+            </div>
+
+            <!-- CRUD Summary Box -->
+            <div class="bg-surface-800 border border-slate-700/50 rounded-xl p-6 mb-6">
+                <h3 class="text-lg font-semibold text-white mb-4">📊 สรุป CRUD ทั้ง 4 ตัว</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="text-left border-b border-slate-700">
+                                <th class="pb-3 text-slate-400 font-medium">Operation</th>
+                                <th class="pb-3 text-slate-400 font-medium">Prisma Method</th>
+                                <th class="pb-3 text-slate-400 font-medium">ใช้ยังไง</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-slate-300">
+                            <tr class="border-b border-slate-700/50">
+                                <td class="py-2.5"><span class="text-green-400 font-semibold">Create</span></td>
+                                <td class="py-2.5"><code class="text-xs bg-surface-900 px-1.5 py-0.5 rounded">prisma.project.create()</code></td>
+                                <td class="py-2.5 text-xs text-slate-500">ส่ง data object ที่ต้องการสร้าง</td>
+                            </tr>
+                            <tr class="border-b border-slate-700/50">
+                                <td class="py-2.5"><span class="text-blue-400 font-semibold">Read</span></td>
+                                <td class="py-2.5"><code class="text-xs bg-surface-900 px-1.5 py-0.5 rounded">prisma.project.findMany()</code></td>
+                                <td class="py-2.5 text-xs text-slate-500">ดึงข้อมูลทั้งหมด หรือ findUnique() ดึงตัวเดียว</td>
+                            </tr>
+                            <tr class="border-b border-slate-700/50">
+                                <td class="py-2.5"><span class="text-amber-400 font-semibold">Update</span></td>
+                                <td class="py-2.5"><code class="text-xs bg-surface-900 px-1.5 py-0.5 rounded">prisma.project.update()</code></td>
+                                <td class="py-2.5 text-xs text-slate-500">ระบุ where + data ที่จะแก้</td>
+                            </tr>
+                            <tr>
+                                <td class="py-2.5"><span class="text-red-400 font-semibold">Delete</span></td>
+                                <td class="py-2.5"><code class="text-xs bg-surface-900 px-1.5 py-0.5 rounded">prisma.project.delete()</code></td>
+                                <td class="py-2.5 text-xs text-slate-500">ระบุ where → ลบทิ้ง</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Update/Delete Tip -->
+            <div class="bg-amber-500/5 border border-amber-500/20 rounded-xl p-5 mb-6">
+                <h4 class="text-amber-400 font-semibold text-sm mb-3">💡 เทคนิค: ส่ง id ผ่าน hidden input</h4>
+                <p class="text-sm text-slate-400 leading-relaxed">
+                    สังเกตมั้ย? ทั้ง Update และ Delete จำเป็นต้องรู้ว่าจะแก้/ลบ <strong class="text-white">ตัวไหน</strong> — เราเลยใส่ 
+                    <code class="bg-surface-700 px-1.5 py-0.5 rounded text-xs">&lt;input type="hidden" name="id" value={p.id} /&gt;</code> 
+                    ไว้ในฟอร์ม เพื่อส่ง id ไปกับ FormData โดยที่ User ไม่เห็น
+                </p>
+            </div>
+
+            <!-- Key Insight -->
+            <div class="bg-green-500/5 border border-green-500/20 rounded-xl p-5 mb-6">
+                <h4 class="text-green-400 font-semibold text-sm mb-3">🔑 Key Insight — ทำไม Server Actions ถึงเจ๋ง?</h4>
+                <ul class="space-y-2 text-sm text-slate-400">
+                    <li class="flex items-start gap-2"><span class="text-green-400 mt-0.5">✓</span> ไม่ต้องสร้าง API Route แยก — เขียนฟังก์ชันเดียวจบ</li>
+                    <li class="flex items-start gap-2"><span class="text-green-400 mt-0.5">✓</span> <code class="bg-surface-700 px-1.5 py-0.5 rounded text-xs">"use server"</code> ทำให้ Next.js รู้ว่าต้องรันบน Server</li>
+                    <li class="flex items-start gap-2"><span class="text-green-400 mt-0.5">✓</span> ผูก <code class="bg-surface-700 px-1.5 py-0.5 rounded text-xs">form action={fn}</code> ได้ตรงๆ — ไม่ต้อง onSubmit + fetch</li>
+                    <li class="flex items-start gap-2"><span class="text-green-400 mt-0.5">✓</span> Server Component ดึงข้อมูลได้เลย ไม่ต้อง useState/useEffect</li>
+                </ul>
+            </div>
+
+            <!-- Checklist -->
+            <div class="bg-surface-800 border border-slate-700/50 rounded-xl p-6">
+                <h3 class="font-semibold text-white mb-4 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+                    Actionable Checklist — Phase 1
+                </h3>
+                <div class="space-y-2">
+                    <label class="checklist-item flex items-center gap-3 p-2 rounded-lg hover:bg-surface-700/50 cursor-pointer text-sm">
+                        <input type="checkbox" class="w-4 h-4 rounded border-slate-600 bg-surface-900 text-brand-500 focus:ring-brand-500/30">
+                        <span class="text-slate-300"><code class="text-xs bg-surface-900 px-1.5 py-0.5 rounded">npx create-next-app@latest</code> — สร้างโปรเจกต์ Next.js</span>
+                    </label>
+                    <label class="checklist-item flex items-center gap-3 p-2 rounded-lg hover:bg-surface-700/50 cursor-pointer text-sm">
+                        <input type="checkbox" class="w-4 h-4 rounded border-slate-600 bg-surface-900 text-brand-500 focus:ring-brand-500/30">
+                        <span class="text-slate-300"><code class="text-xs bg-surface-900 px-1.5 py-0.5 rounded">npm install prisma @prisma/client</code> — ติดตั้ง Prisma</span>
+                    </label>
+                    <label class="checklist-item flex items-center gap-3 p-2 rounded-lg hover:bg-surface-700/50 cursor-pointer text-sm">
+                        <input type="checkbox" class="w-4 h-4 rounded border-slate-600 bg-surface-900 text-brand-500 focus:ring-brand-500/30">
+                        <span class="text-slate-300"><code class="text-xs bg-surface-900 px-1.5 py-0.5 rounded">npx prisma init</code> — สร้าง prisma/schema.prisma</span>
+                    </label>
+                    <label class="checklist-item flex items-center gap-3 p-2 rounded-lg hover:bg-surface-700/50 cursor-pointer text-sm">
+                        <input type="checkbox" class="w-4 h-4 rounded border-slate-600 bg-surface-900 text-brand-500 focus:ring-brand-500/30">
+                        <span class="text-slate-300">สร้างไฟล์ <code class="text-xs bg-surface-900 px-1.5 py-0.5 rounded">lib/prisma.ts</code> — Prisma Client Singleton</span>
+                    </label>
+                    <label class="checklist-item flex items-center gap-3 p-2 rounded-lg hover:bg-surface-700/50 cursor-pointer text-sm">
+                        <input type="checkbox" class="w-4 h-4 rounded border-slate-600 bg-surface-900 text-brand-500 focus:ring-brand-500/30">
+                        <span class="text-slate-300">สร้างไฟล์ <code class="text-xs bg-surface-900 px-1.5 py-0.5 rounded">app/actions.ts</code> — เขียน create, update, delete</span>
+                    </label>
+                    <label class="checklist-item flex items-center gap-3 p-2 rounded-lg hover:bg-surface-700/50 cursor-pointer text-sm">
+                        <input type="checkbox" class="w-4 h-4 rounded border-slate-600 bg-surface-900 text-brand-500 focus:ring-brand-500/30">
+                        <span class="text-slate-300">แก้ไข <code class="text-xs bg-surface-900 px-1.5 py-0.5 rounded">app/page.tsx</code> — ฟอร์มสร้าง + รายการ + ปุ่มลบ</span>
+                    </label>
+                    <label class="checklist-item flex items-center gap-3 p-2 rounded-lg hover:bg-surface-700/50 cursor-pointer text-sm">
+                        <input type="checkbox" class="w-4 h-4 rounded border-slate-600 bg-surface-900 text-brand-500 focus:ring-brand-500/30">
+                        <span class="text-slate-300">สร้าง <code class="text-xs bg-surface-900 px-1.5 py-0.5 rounded">app/projects/[id]/edit/page.tsx</code> — หน้าแก้ไข</span>
+                    </label>
+                    <label class="checklist-item flex items-center gap-3 p-2 rounded-lg hover:bg-surface-700/50 cursor-pointer text-sm">
+                        <input type="checkbox" class="w-4 h-4 rounded border-slate-600 bg-surface-900 text-brand-500 focus:ring-brand-500/30">
+                        <span class="text-slate-300"><code class="text-xs bg-surface-900 px-1.5 py-0.5 rounded">npx prisma db push</code> — Sync Schema กับ DB</span>
+                    </label>
+                    <label class="checklist-item flex items-center gap-3 p-2 rounded-lg hover:bg-surface-700/50 cursor-pointer text-sm">
+                        <input type="checkbox" class="w-4 h-4 rounded border-slate-600 bg-surface-900 text-brand-500 focus:ring-brand-500/30">
+                        <span class="text-slate-300">ทดสอบครบ: สร้าง → ดู → แก้ไข → ลบ ได้สำเร็จ</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <div class="flex justify-between mt-8">
+                <div></div>
+                <button onclick="showPhase(2)" class="flex items-center gap-2 px-4 py-2 bg-surface-800 border border-slate-700 rounded-lg text-sm text-slate-300 hover:text-white hover:border-brand-500/50 transition-colors">
+                    Phase 2: Database Design <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                </button>
+            </div>
+        </section>
+
+        <!-- ============ PHASE 2: DATABASE DESIGN ============ -->
+        <section id="phase-2" class="phase-content hidden fade-in">
+            <div class="flex items-center gap-3 mb-2">
+                <span class="tag bg-blue-500/20 text-blue-300">Phase 2</span>
+                <span class="tag bg-slate-700 text-slate-400">Prisma</span>
+            </div>
+            <h2 class="text-3xl font-bold text-white mb-2">Database Design with Prisma</h2>
+            <p class="text-slate-400 mb-8">ออกแบบ Schema จริง สำหรับระบบ Project Tracker — มี Project กับ Task</p>
+
+            <!-- Concept -->
+            <div class="bg-surface-800 border border-slate-700/50 rounded-xl p-6 mb-6">
+                <h3 class="text-lg font-semibold text-white mb-4">🧠 ทำไมต้อง Prisma?</h3>
+                <p class="text-sm text-slate-400 leading-relaxed mb-4">
+                    พี่จะบอกเลย — Prisma คือสิ่งที่ทำให้การเขียน Database ใน TypeScript เป็นเรื่องสนุก 
+                    แทนที่จะเขียน SQL ดิบๆ เราเขียน Schema เป็นภาษาอ่านง่ายๆ แล้ว Prisma จัดการให้หมด:
+                </p>
+                <div class="grid sm:grid-cols-3 gap-3">
+                    <div class="bg-surface-900 rounded-lg p-3 text-center">
+                        <div class="text-blue-400 font-semibold text-sm mb-1">Schema</div>
+                        <div class="text-xs text-slate-500">เขียน Model เป็นโค้ด<br>ไม่ต้องเขียน SQL</div>
+                    </div>
+                    <div class="bg-surface-900 rounded-lg p-3 text-center">
+                        <div class="text-blue-400 font-semibold text-sm mb-1">Migration</div>
+                        <div class="text-xs text-slate-500">อัปเดต DB อัตโนมัติ<br>ไม่ต้อง ALTER TABLE</div>
+                    </div>
+                    <div class="bg-surface-900 rounded-lg p-3 text-center">
+                        <div class="text-blue-400 font-semibold text-sm mb-1">Type-safe</div>
+                        <div class="text-xs text-slate-500">Auto-complete ใน VS Code<br>ผิด Type รู้ทันที</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 1: Installation -->
+            <div class="bg-surface-800 border border-slate-700/50 rounded-xl p-6 mb-6">
+                <h3 class="text-lg font-semibold text-white mb-4">📦 Step 1: ติดตั้ง Prisma</h3>
+                <p class="text-sm text-slate-400 leading-relaxed mb-4">
+                    ก่อนจะเขียน Schema ได้ ต้องติดตั้ง Prisma ก่อน — มี 2 package ที่ต้องลง:
+                </p>
+                <div class="space-y-3 mb-4">
+                    <div class="bg-surface-900 rounded-lg p-3">
+                        <div class="flex items-center justify-between mb-1">
+                            <code class="text-sm font-mono text-green-400">npm install prisma --save-dev</code>
+                            <span class="tag bg-purple-500/20 text-purple-300">Dev Tool</span>
+                        </div>
+                        <p class="text-xs text-slate-500">Prisma CLI — ใช้สร้าง Migration, generate client, เปิด Studio ฯลฯ</p>
+                    </div>
+                    <div class="bg-surface-900 rounded-lg p-3">
+                        <div class="flex items-center justify-between mb-1">
+                            <code class="text-sm font-mono text-green-400">npm install @prisma/client</code>
+                            <span class="tag bg-blue-500/20 text-blue-300">Runtime</span>
+                        </div>
+                        <p class="text-xs text-slate-500">Prisma Client — ตัวเชื่อมต่อ DB ที่ใช้จริงในโค้ด (prisma.project.create() ฯลฯ)</p>
+                    </div>
+                </div>
+                <div class="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 mb-4">
+                    <p class="text-xs text-amber-300">💡 <strong>สรุป:</strong> <code class="bg-amber-500/20 px-1.5 py-0.5 rounded text-xs">prisma</code> = CLI สำหรับ dev | <code class="bg-amber-500/20 px-1.5 py-0.5 rounded text-xs">@prisma/client</code> = ตัวเชื่อม DB ในโค้ดจริง — ต้องลงทั้งคู่!</p>
+                </div>
+            </div>
+
+            <!-- Step 2: prisma init -->
+            <div class="bg-surface-800 border border-slate-700/50 rounded-xl p-6 mb-6">
+                <h3 class="text-lg font-semibold text-white mb-4">⚡ Step 2: Initialize Prisma</h3>
+                <p class="text-sm text-slate-400 leading-relaxed mb-4">
+                    รันคำสั่งนี้เพื่อสร้างไฟล์ตั้งต้น:
+                </p>
+                <div class="bg-surface-900 rounded-lg p-3 mb-4">
+                    <div class="flex items-center justify-between mb-1">
+                        <code class="text-sm font-mono text-green-400">npx prisma init</code>
+                    </div>
+                    <p class="text-xs text-slate-500 mb-3">สร้างโฟลเดอร์และไฟล์ให้อัตโนมัติ:</p>
+                    <div class="bg-surface-800 rounded-lg p-3 font-mono text-xs">
+                        <div class="text-slate-400">📁 โปรเจกต์ของคุณ</div>
+                        <div class="text-slate-500 ml-4">├── <span class="text-blue-400">prisma/</span></div>
+                        <div class="text-slate-500 ml-8">└── <span class="text-yellow-300">schema.prisma</span> <span class="text-slate-600">← เขียน Model ที่นี่</span></div>
+                        <div class="text-slate-500 ml-4">└── <span class="text-green-400">.env</span> <span class="text-slate-600">← ใส่ DATABASE_URL ที่นี่</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: .env setup -->
+            <div class="bg-surface-800 border border-slate-700/50 rounded-xl overflow-hidden mb-6">
+                <div class="flex items-center justify-between px-4 py-3 bg-surface-900/50 border-b border-slate-700/50">
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-red-500/60"></span>
+                        <span class="w-3 h-3 rounded-full bg-yellow-500/60"></span>
+                        <span class="w-3 h-3 rounded-full bg-green-500/60"></span>
+                        <span class="text-xs text-slate-500 ml-2 font-mono">.env</span>
+                    </div>
+                    <button onclick="copyCode(this)" class="text-xs text-slate-500 hover:text-brand-400 transition-colors flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                        Copy
+                    </button>
+                </div>
+                <pre class="p-4 overflow-x-auto"><code class="text-sm font-mono code-block"><span class="line"><span class="text-slate-500"># .env — ตั้งค่า Database URL</span></span>
+<span class="line"></span>
+<span class="line"><span class="text-slate-500"># 🐘 PostgreSQL (แนะนำสำหรับ Production)</span></span>
+<span class="line"><span class="text-yellow-300">DATABASE_URL</span>=<span class="text-green-400">"postgresql://USER:PASSWORD@HOST:5432/DBNAME"</span></span>
+<span class="line"></span>
+<span class="line"><span class="text-slate-500"># 🪶 SQLite (ง่ายสุด! แนะนำสำหรับเริ่มต้น/ลองเล่น)</span></span>
+<span class="line"><span class="text-slate-500"># DATABASE_URL="file:./dev.db"</span></span>
+<span class="line"></span>
+<span class="line"><span class="text-slate-500"># 💡 ถ้าใช้ SQLite → เปลี่ยน provider ใน schema.prisma เป็น "sqlite"</span></span></code></pre>
+            </div>
+
+            <!-- SQLite vs PostgreSQL Tip -->
+            <div class="bg-blue-500/5 border border-blue-500/20 rounded-xl p-5 mb-6">
+                <h4 class="text-blue-400 font-semibold text-sm mb-3">🤔 SQLite vs PostgreSQL — เลือกอะไรดี?</h4>
+                <div class="grid sm:grid-cols-2 gap-3">
+                    <div class="bg-surface-800 rounded-lg p-3">
+                        <div class="text-green-400 font-semibold text-sm mb-2">🪶 SQLite <span class="text-xs text-slate-500 font-normal">— เริ่มต้น</span></div>
+                        <ul class="text-xs text-slate-400 space-y-1">
+                            <li>✅ ไม่ต้องติดตั้ง DB Server</li>
+                            <li>✅ เก็บเป็นไฟล์ <code class="text-xs bg-surface-900 px-1 rounded">dev.db</code> ในโปรเจกต์</li>
+                            <li>✅ เหมาะสำหรับลองเล่น/prototype</li>
+                            <li>⚠️ ไม่เหมาะ production</li>
+                        </ul>
+                    </div>
+                    <div class="bg-surface-800 rounded-lg p-3">
+                        <div class="text-blue-400 font-semibold text-sm mb-2">🐘 PostgreSQL <span class="text-xs text-slate-500 font-normal">— Production</span></div>
+                        <ul class="text-xs text-slate-400 space-y-1">
+                            <li>✅ รองรับ concurrent users</li>
+                            <li>✅ ใช้ได้กับ Vercel, Railway, Supabase</li>
+                            <li>✅ มี Advanced features (JSON, Full-text search)</li>
+                            <li>⚠️ ต้องมี DB Server (local หรือ cloud)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 4: Schema Code -->
+            <div class="bg-surface-800 border border-slate-700/50 rounded-xl overflow-hidden mb-6">
+                <div class="flex items-center justify-between px-4 py-3 bg-surface-900/50 border-b border-slate-700/50">
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-red-500/60"></span>
+                        <span class="w-3 h-3 rounded-full bg-yellow-500/60"></span>
+                        <span class="w-3 h-3 rounded-full bg-green-500/60"></span>
+                        <span class="text-xs text-slate-500 ml-2 font-mono">prisma/schema.prisma</span>
+                    </div>
+                    <button onclick="copyCode(this)" class="text-xs text-slate-500 hover:text-brand-400 transition-colors flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                        Copy
+                    </button>
+                </div>
+                <pre class="p-4 overflow-x-auto"><code class="text-sm font-mono code-block"><span class="line"><span class="text-slate-500">// prisma/schema.prisma</span></span>
+<span class="line"></span>
+<span class="line"><span class="text-purple-400">generator</span> <span class="text-yellow-300">client</span> {</span>
+<span class="line">  provider = <span class="text-green-400">"prisma-client-js"</span></span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line"><span class="text-purple-400">datasource</span> <span class="text-yellow-300">db</span> {</span>
+<span class="line">  provider = <span class="text-green-400">"postgresql"</span>  <span class="text-slate-500">// หรือ "sqlite" สำหรับลองในเครื่อง</span></span>
+<span class="line">  url      = <span class="text-yellow-300">env</span>(<span class="text-green-400">"DATABASE_URL"</span>)</span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line"><span class="text-slate-500">// 📂 Model: Project (โปรเจกต์หลัก)</span></span>
+<span class="line"><span class="text-purple-400">model</span> <span class="text-yellow-300">Project</span> {</span>
+<span class="line">  id          <span class="text-green-300">String</span>   <span class="text-blue-400">@id</span> <span class="text-blue-400">@default</span>(<span class="text-yellow-300">cuid</span>())</span>
+<span class="line">  name        <span class="text-green-300">String</span>          <span class="text-slate-500">// ชื่อโปรเจกต์</span></span>
+<span class="line">  description <span class="text-green-300">String?</span>         <span class="text-slate-500">// รายละเอียด (optional)</span></span>
+<span class="line">  status      <span class="text-green-300">ProjectStatus</span> <span class="text-blue-400">@default</span>(<span class="text-yellow-300">ACTIVE</span>)</span>
+<span class="line">  createdAt   <span class="text-green-300">DateTime</span> <span class="text-blue-400">@default</span>(<span class="text-yellow-300">now</span>())</span>
+<span class="line">  updatedAt   <span class="text-green-300">DateTime</span> <span class="text-blue-400">@updatedAt</span></span>
+<span class="line"></span>
+<span class="line">  <span class="text-slate-500">// 🔗 ความสัมพันธ์: 1 Project มีหลาย Task</span></span>
+<span class="line">  tasks       <span class="text-green-300">Task</span>[]</span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line"><span class="text-slate-500">// ✅ Model: Task (งานย่อย)</span></span>
+<span class="line"><span class="text-purple-400">model</span> <span class="text-yellow-300">Task</span> {</span>
+<span class="line">  id          <span class="text-green-300">String</span>     <span class="text-blue-400">@id</span> <span class="text-blue-400">@default</span>(<span class="text-yellow-300">cuid</span>())</span>
+<span class="line">  title       <span class="text-green-300">String</span></span>
+<span class="line">  completed   <span class="text-green-300">Boolean</span>    <span class="text-blue-400">@default</span>(<span class="text-yellow-300">false</span>)</span>
+<span class="line">  priority    <span class="text-green-300">Priority</span>   <span class="text-blue-400">@default</span>(<span class="text-yellow-300">MEDIUM</span>)</span>
+<span class="line">  createdAt   <span class="text-green-300">DateTime</span>   <span class="text-blue-400">@default</span>(<span class="text-yellow-300">now</span>())</span>
+<span class="line"></span>
+<span class="line">  <span class="text-slate-500">// 🔗 FK: แต่ละ Task ต้องอยู่ใน Project</span></span>
+<span class="line">  projectId   <span class="text-green-300">String</span></span>
+<span class="line">  project     <span class="text-green-300">Project</span>    <span class="text-blue-400">@relation</span>(fields: [projectId], references: [id])</span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line"><span class="text-slate-500">// 🎨 Enums</span></span>
+<span class="line"><span class="text-purple-400">enum</span> <span class="text-yellow-300">ProjectStatus</span> {</span>
+<span class="line">  <span class="text-green-400">ACTIVE</span></span>
+<span class="line">  <span class="text-green-400">COMPLETED</span></span>
+<span class="line">  <span class="text-green-400">ARCHIVED</span></span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line"><span class="text-purple-400">enum</span> <span class="text-yellow-300">Priority</span> {</span>
+<span class="line">  <span class="text-green-400">LOW</span></span>
+<span class="line">  <span class="text-green-400">MEDIUM</span></span>
+<span class="line">  <span class="text-green-400">HIGH</span></span>
+<span class="line">}</span></code></pre>
+            </div>
+
+            <!-- Prisma Client Setup -->
+            <div class="bg-surface-800 border border-slate-700/50 rounded-xl overflow-hidden mb-6">
+                <div class="flex items-center justify-between px-4 py-3 bg-surface-900/50 border-b border-slate-700/50">
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-red-500/60"></span>
+                        <span class="w-3 h-3 rounded-full bg-yellow-500/60"></span>
+                        <span class="w-3 h-3 rounded-full bg-green-500/60"></span>
+                        <span class="text-xs text-slate-500 ml-2 font-mono">lib/prisma.ts</span>
+                    </div>
+                    <button onclick="copyCode(this)" class="text-xs text-slate-500 hover:text-brand-400 transition-colors flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                        Copy
+                    </button>
+                </div>
+                <pre class="p-4 overflow-x-auto"><code class="text-sm font-mono code-block"><span class="line"><span class="text-slate-500">// lib/prisma.ts — Singleton Pattern (สำคัญมาก!)</span></span>
+<span class="line"><span class="text-blue-400">import</span> { PrismaClient } <span class="text-blue-400">from</span> <span class="text-green-400">"@prisma/client"</span></span>
+<span class="line"></span>
+<span class="line"><span class="text-blue-400">const</span> globalForPrisma = globalThis <span class="text-blue-400">as</span> <span class="text-blue-400">unknown</span> <span class="text-blue-400">as</span> {</span>
+<span class="line">  prisma: PrismaClient | <span class="text-blue-400">undefined</span></span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line"><span class="text-blue-400">export const</span> prisma = globalForPrisma.prisma ?? <span class="text-blue-400">new</span> <span class="text-yellow-300">PrismaClient</span>()</span>
+<span class="line"></span>
+<span class="line"><span class="text-slate-500">// ⚠️ ตอน Dev จะ hot-reload บ่อย ถ้าไม่ทำ Singleton</span></span>
+<span class="line"><span class="text-slate-500">// จะสร้าง PrismaClient ใหม่ทุกครั้งจน connection เต็ม!</span></span>
+<span class="line"><span class="text-blue-400">if</span> (process.env.NODE_ENV !== <span class="text-green-400">"production"</span>) {</span>
+<span class="line">  globalForPrisma.prisma = prisma</span>
+<span class="line">}</span></code></pre>
+            </div>
+
+            <!-- Terminal Commands -->
+            <div class="bg-surface-800 border border-slate-700/50 rounded-xl p-6 mb-6">
+                <h3 class="text-lg font-semibold text-white mb-4">⌨️ คำสั่ง Terminal ที่ต้องใช้</h3>
+                <div class="space-y-3">
+                    <div class="bg-surface-900 rounded-lg p-3">
+                        <div class="flex items-center justify-between mb-1">
+                            <code class="text-sm font-mono text-green-400">npx prisma migrate dev --name init</code>
+                            <span class="tag bg-blue-500/20 text-blue-300">สำคัญ</span>
+                        </div>
+                        <p class="text-xs text-slate-500">สร้าง Migration ครั้งแรก — จะสร้างตารางใน DB ให้ตาม Schema</p>
+                    </div>
+                    <div class="bg-surface-900 rounded-lg p-3">
+                        <div class="flex items-center justify-between mb-1">
+                            <code class="text-sm font-mono text-green-400">npx prisma generate</code>
+                        </div>
+                        <p class="text-xs text-slate-500">อัปเดต Prisma Client — ทำหลังแก้ Schema ทุกครั้ง (migrate dev ทำให้อัตโนมัติ)</p>
+                    </div>
+                    <div class="bg-surface-900 rounded-lg p-3">
+                        <div class="flex items-center justify-between mb-1">
+                            <code class="text-sm font-mono text-green-400">npx prisma studio</code>
+                        </div>
+                        <p class="text-xs text-slate-500">เปิดหน้า Web GUI ดูข้อมูลใน DB — เหมือน phpMyAdmin แต่สวยกว่า 😎</p>
+                    </div>
+                    <div class="bg-surface-900 rounded-lg p-3">
+                        <div class="flex items-center justify-between mb-1">
+                            <code class="text-sm font-mono text-yellow-400">npx prisma db push</code>
+                            <span class="tag bg-amber-500/20 text-amber-300">Dev only</span>
+                        </div>
+                        <p class="text-xs text-slate-500">Sync Schema → DB แบบเร็ว (ไม่สร้าง Migration file) ใช้ตอน Prototype</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Relation Diagram -->
+            <div class="bg-blue-500/5 border border-blue-500/20 rounded-xl p-5 mb-6">
+                <h4 class="text-blue-400 font-semibold text-sm mb-3">📊 ความสัมพันธ์ของข้อมูล</h4>
+                <div class="flex items-center justify-center gap-8 py-4">
+                    <div class="bg-surface-800 border border-blue-500/30 rounded-lg p-4 text-center">
+                        <div class="text-blue-400 font-bold text-sm mb-1">Project</div>
+                        <div class="text-[0.65rem] text-slate-500 space-y-0.5">
+                            <div>id (PK)</div>
+                            <div>name</div>
+                            <div>description?</div>
+                            <div>status</div>
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-slate-500 text-xs mb-1">1 : N</div>
+                        <div class="text-slate-600">─────────</div>
+                        <div class="text-slate-600 text-xs mt-1">has many</div>
+                    </div>
+                    <div class="bg-surface-800 border border-green-500/30 rounded-lg p-4 text-center">
+                        <div class="text-green-400 font-bold text-sm mb-1">Task</div>
+                        <div class="text-[0.65rem] text-slate-500 space-y-0.5">
+                            <div>id (PK)</div>
+                            <div>title</div>
+                            <div>completed</div>
+                            <div>projectId (FK)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Checklist -->
+            <div class="bg-surface-800 border border-slate-700/50 rounded-xl p-6">
+                <h3 class="font-semibold text-white mb-4 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+                    Actionable Checklist — Phase 2
+                </h3>
+                <div class="space-y-2">
+                    <label class="checklist-item flex items-center gap-3 p-2 rounded-lg hover:bg-surface-700/50 cursor-pointer text-sm">
+                        <input type="checkbox" class="w-4 h-4 rounded border-slate-600 bg-surface-900 text-brand-500 focus:ring-brand-500/30">
+                        <span class="text-slate-300">ติดตั้ง <code class="text-xs bg-surface-900 px-1.5 py-0.5 rounded">npm install prisma --save-dev</code></span>
+                    </label>
+                    <label class="checklist-item flex items-center gap-3 p-2 rounded-lg hover:bg-surface-700/50 cursor-pointer text-sm">
+                        <input type="checkbox" class="w-4 h-4 rounded border-slate-600 bg-surface-900 text-brand-500 focus:ring-brand-500/30">
+                        <span class="text-slate-300">ติดตั้ง <code class="text-xs bg-surface-900 px-1.5 py-0.5 rounded">npm install @prisma/client</code></span>
+                    </label>
+                    <label class="checklist-item flex items-center gap-3 p-2 rounded-lg hover:bg-surface-700/50 cursor-pointer text-sm">
+                        <input type="checkbox" class="w-4 h-4 rounded border-slate-600 bg-surface-900 text-brand-500 focus:ring-brand-500/30">
+                        <span class="text-slate-300">รัน <code class="text-xs bg-surface-900 px-1.5 py-0.5 rounded">npx prisma init</code> — สร้างไฟล์ตั้งต้น</span>
+                    </label>
+                    <label class="checklist-item flex items-center gap-3 p-2 rounded-lg hover:bg-surface-700/50 cursor-pointer text-sm">
+                        <input type="checkbox" class="w-4 h-4 rounded border-slate-600 bg-surface-900 text-brand-500 focus:ring-brand-500/30">
+                        <span class="text-slate-300">ตั้งค่า <code class="text-xs bg-surface-900 px-1.5 py-0.5 rounded">.env</code> → DATABASE_URL</span>
+                    </label>
+                    <label class="checklist-item flex items-center gap-3 p-2 rounded-lg hover:bg-surface-700/50 cursor-pointer text-sm">
+                        <input type="checkbox" class="w-4 h-4 rounded border-slate-600 bg-surface-900 text-brand-500 focus:ring-brand-500/30">
+                        <span class="text-slate-300">สร้าง/แก้ไข <code class="text-xs bg-surface-900 px-1.5 py-0.5 rounded">prisma/schema.prisma</code></span>
+                    </label>
+                    <label class="checklist-item flex items-center gap-3 p-2 rounded-lg hover:bg-surface-700/50 cursor-pointer text-sm">
+                        <input type="checkbox" class="w-4 h-4 rounded border-slate-600 bg-surface-900 text-brand-500 focus:ring-brand-500/30">
+                        <span class="text-slate-300">สร้าง <code class="text-xs bg-surface-900 px-1.5 py-0.5 rounded">lib/prisma.ts</code> — Singleton Pattern</span>
+                    </label>
+                    <label class="checklist-item flex items-center gap-3 p-2 rounded-lg hover:bg-surface-700/50 cursor-pointer text-sm">
+                        <input type="checkbox" class="w-4 h-4 rounded border-slate-600 bg-surface-900 text-brand-500 focus:ring-brand-500/30">
+                        <span class="text-slate-300">รัน <code class="text-xs bg-surface-900 px-1.5 py-0.5 rounded">npx prisma migrate dev --name init</code></span>
+                    </label>
+                    <label class="checklist-item flex items-center gap-3 p-2 rounded-lg hover:bg-surface-700/50 cursor-pointer text-sm">
+                        <input type="checkbox" class="w-4 h-4 rounded border-slate-600 bg-surface-900 text-brand-500 focus:ring-brand-500/30">
+                        <span class="text-slate-300">ทดสอบด้วย <code class="text-xs bg-surface-900 px-1.5 py-0.5 rounded">npx prisma studio</code> ว่า Table ถูกสร้าง</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <div class="flex justify-between mt-8">
+                <button onclick="showPhase(1)" class="flex items-center gap-2 px-4 py-2 bg-surface-800 border border-slate-700 rounded-lg text-sm text-slate-300 hover:text-white hover:border-brand-500/50 transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12"/></svg> Phase 1
+                </button>
+                <button onclick="showPhase(3)" class="flex items-center gap-2 px-4 py-2 bg-surface-800 border border-slate-700 rounded-lg text-sm text-slate-300 hover:text-white hover:border-brand-500/50 transition-colors">
+                    Phase 3: Zod Validation <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                </button>
+            </div>
+        </section>
+
+        <!-- ============ PHASE 3: ZOD VALIDATION ============ -->
+        <section id="phase-3" class="phase-content hidden fade-in">
+            <div class="flex items-center gap-3 mb-2">
+                <span class="tag bg-amber-500/20 text-amber-300">Phase 3</span>
+                <span class="tag bg-red-500/20 text-red-300">Special Topic</span>
+            </div>
+            <h2 class="text-3xl font-bold text-white mb-2">Data Validation with Zod</h2>
+            <p class="text-slate-400 mb-8">ทำไมต้อง Validate? เพราะ User ส่งอะไรมาก็ได้ — เราต้องป้องกัน DB ของเรา!</p>
+
+            <!-- Why Zod? -->
+            <div class="bg-surface-800 border border-slate-700/50 rounded-xl p-6 mb-6">
+                <h3 class="text-lg font-semibold text-white mb-4">🤔 ทำไมต้อง Validate ก่อนเข้า Database?</h3>
+                <div class="grid sm:grid-cols-2 gap-4 mb-4">
+                    <div class="bg-red-500/5 border border-red-500/20 rounded-lg p-4">
+                        <div class="text-red-400 font-semibold text-sm mb-2">❌ ไม่ Validate</div>
+                        <ul class="text-xs text-slate-400 space-y-1.5">
+                            <li>• User ส่งชื่อว่าง → Error จาก DB</li>
+                            <li>• User ส่งอีเมลผิด format → ข้อมูลเสีย</li>
+                            <li>• User ส่ง string 10,000 ตัว → DB บวม</li>
+                            <li>• Hacker ส่ง SQL Injection → 💀</li>
+                        </ul>
+                    </div>
+                    <div class="bg-green-500/5 border border-green-500/20 rounded-lg p-4">
+                        <div class="text-green-400 font-semibold text-sm mb-2">✅ ใช้ Zod Validate</div>
+                        <ul class="text-xs text-slate-400 space-y-1.5">
+                            <li>• ดักข้อมูลก่อนถึง DB — ปลอดภัย</li>
+                            <li>• Error Message ชัดเจน → UX ดี</li>
+                            <li>• Type-safe ทั้ง Runtime + Compile time</li>
+                            <li>• Schema เดียวใช้ได้ทั้ง Server & Client</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3">
+                    <p class="text-xs text-amber-300">💡 <strong>คิดง่ายๆ:</strong> TypeScript ดักข้อผิดพลาดตอนเขียนโค้ด (compile time) แต่ Zod ดักข้อผิดพลาดตอนรับข้อมูลจริงจาก User (runtime) — ต้องมีทั้งคู่!</p>
+                </div>
+            </div>
+
+            <!-- Install -->
+            <div class="bg-surface-800 border border-slate-700/50 rounded-xl overflow-hidden mb-6">
+                <div class="flex items-center justify-between px-4 py-3 bg-surface-900/50 border-b border-slate-700/50">
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-red-500/60"></span>
+                        <span class="w-3 h-3 rounded-full bg-yellow-500/60"></span>
+                        <span class="w-3 h-3 rounded-full bg-green-500/60"></span>
+                        <span class="text-xs text-slate-500 ml-2 font-mono">Terminal</span>
+                    </div>
+                </div>
+                <pre class="p-4 overflow-x-auto"><code class="text-sm font-mono"><span class="text-green-400">$</span> npm install zod</code></pre>
+            </div>
+
+            <!-- Zod Schema -->
+            <div class="bg-surface-800 border border-slate-700/50 rounded-xl overflow-hidden mb-6">
+                <div class="flex items-center justify-between px-4 py-3 bg-surface-900/50 border-b border-slate-700/50">
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-red-500/60"></span>
+                        <span class="w-3 h-3 rounded-full bg-yellow-500/60"></span>
+                        <span class="w-3 h-3 rounded-full bg-green-500/60"></span>
+                        <span class="text-xs text-slate-500 ml-2 font-mono">lib/validations.ts</span>
+                    </div>
+                    <button onclick="copyCode(this)" class="text-xs text-slate-500 hover:text-brand-400 transition-colors flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                        Copy
+                    </button>
+                </div>
+                <pre class="p-4 overflow-x-auto"><code class="text-sm font-mono code-block"><span class="line"><span class="text-slate-500">// lib/validations.ts</span></span>
+<span class="line"><span class="text-blue-400">import</span> { z } <span class="text-blue-400">from</span> <span class="text-green-400">"zod"</span></span>
+<span class="line"></span>
+<span class="line"><span class="text-slate-500">// 📝 Schema สำหรับสร้าง Project</span></span>
+<span class="line"><span class="text-blue-400">export const</span> <span class="text-yellow-300">createProjectSchema</span> = z.<span class="text-yellow-300">object</span>({</span>
+<span class="line">  <span class="text-slate-500">// ✅ ชื่อโปรเจกต์ต้องมี 5-50 ตัวอักษร</span></span>
+<span class="line">  name: z.<span class="text-yellow-300">string</span>()</span>
+<span class="line">    .<span class="text-yellow-300">min</span>(<span class="text-orange-300">5</span>, { message: <span class="text-green-400">"ชื่อโปรเจกต์ต้องมีอย่างน้อย 5 ตัวอักษร"</span> })</span>
+<span class="line">    .<span class="text-yellow-300">max</span>(<span class="text-orange-300">50</span>, { message: <span class="text-green-400">"ชื่อโปรเจกต์ต้องไม่เกิน 50 ตัวอักษร"</span> }),</span>
+<span class="line"></span>
+<span class="line">  <span class="text-slate-500">// ✅ รายละเอียด (ไม่บังคับ แต่ถ้ากรอกต้องไม่เกิน 500 ตัว)</span></span>
+<span class="line">  description: z.<span class="text-yellow-300">string</span>()</span>
+<span class="line">    .<span class="text-yellow-300">max</span>(<span class="text-orange-300">500</span>, { message: <span class="text-green-400">"รายละเอียดต้องไม่เกิน 500 ตัวอักษร"</span> })</span>
+<span class="line">    .<span class="text-yellow-300">optional</span>(),</span>
+<span class="line"></span>
+<span class="line">  <span class="text-slate-500">// ✅ อีเมลต้องถูก Format</span></span>
+<span class="line">  ownerEmail: z.<span class="text-yellow-300">string</span>()</span>
+<span class="line">    .<span class="text-yellow-300">email</span>({ message: <span class="text-green-400">"รูปแบบอีเมลไม่ถูกต้อง"</span> }),</span>
+<span class="line">})</span>
+<span class="line"></span>
+<span class="line"><span class="text-slate-500">// 🎯 ดึง Type จาก Schema (ไม่ต้องเขียน interface ซ้ำ!)</span></span>
+<span class="line"><span class="text-blue-400">export type</span> <span class="text-yellow-300">CreateProjectInput</span> = z.<span class="text-yellow-300">infer</span>&lt;<span class="text-blue-400">typeof</span> createProjectSchema&gt;</span>
+<span class="line"></span>
+<span class="line"><span class="text-slate-500">// 📝 Schema สำหรับสร้าง Task</span></span>
+<span class="line"><span class="text-blue-400">export const</span> <span class="text-yellow-300">createTaskSchema</span> = z.<span class="text-yellow-300">object</span>({</span>
+<span class="line">  title: z.<span class="text-yellow-300">string</span>()</span>
+<span class="line">    .<span class="text-yellow-300">min</span>(<span class="text-orange-300">3</span>, { message: <span class="text-green-400">"ชื่อ Task ต้องมีอย่างน้อย 3 ตัวอักษร"</span> })</span>
+<span class="line">    .<span class="text-yellow-300">max</span>(<span class="text-orange-300">100</span>, { message: <span class="text-green-400">"ชื่อ Task ต้องไม่เกิน 100 ตัวอักษร"</span> }),</span>
+<span class="line">  projectId: z.<span class="text-yellow-300">string</span>()</span>
+<span class="line">    .<span class="text-yellow-300">cuid</span>({ message: <span class="text-green-400">"Project ID ไม่ถูกต้อง"</span> }),</span>
+<span class="line">  priority: z.<span class="text-yellow-300">enum</span>([<span class="text-green-400">"LOW"</span>, <span class="text-green-400">"MEDIUM"</span>, <span class="text-green-400">"HIGH"</span>])</span>
+<span class="line">    .<span class="text-yellow-300">default</span>(<span class="text-green-400">"MEDIUM"</span>),</span>
+<span class="line">})</span></code></pre>
+            </div>
+
+            <!-- Zod Methods -->
+            <div class="bg-surface-800 border border-slate-700/50 rounded-xl p-6 mb-6">
+                <h3 class="text-lg font-semibold text-white mb-4">📖 Zod Methods ที่ใช้บ่อย</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="text-left border-b border-slate-700">
+                                <th class="pb-3 text-slate-400 font-medium">Method</th>
+                                <th class="pb-3 text-slate-400 font-medium">ใช้กับ</th>
+                                <th class="pb-3 text-slate-400 font-medium">ตัวอย่าง</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-slate-300">
+                            <tr class="border-b border-slate-700/50">
+                                <td class="py-2"><code class="text-amber-400 text-xs">.min(n)</code></td>
+                                <td class="py-2 text-xs text-slate-500">string, number</td>
+                                <td class="py-2 text-xs"><code class="text-slate-400">z.string().min(5)</code></td>
+                            </tr>
+                            <tr class="border-b border-slate-700/50">
+                                <td class="py-2"><code class="text-amber-400 text-xs">.max(n)</code></td>
+                                <td class="py-2 text-xs text-slate-500">string, number</td>
+                                <td class="py-2 text-xs"><code class="text-slate-400">z.string().max(50)</code></td>
+                            </tr>
+                            <tr class="border-b border-slate-700/50">
+                                <td class="py-2"><code class="text-amber-400 text-xs">.email()</code></td>
+                                <td class="py-2 text-xs text-slate-500">string</td>
+                                <td class="py-2 text-xs"><code class="text-slate-400">z.string().email()</code></td>
+                            </tr>
+                            <tr class="border-b border-slate-700/50">
+                                <td class="py-2"><code class="text-amber-400 text-xs">.optional()</code></td>
+                                <td class="py-2 text-xs text-slate-500">ทุก type</td>
+                                <td class="py-2 text-xs"><code class="text-slate-400">z.string().optional()</code></td>
+                            </tr>
+                            <tr class="border-b border-slate-700/50">
+                                <td class="py-2"><code class="text-amber-400 text-xs">.enum()</code></td>
+                                <td class="py-2 text-xs text-slate-500">string</td>
+                                <td class="py-2 text-xs"><code class="text-slate-400">z.enum(["A","B"])</code></td>
+                            </tr>
+                            <tr>
+                                <td class="py-2"><code class="text-amber-400 text-xs">.safeParse()</code></td>
+                                <td class="py-2 text-xs text-slate-500">schema</td>
+                                <td class="py-2 text-xs"><code class="text-slate-400">schema.safeParse(data)</code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Parse vs SafeParse -->
+            <div class="bg-amber-500/5 border border-amber-500/20 rounded-xl p-5 mb-6">
+                <h4 class="text-amber-400 font-semibold text-sm mb-3">⚡ parse() vs safeParse() — ใช้ตัวไหนดี?</h4>
+                <div class="grid sm:grid-cols-2 gap-3">
+                    <div class="bg-surface-800 rounded-lg p-3">
+                        <div class="text-xs font-mono text-red-400 mb-1">schema.parse(data)</div>
+                        <p class="text-xs text-slate-500">ถ้าผิด → <strong class="text-red-300">throw Error</strong> ทันที<br>ใช้ตอนมั่นใจว่าข้อมูลถูกแน่ๆ</p>
+                    </div>
+                    <div class="bg-surface-800 rounded-lg p-3 border border-green-500/20">
+                        <div class="text-xs font-mono text-green-400 mb-1">schema.safeParse(data) ✅ แนะนำ</div>
+                        <p class="text-xs text-slate-500">return <strong class="text-green-300">{ success, data, error }</strong><br>ดีกว่า เพราะจัดการ error ได้เอง</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Checklist -->
+            <div class="bg-surface-800 border border-slate-700/50 rounded-xl p-6">
+                <h3 class="font-semibold text-white mb-4 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+                    Actionable Checklist — Phase 3
+                </h3>
+                <div class="space-y-2">
+                    <label class="checklist-item flex items-center gap-3 p-2 rounded-lg hover:bg-surface-700/50 cursor-pointer text-sm">
+                        <input type="checkbox" class="w-4 h-4 rounded border-slate-600 bg-surface-900 text-brand-500 focus:ring-brand-500/30">
+                        <span class="text-slate-300"><code class="text-xs bg-surface-900 px-1.5 py-0.5 rounded">npm install zod</code></span>
+                    </label>
+                    <label class="checklist-item flex items-center gap-3 p-2 rounded-lg hover:bg-surface-700/50 cursor-pointer text-sm">
+                        <input type="checkbox" class="w-4 h-4 rounded border-slate-600 bg-surface-900 text-brand-500 focus:ring-brand-500/30">
+                        <span class="text-slate-300">สร้างไฟล์ <code class="text-xs bg-surface-900 px-1.5 py-0.5 rounded">lib/validations.ts</code></span>
+                    </label>
+                    <label class="checklist-item flex items-center gap-3 p-2 rounded-lg hover:bg-surface-700/50 cursor-pointer text-sm">
+                        <input type="checkbox" class="w-4 h-4 rounded border-slate-600 bg-surface-900 text-brand-500 focus:ring-brand-500/30">
+                        <span class="text-slate-300">เขียน <code class="text-xs bg-surface-900 px-1.5 py-0.5 rounded">createProjectSchema</code> พร้อม message ภาษาไทย</span>
+                    </label>
+                    <label class="checklist-item flex items-center gap-3 p-2 rounded-lg hover:bg-surface-700/50 cursor-pointer text-sm">
+                        <input type="checkbox" class="w-4 h-4 rounded border-slate-600 bg-surface-900 text-brand-500 focus:ring-brand-500/30">
+                        <span class="text-slate-300">ใช้ <code class="text-xs bg-surface-900 px-1.5 py-0.5 rounded">z.infer</code> ดึง Type แทนเขียน interface ซ้ำ</span>
+                    </label>
+                    <label class="checklist-item flex items-center gap-3 p-2 rounded-lg hover:bg-surface-700/50 cursor-pointer text-sm">
+                        <input type="checkbox" class="w-4 h-4 rounded border-slate-600 bg-surface-900 text-brand-500 focus:ring-brand-500/30">
+                        <span class="text-slate-300">ทดสอบ <code class="text-xs bg-surface-900 px-1.5 py-0.5 rounded">safeParse()</code> กับข้อมูลถูก/ผิด</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <div class="flex justify-between mt-8">
+                <button onclick="showPhase(2)" class="flex items-center gap-2 px-4 py-2 bg-surface-800 border border-slate-700 rounded-lg text-sm text-slate-300 hover:text-white hover:border-brand-500/50 transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12"/></svg> Phase 2
+                </button>
+                <button onclick="showPhase(4)" class="flex items-center gap-2 px-4 py-2 bg-surface-800 border border-slate-700 rounded-lg text-sm text-slate-300 hover:text-white hover:border-brand-500/50 transition-colors">
+                    Phase 4: Pro Flow <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                </button>
+            </div>
+        </section>
+
+        <!-- ============ PHASE 4: PROFESSIONAL FLOW ============ -->
+        <section id="phase-4" class="phase-content hidden fade-in">
+            <div class="flex items-center gap-3 mb-2">
+                <span class="tag bg-purple-500/20 text-purple-300">Phase 4</span>
+                <span class="tag bg-slate-700 text-slate-400">Professional</span>
+            </div>
+            <h2 class="text-3xl font-bold text-white mb-2">Professional Flow & Robustness</h2>
+            <p class="text-slate-400 mb-8">จัดการ Error แบบมืออาชีพ + revalidatePath + ส่งสถานะกลับ Client</p>
+
+            <!-- Concept -->
+            <div class="bg-surface-800 border border-slate-700/50 rounded-xl p-6 mb-6">
+                <h3 class="text-lg font-semibold text-white mb-4">🧠 ปัญหาของ Phase 1</h3>
+                <p class="text-sm text-slate-400 leading-relaxed mb-4">
+                    จำ Phase 1 ได้มั้ย? โค้ดสั้นดี แต่ถ้าเกิด Error ล่ะ? DB ล่ม? ข้อมูลซ้ำ? 
+                    ตอนนี้เราจะเพิ่ม "เกราะป้องกัน" ให้ Server Actions แบบที่ทีมจริงทำกัน:
+                </p>
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <div class="flex-1 bg-purple-500/5 border border-purple-500/20 rounded-lg p-3">
+                        <div class="text-purple-400 font-semibold text-sm mb-1">try...catch</div>
+                        <p class="text-xs text-slate-500">ดัก Error ไม่ให้ App พัง</p>
+                    </div>
+                    <div class="flex-1 bg-purple-500/5 border border-purple-500/20 rounded-lg p-3">
+                        <div class="text-purple-400 font-semibold text-sm mb-1">revalidatePath</div>
+                        <p class="text-xs text-slate-500">บอก Next.js ให้ Refresh data</p>
+                    </div>
+                    <div class="flex-1 bg-purple-500/5 border border-purple-500/20 rounded-lg p-3">
+                        <div class="text-purple-400 font-semibold text-sm mb-1">Return Status</div>
+                        <p class="text-xs text-slate-500">ส่ง success/error กลับ UI</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Result Type -->
+            <div class="bg-surface-800 border border-slate-700/50 rounded-xl overflow-hidden mb-6">
+                <div class="flex items-center justify-between px-4 py-3 bg-surface-900/50 border-b border-slate-700/50">
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-red-500/60"></span>
+                        <span class="w-3 h-3 rounded-full bg-yellow-500/60"></span>
+                        <span class="w-3 h-3 rounded-full bg-green-500/60"></span>
+                        <span class="text-xs text-slate-500 ml-2 font-mono">lib/types.ts</span>
+                    </div>
+                    <button onclick="copyCode(this)" class="text-xs text-slate-500 hover:text-brand-400 transition-colors flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                        Copy
+                    </button>
+                </div>
+                <pre class="p-4 overflow-x-auto"><code class="text-sm font-mono code-block"><span class="line"><span class="text-slate-500">// lib/types.ts — กำหนดรูปแบบ Response มาตรฐาน</span></span>
+<span class="line"><span class="text-blue-400">export type</span> <span class="text-yellow-300">ActionResult</span> = {</span>
+<span class="line">  success: <span class="text-green-300">boolean</span></span>
+<span class="line">  message: <span class="text-green-300">string</span></span>
+<span class="line">  errors?: <span class="text-green-300">Record</span>&lt;<span class="text-green-300">string</span>, <span class="text-green-300">string</span>[]&gt;  <span class="text-slate-500">// field-level errors</span></span>
+<span class="line">}</span></code></pre>
+            </div>
+
+            <!-- Pro Action -->
+            <div class="bg-surface-800 border border-slate-700/50 rounded-xl overflow-hidden mb-6">
+                <div class="flex items-center justify-between px-4 py-3 bg-surface-900/50 border-b border-slate-700/50">
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-red-500/60"></span>
+                        <span class="w-3 h-3 rounded-full bg-yellow-500/60"></span>
+                        <span class="w-3 h-3 rounded-full bg-green-500/60"></span>
+                        <span class="text-xs text-slate-500 ml-2 font-mono">app/actions.ts — Pro Version</span>
+                    </div>
+                    <button onclick="copyCode(this)" class="text-xs text-slate-500 hover:text-brand-400 transition-colors flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                        Copy
+                    </button>
+                </div>
+                <pre class="p-4 overflow-x-auto"><code class="text-sm font-mono code-block"><span class="line"><span class="text-purple-400">"use server"</span></span>
+<span class="line"></span>
+<span class="line"><span class="text-blue-400">import</span> { prisma } <span class="text-blue-400">from</span> <span class="text-green-400">"@/lib/prisma"</span></span>
+<span class="line"><span class="text-blue-400">import</span> { revalidatePath } <span class="text-blue-400">from</span> <span class="text-green-400">"next/cache"</span></span>
+<span class="line"><span class="text-blue-400">import type</span> { ActionResult } <span class="text-blue-400">from</span> <span class="text-green-400">"@/lib/types"</span></span>
+<span class="line"></span>
+<span class="line"><span class="text-blue-400">export async function</span> <span class="text-yellow-300">createProject</span>(</span>
+<span class="line">  formData: <span class="text-green-300">FormData</span></span>
+<span class="line">): <span class="text-green-300">Promise</span>&lt;<span class="text-green-300">ActionResult</span>&gt; {</span>
+<span class="line">  <span class="text-blue-400">try</span> {</span>
+<span class="line">    <span class="text-blue-400">const</span> name = formData.<span class="text-yellow-300">get</span>(<span class="text-green-400">"name"</span>) <span class="text-blue-400">as</span> <span class="text-green-300">string</span></span>
+<span class="line">    <span class="text-blue-400">const</span> description = formData.<span class="text-yellow-300">get</span>(<span class="text-green-400">"description"</span>) <span class="text-blue-400">as</span> <span class="text-green-300">string</span></span>
+<span class="line"></span>
+<span class="line">    <span class="text-slate-500">// 1️⃣ Validate (จะสอนเพิ่มใน Phase 6!)</span></span>
+<span class="line">    <span class="text-blue-400">if</span> (!name || name.length &lt; <span class="text-orange-300">5</span>) {</span>
+<span class="line">      <span class="text-blue-400">return</span> {</span>
+<span class="line">        success: <span class="text-orange-300">false</span>,</span>
+<span class="line">        message: <span class="text-green-400">"ชื่อโปรเจกต์ต้องมีอย่างน้อย 5 ตัวอักษร"</span>,</span>
+<span class="line">        errors: { name: [<span class="text-green-400">"ต้องมีอย่างน้อย 5 ตัวอักษร"</span>] }</span>
+<span class="line">      }</span>
+<span class="line">    }</span>
+<span class="line"></span>
+<span class="line">    <span class="text-slate-500">// 2️⃣ บันทึกลง DB</span></span>
+<span class="line">    <span class="text-blue-400">await</span> prisma.project.<span class="text-yellow-300">create</span>({</span>
+<span class="line">      data: { name, description }</span>
+<span class="line">    })</span>
+<span class="line"></span>
+<span class="line">    <span class="text-slate-500">// 3️⃣ Refresh ข้อมูลบนหน้าเว็บ</span></span>
+<span class="line">    <span class="text-yellow-300">revalidatePath</span>(<span class="text-green-400">"/projects"</span>)</span>
+<span class="line"></span>
+<span class="line">    <span class="text-slate-500">// 4️⃣ ส่งสถานะสำเร็จกลับ</span></span>
+<span class="line">    <span class="text-blue-400">return</span> {</span>
+<span class="line">      success: <span class="text-orange-300">true</span>,</span>
+<span class="line">      message: <span class="text-green-400">"สร้างโปรเจกต์สำเร็จ! 🎉"</span></span>
+<span class="line">    }</span>
+<span class="line"></span>
+<span class="line">  } <span class="text-blue-400">catch</span> (error) {</span>
+<span class="line">    <span class="text-slate-500">// 5️⃣ ดัก Error ที่ไม่คาดคิด (DB ล่ม, Network error ฯลฯ)</span></span>
+<span class="line">    console.<span class="text-yellow-300">error</span>(<span class="text-green-400">"Create project failed:"</span>, error)</span>
+<span class="line">    <span class="text-blue-400">return</span> {</span>
+<span class="line">      success: <span class="text-orange-300">false</span>,</span>
+<span class="line">      message: <span class="text-green-400">"เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง"</span></span>
+<span class="line">    }</span>
+<span class="line">  }</span>
+<span class="line">}</span></code></pre>
+            </div>
+
+            <!-- Client UI -->
+            <div class="bg-surface-800 border border-slate-700/50 rounded-xl overflow-hidden mb-6">
+                <div class="flex items-center justify-between px-4 py-3 bg-surface-900/50 border-b border-slate-700/50">
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-red-500/60"></span>
+                        <span class="w-3 h-3 rounded-full bg-yellow-500/60"></span>
+                        <span class="w-3 h-3 rounded-full bg-green-500/60"></span>
+                        <span class="text-xs text-slate-500 ml-2 font-mono">app/components/ProjectForm.tsx</span>
+                    </div>
+                    <button onclick="copyCode(this)" class="text-xs text-slate-500 hover:text-brand-400 transition-colors flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                        Copy
+                    </button>
+                </div>
+                <pre class="p-4 overflow-x-auto"><code class="text-sm font-mono code-block"><span class="line"><span class="text-purple-400">"use client"</span>  <span class="text-slate-500">// ← ต้องเป็น Client Component เพราะใช้ Hook</span></span>
+<span class="line"></span>
+<span class="line"><span class="text-blue-400">import</span> { useActionState } <span class="text-blue-400">from</span> <span class="text-green-400">"react"</span></span>
+<span class="line"><span class="text-blue-400">import</span> { createProject } <span class="text-blue-400">from</span> <span class="text-green-400">"../actions"</span></span>
+<span class="line"></span>
+<span class="line"><span class="text-blue-400">export default function</span> <span class="text-yellow-300">ProjectForm</span>() {</span>
+<span class="line">  <span class="text-blue-400">const</span> [state, formAction, isPending] = <span class="text-yellow-300">useActionState</span>(</span>
+<span class="line">    createProject,</span>
+<span class="line">    { success: <span class="text-orange-300">false</span>, message: <span class="text-green-400">""</span> }</span>
+<span class="line">  )</span>
+<span class="line"></span>
+<span class="line">  <span class="text-blue-400">return</span> (</span>
+<span class="line">    &lt;<span class="text-red-400">form</span> <span class="text-yellow-300">action</span>={formAction}&gt;</span>
+<span class="line">      <span class="text-slate-500">{/* แสดงสถานะ Success / Error */}</span></span>
+<span class="line">      {state.message &amp;&amp; (</span>
+<span class="line">        &lt;<span class="text-red-400">div</span> <span class="text-yellow-300">className</span>={state.success</span>
+<span class="line">          ? <span class="text-green-400">"bg-green-50 text-green-600 p-3 rounded"</span></span>
+<span class="line">          : <span class="text-green-400">"bg-red-50 text-red-600 p-3 rounded"</span></span>
+<span class="line">        }&gt;</span>
+<span class="line">          {state.message}</span>
+<span class="line">        &lt;/<span class="text-red-400">div</span>&gt;</span>
+<span class="line">      )}</span>
+<span class="line"></span>
+<span class="line">      &lt;<span class="text-red-400">input</span> <span class="text-yellow-300">name</span>=<span class="text-green-400">"name"</span> <span class="text-yellow-300">placeholder</span>=<span class="text-green-400">"ชื่อโปรเจกต์"</span> /&gt;</span>
+<span class="line"></span>
+<span class="line">      <span class="text-slate-500">{/* แสดง Error แต่ละ field */}</span></span>
+<span class="line">      {state.errors?.name &amp;&amp; (</span>
+<span class="line">        &lt;<span class="text-red-400">p</span> <span class="text-yellow-300">className</span>=<span class="text-green-400">"text-red-500 text-sm"</span>&gt;</span>
+<span class="line">          {state.errors.name[<span class="text-orange-300">0</span>]}</span>
+<span class="line">        &lt;/<span class="text-red-400">p</span>&gt;</span>
+<span class="line">      )}</span>
+<span class="line"></span>
+<span class="line">      &lt;<span class="text-red-400">button</span> <span class="text-yellow-300">disabled</span>={isPending}&gt;</span>
+<span class="line">        {isPending ? <span class="text-green-400">"กำลังบันทึก..."</span> : <span class="text-green-400">"สร้างโปรเจกต์"</span>}</span>
+<span class="line">      &lt;/<span class="text-red-400">button</span>&gt;</span>
+<span class="line">    &lt;/<span class="text-red-400">form</span>&gt;</span>
+<span class="line">  )</span>
+<span class="line">}</span></code></pre>
+            </div>
+
+            <!-- revalidatePath Explanation -->
+            <div class="bg-purple-500/5 border border-purple-500/20 rounded-xl p-5 mb-6">
+                <h4 class="text-purple-400 font-semibold text-sm mb-3">🔄 revalidatePath คืออะไร?</h4>
+                <p class="text-sm text-slate-400 mb-3">ปกติ Next.js จะ cache หน้าเว็บไว้ พอข้อมูลใน DB เปลี่ยน หน้าเว็บจะไม่อัปเดตอัตโนมัติ 
+                <code class="bg-surface-700 px-1.5 py-0.5 rounded text-xs text-purple-300">revalidatePath("/projects")</code> คือการบอก Next.js ว่า:</p>
+                <div class="bg-surface-800 rounded-lg p-3">
+                    <p class="text-xs text-slate-300 italic">"เฮ้! ข้อมูลในหน้า /projects เปลี่ยนแล้วนะ — ช่วย Refresh ให้ที"</p>
+                </div>
+            </div>
+
+            <!-- Checklist -->
+            <div class="bg-surface-800 border border-slate-700/50 rounded-xl p-6">
+                <h3 class="font-semibold text-white mb-4 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+                    Actionable Checklist — Phase 4
+                </h3>
+                <div class="space-y-2">
+                    <label class="checklist-item flex items-center gap-3 p-2 rounded-lg hover:bg-surface-700/50 cursor-pointer text-sm">
+                        <input type="checkbox" class="w-4 h-4 rounded border-slate-600 bg-surface-900 text-brand-500 focus:ring-brand-500/30">
+                        <span class="text-slate-300">สร้าง <code class="text-xs bg-surface-900 px-1.5 py-0.5 rounded">lib/types.ts</code> — ActionResult type</span>
+                    </label>
+                    <label class="checklist-item flex items-center gap-3 p-2 rounded-lg hover:bg-surface-700/50 cursor-pointer text-sm">
+                        <input type="checkbox" class="w-4 h-4 rounded border-slate-600 bg-surface-900 text-brand-500 focus:ring-brand-500/30">
+                        <span class="text-slate-300">ครอบ <code class="text-xs bg-surface-900 px-1.5 py-0.5 rounded">try...catch</code> ใน Server Action ทุกตัว</span>
+                    </label>
+                    <label class="checklist-item flex items-center gap-3 p-2 rounded-lg hover:bg-surface-700/50 cursor-pointer text-sm">
+                        <input type="checkbox" class="w-4 h-4 rounded border-slate-600 bg-surface-900 text-brand-500 focus:ring-brand-500/30">
+                        <span class="text-slate-300">เพิ่ม <code class="text-xs bg-surface-900 px-1.5 py-0.5 rounded">revalidatePath()</code> หลัง create/update/delete</span>
+                    </label>
+                    <label class="checklist-item flex items-center gap-3 p-2 rounded-lg hover:bg-surface-700/50 cursor-pointer text-sm">
+                        <input type="checkbox" class="w-4 h-4 rounded border-slate-600 bg-surface-900 text-brand-500 focus:ring-brand-500/30">
+                        <span class="text-slate-300">สร้าง Client Component ที่แสดง Success/Error message</span>
+                    </label>
+                    <label class="checklist-item flex items-center gap-3 p-2 rounded-lg hover:bg-surface-700/50 cursor-pointer text-sm">
+                        <input type="checkbox" class="w-4 h-4 rounded border-slate-600 bg-surface-900 text-brand-500 focus:ring-brand-500/30">
+                        <span class="text-slate-300">ใช้ <code class="text-xs bg-surface-900 px-1.5 py-0.5 rounded">useActionState</code> จัดการ form state</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <div class="flex justify-between mt-8">
+                <button onclick="showPhase(3)" class="flex items-center gap-2 px-4 py-2 bg-surface-800 border border-slate-700 rounded-lg text-sm text-slate-300 hover:text-white hover:border-brand-500/50 transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12"/></svg> Phase 3
+                </button>
+                <button onclick="showPhase(5)" class="flex items-center gap-2 px-4 py-2 bg-surface-800 border border-slate-700 rounded-lg text-sm text-slate-300 hover:text-white hover:border-brand-500/50 transition-colors">
+                    Phase 5: Advanced UX <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                </button>
+            </div>
+        </section>
+
+        <!-- ============ PHASE 5: ADVANCED UX ============ -->
+        <section id="phase-5" class="phase-content hidden fade-in">
+            <div class="flex items-center gap-3 mb-2">
+                <span class="tag bg-pink-500/20 text-pink-300">Phase 5</span>
+                <span class="tag bg-slate-700 text-slate-400">UX</span>
+            </div>
+            <h2 class="text-3xl font-bold text-white mb-2">Advanced UX & Optimistic Updates</h2>
+            <p class="text-slate-400 mb-8">ทำให้ UI ตอบสนองทันที — ไม่ต้องรอ Server ก็เห็นผลลัพธ์</p>
+
+            <!-- Concept -->
+            <div class="bg-surface-800 border border-slate-700/50 rounded-xl p-6 mb-6">
+                <h3 class="text-lg font-semibold text-white mb-4">🚀 Optimistic Updates คืออะไร?</h3>
+                <p class="text-sm text-slate-400 leading-relaxed mb-4">
+                    ลองนึกถึง Instagram — พอกดไลค์ หัวใจจะแดงทันที ไม่ต้องรอ Server ตอบกลับ 
+                    นั่นแหละ <strong class="text-white">Optimistic Update</strong>! เราเปลี่ยน UI ก่อน แล้วค่อย sync กับ Server ทีหลัง
+                </p>
+                <div class="grid sm:grid-cols-2 gap-4">
+                    <div class="bg-surface-900 rounded-lg p-4">
+                        <div class="text-pink-400 font-semibold text-sm mb-2">แบบปกติ (Pessimistic)</div>
+                        <div class="flex items-center gap-2 text-xs text-slate-500">
+                            <span class="bg-surface-700 px-2 py-1 rounded">กดปุ่ม</span>
+                            <span>→</span>
+                            <span class="bg-surface-700 px-2 py-1 rounded">⏳ รอ...</span>
+                            <span>→</span>
+                            <span class="bg-surface-700 px-2 py-1 rounded">แสดงผล</span>
+                        </div>
+                    </div>
+                    <div class="bg-surface-900 rounded-lg p-4 border border-pink-500/20">
+                        <div class="text-green-400 font-semibold text-sm mb-2">แบบ Optimistic ✅</div>
+                        <div class="flex items-center gap-2 text-xs text-slate-500">
+                            <span class="bg-surface-700 px-2 py-1 rounded">กดปุ่ม</span>
+                            <span>→</span>
+                            <span class="bg-green-500/20 text-green-300 px-2 py-1 rounded">แสดงผลทันที!</span>
+                            <span>→</span>
+                            <span class="bg-surface-700 px-2 py-1 rounded">sync</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Optimistic Code -->
+            <div class="bg-surface-800 border border-slate-700/50 rounded-xl overflow-hidden mb-6">
+                <div class="flex items-center justify-between px-4 py-3 bg-surface-900/50 border-b border-slate-700/50">
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-red-500/60"></span>
+                        <span class="w-3 h-3 rounded-full bg-yellow-500/60"></span>
+                        <span class="w-3 h-3 rounded-full bg-green-500/60"></span>
+                        <span class="text-xs text-slate-500 ml-2 font-mono">app/components/TaskList.tsx</span>
+                    </div>
+                    <button onclick="copyCode(this)" class="text-xs text-slate-500 hover:text-brand-400 transition-colors flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                        Copy
+                    </button>
+                </div>
+                <pre class="p-4 overflow-x-auto"><code class="text-sm font-mono code-block"><span class="line"><span class="text-purple-400">"use client"</span></span>
+<span class="line"></span>
+<span class="line"><span class="text-blue-400">import</span> { useOptimistic } <span class="text-blue-400">from</span> <span class="text-green-400">"react"</span></span>
+<span class="line"><span class="text-blue-400">import</span> { toggleTask } <span class="text-blue-400">from</span> <span class="text-green-400">"../actions"</span></span>
+<span class="line"></span>
+<span class="line"><span class="text-blue-400">type</span> <span class="text-yellow-300">Task</span> = { id: <span class="text-green-300">string</span>; title: <span class="text-green-300">string</span>; completed: <span class="text-green-300">boolean</span> }</span>
+<span class="line"></span>
+<span class="line"><span class="text-blue-400">export default function</span> <span class="text-yellow-300">TaskList</span>({ tasks }: { tasks: <span class="text-green-300">Task</span>[] }) {</span>
+<span class="line">  <span class="text-slate-500">// ✅ useOptimistic — สร้าง "state ชั่วคราว" ที่เปลี่ยนทันที</span></span>
+<span class="line">  <span class="text-blue-400">const</span> [optimisticTasks, addOptimistic] = <span class="text-yellow-300">useOptimistic</span>(</span>
+<span class="line">    tasks,</span>
+<span class="line">    <span class="text-slate-500">// ฟังก์ชันนี้จะถูกเรียกเมื่อ addOptimistic() ทำงาน</span></span>
+<span class="line">    (currentTasks: <span class="text-green-300">Task</span>[], taskId: <span class="text-green-300">string</span>) =&gt;</span>
+<span class="line">      currentTasks.<span class="text-yellow-300">map</span>((t) =&gt;</span>
+<span class="line">        t.id === taskId ? { ...t, completed: !t.completed } : t</span>
+<span class="line">      )</span>
+<span class="line">  )</span>
+<span class="line"></span>
+<span class="line">  <span class="text-blue-400">async function</span> <span class="text-yellow-300">handleToggle</span>(taskId: <span class="text-green-300">string</span>) {</span>
+<span class="line">    <span class="text-slate-500">// 1️⃣ เปลี่ยน UI ทันที (ไม่รอ Server)</span></span>
+<span class="line">    <span class="text-yellow-300">addOptimistic</span>(taskId)</span>
+<span class="line">    <span class="text-slate-500">// 2️⃣ ส่งคำสั่งไป Server (ทำพร้อมกัน)</span></span>
+<span class="line">    <span class="text-blue-400">await</span> <span class="text-yellow-300">toggleTask</span>(taskId)</span>
+<span class="line">  }</span>
+<span class="line"></span>
+<span class="line">  <span class="text-blue-400">return</span> (</span>
+<span class="line">    &lt;<span class="text-red-400">ul</span>&gt;</span>
+<span class="line">      {optimisticTasks.<span class="text-yellow-300">map</span>((task) =&gt; (</span>
+<span class="line">        &lt;<span class="text-red-400">li</span> <span class="text-yellow-300">key</span>={task.id} <span class="text-yellow-300">className</span>=<span class="text-green-400">"flex items-center gap-2"</span>&gt;</span>
+<span class="line">          &lt;<span class="text-red-400">input</span></span>
+<span class="line">            <span class="text-yellow-300">type</span>=<span class="text-green-400">"checkbox"</span></span>
+<span class="line">            <span class="text-yellow-300">checked</span>={task.completed}</span>
+<span class="line">            <span class="text-yellow-300">onChange</span>={() =&gt; <span class="text-yellow-300">handleToggle</span>(task.id)}</span>
+<span class="line">          /&gt;</span>
+<span class="line">          &lt;<span class="text-red-400">span</span> <span class="text-yellow-300">className</span>={task.completed ? <span class="text-green-400">"line-through"</span> : <span class="text-green-400">""</span>}&gt;</span>
+<span class="line">            {task.title}</span>
+<span class="line">          &lt;/<span class="text-red-400">span</span>&gt;</span>
+<span class="line">        &lt;/<span class="text-red-400">li</span>&gt;</span>
+<span class="line">      ))}</span>
+<span class="line">    &lt;/<span class="text-red-400">ul</span>&gt;</span>
+<span class="line">  )</span>
+<span class="line">}</span></code></pre>
+            </div>
+
+            <!-- Loading & Skeleton -->
+            <div class="bg-surface-800 border border-slate-700/50 rounded-xl overflow-hidden mb-6">
+                <div class="flex items-center justify-between px-4 py-3 bg-surface-900/50 border-b border-slate-700/50">
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-red-500/60"></span>
+                        <span class="w-3 h-3 rounded-full bg-yellow-500/60"></span>
+                        <span class="w-3 h-3 rounded-full bg-green-500/60"></span>
+                        <span class="text-xs text-slate-500 ml-2 font-mono">app/projects/loading.tsx</span>
+                    </div>
+                    <button onclick="copyCode(this)" class="text-xs text-slate-500 hover:text-brand-400 transition-colors flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                        Copy
+                    </button>
+                </div>
+                <pre class="p-4 overflow-x-auto"><code class="text-sm font-mono code-block"><span class="line"><span class="text-slate-500">// app/projects/loading.tsx</span></span>
+<span class="line"><span class="text-slate-500">// ✅ Next.js จะแสดงไฟล์นี้อัตโนมัติระหว่างโหลดข้อมูล!</span></span>
+<span class="line"></span>
+<span class="line"><span class="text-blue-400">export default function</span> <span class="text-yellow-300">Loading</span>() {</span>
+<span class="line">  <span class="text-blue-400">return</span> (</span>
+<span class="line">    &lt;<span class="text-red-400">div</span> <span class="text-yellow-300">className</span>=<span class="text-green-400">"space-y-4 p-8"</span>&gt;</span>
+<span class="line">      <span class="text-slate-500">{/* Skeleton UI — กล่องสีเทาเคลื่อนไหว */}</span></span>
+<span class="line">      {[1, 2, 3].<span class="text-yellow-300">map</span>((i) =&gt; (</span>
+<span class="line">        &lt;<span class="text-red-400">div</span> <span class="text-yellow-300">key</span>={i} <span class="text-yellow-300">className</span>=<span class="text-green-400">"animate-pulse"</span>&gt;</span>
+<span class="line">          &lt;<span class="text-red-400">div</span> <span class="text-yellow-300">className</span>=<span class="text-green-400">"h-6 bg-gray-200 rounded w-1/3 mb-2"</span> /&gt;</span>
+<span class="line">          &lt;<span class="text-red-400">div</span> <span class="text-yellow-300">className</span>=<span class="text-green-400">"h-4 bg-gray-200 rounded w-2/3"</span> /&gt;</span>
+<span class="line">        &lt;/<span class="text-red-400">div</span>&gt;</span>
+<span class="line">      ))}</span>
+<span class="line">    &lt;/<span class="text-red-400">div</span>&gt;</span>
+<span class="line">  )</span>
+<span class="line">}</span></code></pre>
+            </div>
+
+            <!-- Skeleton Demo -->
+            <div class="bg-surface-800 border border-slate-700/50 rounded-xl p-6 mb-6">
+                <h3 class="text-lg font-semibold text-white mb-4">👀 Skeleton UI — ตัวอย่างสด</h3>
+                <p class="text-xs text-slate-500 mb-4">นี่คือสิ่งที่ User จะเห็นระหว่างข้อมูลกำลังโหลด:</p>
+                <div class="space-y-3">
+                    <div class="animate-pulse flex items-center gap-3 bg-surface-900 p-4 rounded-lg">
+                        <div class="w-10 h-10 bg-slate-700 rounded-lg"></div>
+                        <div class="flex-1">
+                            <div class="h-4 bg-slate-700 rounded w-1/3 mb-2"></div>
+                            <div class="h-3 bg-slate-700 rounded w-2/3"></div>
+                        </div>
+                        <div class="h-6 w-16 bg-slate-700 rounded-full"></div>
+                    </div>
+                    <div class="animate-pulse flex items-center gap-3 bg-surface-900 p-4 rounded-lg">
+                        <div class="w-10 h-10 bg-slate-700 rounded-lg"></div>
+                        <div class="flex-1">
+                            <div class="h-4 bg-slate-700 rounded w-1/4 mb-2"></div>
+                            <div class="h-3 bg-slate-700 rounded w-1/2"></div>
+                        </div>
+                        <div class="h-6 w-16 bg-slate-700 rounded-full"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Checklist -->
+            <div class="bg-surface-800 border border-slate-700/50 rounded-xl p-6">
+                <h3 class="font-semibold text-white mb-4 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+                    Actionable Checklist — Phase 5
+                </h3>
+                <div class="space-y-2">
+                    <label class="checklist-item flex items-center gap-3 p-2 rounded-lg hover:bg-surface-700/50 cursor-pointer text-sm">
+                        <input type="checkbox" class="w-4 h-4 rounded border-slate-600 bg-surface-900 text-brand-500 focus:ring-brand-500/30">
+                        <span class="text-slate-300">สร้าง <code class="text-xs bg-surface-900 px-1.5 py-0.5 rounded">loading.tsx</code> ในแต่ละ route</span>
+                    </label>
+                    <label class="checklist-item flex items-center gap-3 p-2 rounded-lg hover:bg-surface-700/50 cursor-pointer text-sm">
+                        <input type="checkbox" class="w-4 h-4 rounded border-slate-600 bg-surface-900 text-brand-500 focus:ring-brand-500/30">
+                        <span class="text-slate-300">ออกแบบ Skeleton UI ให้เหมือนเนื้อหาจริง</span>
+                    </label>
+                    <label class="checklist-item flex items-center gap-3 p-2 rounded-lg hover:bg-surface-700/50 cursor-pointer text-sm">
+                        <input type="checkbox" class="w-4 h-4 rounded border-slate-600 bg-surface-900 text-brand-500 focus:ring-brand-500/30">
+                        <span class="text-slate-300">ใช้ <code class="text-xs bg-surface-900 px-1.5 py-0.5 rounded">useOptimistic</code> กับ action ที่ต้องการ instant feedback</span>
+                    </label>
+                    <label class="checklist-item flex items-center gap-3 p-2 rounded-lg hover:bg-surface-700/50 cursor-pointer text-sm">
+                        <input type="checkbox" class="w-4 h-4 rounded border-slate-600 bg-surface-900 text-brand-500 focus:ring-brand-500/30">
+                        <span class="text-slate-300">ใช้ <code class="text-xs bg-surface-900 px-1.5 py-0.5 rounded">isPending</code> disable ปุ่มระหว่าง submit</span>
+                    </label>
+                    <label class="checklist-item flex items-center gap-3 p-2 rounded-lg hover:bg-surface-700/50 cursor-pointer text-sm">
+                        <input type="checkbox" class="w-4 h-4 rounded border-slate-600 bg-surface-900 text-brand-500 focus:ring-brand-500/30">
+                        <span class="text-slate-300">เพิ่ม <code class="text-xs bg-surface-900 px-1.5 py-0.5 rounded">animate-pulse</code> class จาก Tailwind</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <div class="flex justify-between mt-8">
+                <button onclick="showPhase(4)" class="flex items-center gap-2 px-4 py-2 bg-surface-800 border border-slate-700 rounded-lg text-sm text-slate-300 hover:text-white hover:border-brand-500/50 transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12"/></svg> Phase 4
+                </button>
+                <button onclick="showPhase(6)" class="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-brand-600 to-brand-500 text-white rounded-lg text-sm font-semibold hover:from-brand-500 hover:to-brand-400 transition-all">
+                    ⭐ Phase 6: Ultimate Integration <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                </button>
+            </div>
+        </section>
+
+        <!-- ============ PHASE 6: ULTIMATE INTEGRATION ============ -->
+        <section id="phase-6" class="phase-content hidden fade-in">
+            <div class="flex items-center gap-3 mb-2">
+                <span class="tag bg-brand-500/20 text-brand-300">Phase 6</span>
+                <span class="tag bg-yellow-500/20 text-yellow-300">⭐ เน้นพิเศษ</span>
+            </div>
+            <h2 class="text-3xl font-bold text-white mb-2">The Ultimate Integration</h2>
+            <p class="text-slate-400 mb-2">รวมร่าง Zod + Prisma + Server Actions — ตัวอย่าง Production-Ready ที่ใช้งานได้จริง</p>
+            <p class="text-xs text-brand-400 mb-8">นี่คือ "จิ๊กซอว์ชิ้นสุดท้าย" ที่เอาทุกอย่างมาต่อกัน 🧩</p>
+
+            <!-- Ultimate Flow -->
+            <div class="bg-gradient-to-br from-brand-900/30 to-surface-800 border border-brand-500/20 rounded-xl p-6 mb-6">
+                <h3 class="text-lg font-semibold text-white mb-4">🔄 Full Flow: จากฟอร์ม → Zod → Prisma → Response</h3>
+                <div class="flex flex-col gap-2">
+                    <div class="flex items-center gap-3">
+                        <span class="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center text-xs font-bold text-green-400 flex-shrink-0">1</span>
+                        <div class="flex-1 bg-surface-800/80 rounded-lg p-3">
+                            <span class="text-sm text-white font-medium">User กรอกฟอร์ม</span>
+                            <span class="text-xs text-slate-500 ml-2">→ กดปุ่ม Submit</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center text-xs font-bold text-amber-400 flex-shrink-0">2</span>
+                        <div class="flex-1 bg-surface-800/80 rounded-lg p-3">
+                            <span class="text-sm text-white font-medium">Zod safeParse()</span>
+                            <span class="text-xs text-slate-500 ml-2">→ Validate ข้อมูล — ถ้าผิดส่ง Error กลับ</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center text-xs font-bold text-blue-400 flex-shrink-0">3</span>
+                        <div class="flex-1 bg-surface-800/80 rounded-lg p-3">
+                            <span class="text-sm text-white font-medium">Prisma create()</span>
+                            <span class="text-xs text-slate-500 ml-2">→ บันทึกลง Database</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center text-xs font-bold text-purple-400 flex-shrink-0">4</span>
+                        <div class="flex-1 bg-surface-800/80 rounded-lg p-3">
+                            <span class="text-sm text-white font-medium">revalidatePath()</span>
+                            <span class="text-xs text-slate-500 ml-2">→ Refresh หน้าเว็บ</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="w-8 h-8 rounded-full bg-brand-500/20 flex items-center justify-center text-xs font-bold text-brand-400 flex-shrink-0">5</span>
+                        <div class="flex-1 bg-surface-800/80 rounded-lg p-3">
+                            <span class="text-sm text-white font-medium">Return ActionResult</span>
+                            <span class="text-xs text-slate-500 ml-2">→ ส่ง success/error กลับ Client</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- THE actions.ts -->
+            <div class="bg-surface-800 border border-brand-500/30 rounded-xl overflow-hidden mb-6 glow-border">
+                <div class="flex items-center justify-between px-4 py-3 bg-surface-900/50 border-b border-brand-500/20">
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-red-500/60"></span>
+                        <span class="w-3 h-3 rounded-full bg-yellow-500/60"></span>
+                        <span class="w-3 h-3 rounded-full bg-green-500/60"></span>
+                        <span class="text-xs text-brand-400 ml-2 font-mono font-semibold">⭐ app/actions.ts — Ultimate Version</span>
+                    </div>
+                    <button onclick="copyCode(this)" class="text-xs text-slate-500 hover:text-brand-400 transition-colors flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                        Copy
+                    </button>
+                </div>
+                <pre class="p-4 overflow-x-auto"><code class="text-sm font-mono code-block"><span class="line"><span class="text-purple-400">"use server"</span></span>
+<span class="line"></span>
+<span class="line"><span class="text-blue-400">import</span> { prisma } <span class="text-blue-400">from</span> <span class="text-green-400">"@/lib/prisma"</span></span>
+<span class="line"><span class="text-blue-400">import</span> { revalidatePath } <span class="text-blue-400">from</span> <span class="text-green-400">"next/cache"</span></span>
+<span class="line"><span class="text-blue-400">import</span> { createProjectSchema } <span class="text-blue-400">from</span> <span class="text-green-400">"@/lib/validations"</span></span>
+<span class="line"><span class="text-blue-400">import type</span> { ActionResult } <span class="text-blue-400">from</span> <span class="text-green-400">"@/lib/types"</span></span>
+<span class="line"></span>
+<span class="line"><span class="text-slate-500">// ============================================</span></span>
+<span class="line"><span class="text-slate-500">// ⭐ CREATE PROJECT — Zod + Prisma + Error Handling</span></span>
+<span class="line"><span class="text-slate-500">// ============================================</span></span>
+<span class="line"><span class="text-blue-400">export async function</span> <span class="text-yellow-300">createProject</span>(</span>
+<span class="line">  _prevState: <span class="text-green-300">ActionResult</span>,  <span class="text-slate-500">// state ก่อนหน้า (จาก useActionState)</span></span>
+<span class="line">  formData: <span class="text-green-300">FormData</span></span>
+<span class="line">): <span class="text-green-300">Promise</span>&lt;<span class="text-green-300">ActionResult</span>&gt; {</span>
+<span class="line">  <span class="text-blue-400">try</span> {</span>
+<span class="line">    <span class="text-slate-500">// ──────────────────────────────────</span></span>
+<span class="line">    <span class="text-slate-500">// STEP 1: ดึงค่าจากฟอร์ม</span></span>
+<span class="line">    <span class="text-slate-500">// ──────────────────────────────────</span></span>
+<span class="line">    <span class="text-blue-400">const</span> rawData = {</span>
+<span class="line">      name: formData.<span class="text-yellow-300">get</span>(<span class="text-green-400">"name"</span>),</span>
+<span class="line">      description: formData.<span class="text-yellow-300">get</span>(<span class="text-green-400">"description"</span>),</span>
+<span class="line">      ownerEmail: formData.<span class="text-yellow-300">get</span>(<span class="text-green-400">"ownerEmail"</span>),</span>
+<span class="line">    }</span>
+<span class="line"></span>
+<span class="line">    <span class="text-slate-500">// ──────────────────────────────────</span></span>
+<span class="line">    <span class="text-slate-500">// STEP 2: ✅ Validate ด้วย Zod</span></span>
+<span class="line">    <span class="text-slate-500">// ──────────────────────────────────</span></span>
+<span class="line">    <span class="text-blue-400">const</span> validated = createProjectSchema.<span class="text-yellow-300">safeParse</span>(rawData)</span>
+<span class="line"></span>
+<span class="line">    <span class="text-blue-400">if</span> (!validated.success) {</span>
+<span class="line">      <span class="text-slate-500">// ❌ ข้อมูลไม่ผ่าน → ส่ง Error กลับให้ฟอร์ม</span></span>
+<span class="line">      <span class="text-blue-400">return</span> {</span>
+<span class="line">        success: <span class="text-orange-300">false</span>,</span>
+<span class="line">        message: <span class="text-green-400">"กรุณาตรวจสอบข้อมูลที่กรอก"</span>,</span>
+<span class="line">        errors: validated.error.<span class="text-yellow-300">flatten</span>().fieldErrors <span class="text-blue-400">as</span></span>
+<span class="line">          <span class="text-green-300">Record</span>&lt;<span class="text-green-300">string</span>, <span class="text-green-300">string</span>[]&gt;,</span>
+<span class="line">      }</span>
+<span class="line">    }</span>
+<span class="line"></span>
+<span class="line">    <span class="text-slate-500">// ──────────────────────────────────</span></span>
+<span class="line">    <span class="text-slate-500">// STEP 3: 💾 บันทึกลง Database</span></span>
+<span class="line">    <span class="text-slate-500">// ──────────────────────────────────</span></span>
+<span class="line">    <span class="text-blue-400">await</span> prisma.project.<span class="text-yellow-300">create</span>({</span>
+<span class="line">      data: {</span>
+<span class="line">        name: validated.data.name,</span>
+<span class="line">        description: validated.data.description,</span>
+<span class="line">        <span class="text-slate-500">// ownerEmail สามารถเก็บตาม Business Logic</span></span>
+<span class="line">      },</span>
+<span class="line">    })</span>
+<span class="line"></span>
+<span class="line">    <span class="text-slate-500">// ──────────────────────────────────</span></span>
+<span class="line">    <span class="text-slate-500">// STEP 4: 🔄 Refresh หน้าเว็บ</span></span>
+<span class="line">    <span class="text-slate-500">// ──────────────────────────────────</span></span>
+<span class="line">    <span class="text-yellow-300">revalidatePath</span>(<span class="text-green-400">"/projects"</span>)</span>
+<span class="line"></span>
+<span class="line">    <span class="text-slate-500">// ──────────────────────────────────</span></span>
+<span class="line">    <span class="text-slate-500">// STEP 5: ✅ ส่งผลลัพธ์สำเร็จ</span></span>
+<span class="line">    <span class="text-slate-500">// ──────────────────────────────────</span></span>
+<span class="line">    <span class="text-blue-400">return</span> {</span>
+<span class="line">      success: <span class="text-orange-300">true</span>,</span>
+<span class="line">      message: <span class="text-green-400">"สร้างโปรเจกต์สำเร็จ! 🎉"</span>,</span>
+<span class="line">    }</span>
+<span class="line"></span>
+<span class="line">  } <span class="text-blue-400">catch</span> (error) {</span>
+<span class="line">    <span class="text-slate-500">// ──────────────────────────────────</span></span>
+<span class="line">    <span class="text-slate-500">// 🛑 Unexpected Error (DB ล่ม ฯลฯ)</span></span>
+<span class="line">    <span class="text-slate-500">// ──────────────────────────────────</span></span>
+<span class="line">    console.<span class="text-yellow-300">error</span>(<span class="text-green-400">"[createProject] Error:"</span>, error)</span>
+<span class="line">    <span class="text-blue-400">return</span> {</span>
+<span class="line">      success: <span class="text-orange-300">false</span>,</span>
+<span class="line">      message: <span class="text-green-400">"เกิดข้อผิดพลาดภายในระบบ กรุณาลองใหม่"</span>,</span>
+<span class="line">    }</span>
+<span class="line">  }</span>
+<span class="line">}</span></code></pre>
+            </div>
+
+            <!-- Error Display Form -->
+            <div class="bg-surface-800 border border-brand-500/30 rounded-xl overflow-hidden mb-6 glow-border">
+                <div class="flex items-center justify-between px-4 py-3 bg-surface-900/50 border-b border-brand-500/20">
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-red-500/60"></span>
+                        <span class="w-3 h-3 rounded-full bg-yellow-500/60"></span>
+                        <span class="w-3 h-3 rounded-full bg-green-500/60"></span>
+                        <span class="text-xs text-brand-400 ml-2 font-mono font-semibold">⭐ app/components/ProjectForm.tsx — แสดง Error จาก Zod</span>
+                    </div>
+                    <button onclick="copyCode(this)" class="text-xs text-slate-500 hover:text-brand-400 transition-colors flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                        Copy
+                    </button>
+                </div>
+                <pre class="p-4 overflow-x-auto"><code class="text-sm font-mono code-block"><span class="line"><span class="text-purple-400">"use client"</span></span>
+<span class="line"></span>
+<span class="line"><span class="text-blue-400">import</span> { useActionState } <span class="text-blue-400">from</span> <span class="text-green-400">"react"</span></span>
+<span class="line"><span class="text-blue-400">import</span> { createProject } <span class="text-blue-400">from</span> <span class="text-green-400">"../actions"</span></span>
+<span class="line"><span class="text-blue-400">import type</span> { ActionResult } <span class="text-blue-400">from</span> <span class="text-green-400">"@/lib/types"</span></span>
+<span class="line"></span>
+<span class="line"><span class="text-blue-400">const</span> initialState: <span class="text-green-300">ActionResult</span> = {</span>
+<span class="line">  success: <span class="text-orange-300">false</span>,</span>
+<span class="line">  message: <span class="text-green-400">""</span>,</span>
+<span class="line">}</span>
+<span class="line"></span>
+<span class="line"><span class="text-blue-400">export default function</span> <span class="text-yellow-300">ProjectForm</span>() {</span>
+<span class="line">  <span class="text-blue-400">const</span> [state, formAction, isPending] = <span class="text-yellow-300">useActionState</span>(</span>
+<span class="line">    createProject,</span>
+<span class="line">    initialState</span>
+<span class="line">  )</span>
+<span class="line"></span>
+<span class="line">  <span class="text-blue-400">return</span> (</span>
+<span class="line">    &lt;<span class="text-red-400">form</span> <span class="text-yellow-300">action</span>={formAction} <span class="text-yellow-300">className</span>=<span class="text-green-400">"space-y-4 max-w-lg"</span>&gt;</span>
+<span class="line">      <span class="text-slate-500">{/* ── Global Message ── */}</span></span>
+<span class="line">      {state.message &amp;&amp; (</span>
+<span class="line">        &lt;<span class="text-red-400">div</span> <span class="text-yellow-300">className</span>={`p-3 rounded-lg text-sm ${</span></span>
+<span class="line">          state.success</span>
+<span class="line">            ? <span class="text-green-400">"bg-green-500/10 text-green-400 border border-green-500/20"</span></span>
+<span class="line">            : <span class="text-green-400">"bg-red-500/10 text-red-400 border border-red-500/20"</span></span>
+<span class="line">        }`}&gt;</span>
+<span class="line">          {state.success ? <span class="text-green-400">"✅"</span> : <span class="text-green-400">"❌"</span>} {state.message}</span>
+<span class="line">        &lt;/<span class="text-red-400">div</span>&gt;</span>
+<span class="line">      )}</span>
+<span class="line"></span>
+<span class="line">      <span class="text-slate-500">{/* ── ชื่อโปรเจกต์ ── */}</span></span>
+<span class="line">      &lt;<span class="text-red-400">div</span>&gt;</span>
+<span class="line">        &lt;<span class="text-red-400">label</span> <span class="text-yellow-300">className</span>=<span class="text-green-400">"block text-sm font-medium mb-1"</span>&gt;</span>
+<span class="line">          ชื่อโปรเจกต์ *</span>
+<span class="line">        &lt;/<span class="text-red-400">label</span>&gt;</span>
+<span class="line">        &lt;<span class="text-red-400">input</span></span>
+<span class="line">          <span class="text-yellow-300">name</span>=<span class="text-green-400">"name"</span></span>
+<span class="line">          <span class="text-yellow-300">className</span>={`w-full p-2 rounded border ${</span></span>
+<span class="line">            state.errors?.name</span>
+<span class="line">              ? <span class="text-green-400">"border-red-500"</span>  <span class="text-slate-500">// ขอบแดงถ้ามี error!</span></span>
+<span class="line">              : <span class="text-green-400">"border-gray-300"</span></span>
+<span class="line">          }`}</span>
+<span class="line">        /&gt;</span>
+<span class="line">        <span class="text-slate-500">{/* 🔴 แสดง Error Message จาก Zod */}</span></span>
+<span class="line">        {state.errors?.name?.map((err, i) =&gt; (</span>
+<span class="line">          &lt;<span class="text-red-400">p</span> <span class="text-yellow-300">key</span>={i} <span class="text-yellow-300">className</span>=<span class="text-green-400">"text-red-400 text-xs mt-1"</span>&gt;</span>
+<span class="line">            ⚠️ {err}</span>
+<span class="line">          &lt;/<span class="text-red-400">p</span>&gt;</span>
+<span class="line">        ))}</span>
+<span class="line">      &lt;/<span class="text-red-400">div</span>&gt;</span>
+<span class="line"></span>
+<span class="line">      <span class="text-slate-500">{/* ── อีเมลเจ้าของ ── */}</span></span>
+<span class="line">      &lt;<span class="text-red-400">div</span>&gt;</span>
+<span class="line">        &lt;<span class="text-red-400">label</span> <span class="text-yellow-300">className</span>=<span class="text-green-400">"block text-sm font-medium mb-1"</span>&gt;</span>
+<span class="line">          อีเมลเจ้าของ *</span>
+<span class="line">        &lt;/<span class="text-red-400">label</span>&gt;</span>
+<span class="line">        &lt;<span class="text-red-400">input</span></span>
+<span class="line">          <span class="text-yellow-300">name</span>=<span class="text-green-400">"ownerEmail"</span></span>
+<span class="line">          <span class="text-yellow-300">type</span>=<span class="text-green-400">"email"</span></span>
+<span class="line">          <span class="text-yellow-300">className</span>={`w-full p-2 rounded border ${</span></span>
+<span class="line">            state.errors?.ownerEmail</span>
+<span class="line">              ? <span class="text-green-400">"border-red-500"</span></span>
+<span class="line">              : <span class="text-green-400">"border-gray-300"</span></span>
+<span class="line">          }`}</span>
+<span class="line">        /&gt;</span>
+<span class="line">        {state.errors?.ownerEmail?.map((err, i) =&gt; (</span>
+<span class="line">          &lt;<span class="text-red-400">p</span> <span class="text-yellow-300">key</span>={i} <span class="text-yellow-300">className</span>=<span class="text-green-400">"text-red-400 text-xs mt-1"</span>&gt;</span>
+<span class="line">            ⚠️ {err}</span>
+<span class="line">          &lt;/<span class="text-red-400">p</span>&gt;</span>
+<span class="line">        ))}</span>
+<span class="line">      &lt;/<span class="text-red-400">div</span>&gt;</span>
+<span class="line"></span>
+<span class="line">      <span class="text-slate-500">{/* ── Submit Button ── */}</span></span>
+<span class="line">      &lt;<span class="text-red-400">button</span></span>
+<span class="line">        <span class="text-yellow-300">type</span>=<span class="text-green-400">"submit"</span></span>
+<span class="line">        <span class="text-yellow-300">disabled</span>={isPending}</span>
+<span class="line">        <span class="text-yellow-300">className</span>=<span class="text-green-400">"w-full bg-blue-600 hover:bg-blue-500 disabled:bg-gray-400 text-white py-2 rounded font-medium transition-colors"</span></span>
+<span class="line">      &gt;</span>
+<span class="line">        {isPending ? (</span>
+<span class="line">          &lt;<span class="text-red-400">span</span> <span class="text-yellow-300">className</span>=<span class="text-green-400">"flex items-center justify-center gap-2"</span>&gt;</span>
+<span class="line">            &lt;<span class="text-red-400">svg</span> <span class="text-yellow-300">className</span>=<span class="text-green-400">"animate-spin h-4 w-4"</span> <span class="text-yellow-300">viewBox</span>=<span class="text-green-400">"0 0 24 24"</span>&gt;</span>
+<span class="line">              &lt;<span class="text-red-400">circle</span> <span class="text-yellow-300">cx</span>=<span class="text-green-400">"12"</span> <span class="text-yellow-300">cy</span>=<span class="text-green-400">"12"</span> <span class="text-yellow-300">r</span>=<span class="text-green-400">"10"</span> <span class="text-yellow-300">stroke</span>=<span class="text-green-400">"currentColor"</span></span>
+<span class="line">              <span class="text-yellow-300">strokeWidth</span>=<span class="text-green-400">"4"</span> <span class="text-yellow-300">fill</span>=<span class="text-green-400">"none"</span> <span class="text-yellow-300">opacity</span>=<span class="text-green-400">"0.25"</span> /&gt;</span>
+<span class="line">              &lt;<span class="text-red-400">path</span> <span class="text-yellow-300">fill</span>=<span class="text-green-400">"currentColor"</span> <span class="text-yellow-300">d</span>=<span class="text-green-400">"M4 12a8 8 0..."</span> /&gt;</span>
+<span class="line">            &lt;/<span class="text-red-400">svg</span>&gt;</span>
+<span class="line">            กำลังบันทึก...</span>
+<span class="line">          &lt;/<span class="text-red-400">span</span>&gt;</span>
+<span class="line">        ) : (</span>
+<span class="line">          <span class="text-green-400">"สร้างโปรเจกต์"</span></span>
+<span class="line">        )}</span>
+<span class="line">      &lt;/<span class="text-red-400">button</span>&gt;</span>
+<span class="line">    &lt;/<span class="text-red-400">form</span>&gt;</span>
+<span class="line">  )</span>
+<span class="line">}</span></code></pre>
+            </div>
+
+            <!-- Key Technique: flatten() -->
+            <div class="bg-brand-500/5 border border-brand-500/20 rounded-xl p-5 mb-6">
+                <h4 class="text-brand-400 font-semibold text-sm mb-3">🔑 เทคนิคสำคัญ: <code class="bg-brand-500/20 px-1.5 py-0.5 rounded text-xs">.flatten().fieldErrors</code></h4>
+                <p class="text-sm text-slate-400 mb-3">
+                    Zod จะให้ error เป็น object ซ้อนๆ ซับซ้อน แต่ <code class="bg-surface-700 px-1.5 py-0.5 rounded text-xs">.flatten()</code> จะแปลงให้เป็น format ง่ายๆ:
+                </p>
+                <div class="bg-surface-800 rounded-lg p-4 font-mono text-xs">
+                    <div class="text-slate-500 mb-2">// ผลลัพธ์จาก validated.error.flatten().fieldErrors</div>
+                    <div class="text-slate-300">{</div>
+                    <div class="text-slate-300 ml-4">name: [<span class="text-green-400">"ชื่อโปรเจกต์ต้องมีอย่างน้อย 5 ตัวอักษร"</span>],</div>
+                    <div class="text-slate-300 ml-4">ownerEmail: [<span class="text-green-400">"รูปแบบอีเมลไม่ถูกต้อง"</span>],</div>
+                    <div class="text-slate-300">}</div>
+                </div>
+                <p class="text-xs text-slate-500 mt-3">↑ แต่ละ field เป็น array ของ error messages → วนลูปแสดงได้เลย!</p>
+            </div>
+
+            <!-- Interactive Demo -->
+            <div class="bg-surface-800 border border-slate-700/50 rounded-xl p-6 mb-6">
+                <h3 class="text-lg font-semibold text-white mb-4">🎮 ลองเล่น Interactive Demo</h3>
+                <p class="text-xs text-slate-500 mb-4">ลองกรอกข้อมูลผิดๆ ดู — จะเห็น Error แบบเดียวกับที่ Zod สร้างให้:</p>
+                <div class="max-w-md mx-auto">
+                    <div id="demoMessage" class="hidden p-3 rounded-lg text-sm mb-3"></div>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">ชื่อโปรเจกต์ *</label>
+                            <input id="demoName" type="text" placeholder="กรอกชื่อ (5-50 ตัวอักษร)" class="w-full bg-surface-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-300 focus:outline-none focus:border-brand-500 transition-colors">
+                            <p id="demoNameError" class="text-red-400 text-xs mt-1 hidden"></p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">อีเมลเจ้าของ *</label>
+                            <input id="demoEmail" type="text" placeholder="your@email.com" class="w-full bg-surface-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-300 focus:outline-none focus:border-brand-500 transition-colors">
+                            <p id="demoEmailError" class="text-red-400 text-xs mt-1 hidden"></p>
+                        </div>
+                        <button onclick="demoValidate()" class="w-full bg-brand-600 hover:bg-brand-500 text-white py-2 rounded-lg font-medium transition-colors text-sm">
+                            ทดสอบ Validate
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- File Structure -->
+            <div class="bg-surface-800 border border-slate-700/50 rounded-xl p-6 mb-6">
+                <h3 class="text-lg font-semibold text-white mb-4">📁 โครงสร้างไฟล์สุดท้าย</h3>
+                <div class="bg-surface-900 rounded-lg p-4 font-mono text-xs leading-loose">
+                    <div class="text-slate-400">📦 my-project/</div>
+                    <div class="text-slate-500 ml-4">├── 📂 app/</div>
+                    <div class="text-brand-400 ml-8">│   ├── <strong>actions.ts</strong>        <span class="text-slate-600"># Server Actions + Zod</span></div>
+                    <div class="text-slate-400 ml-8">│   ├── page.tsx            <span class="text-slate-600"># Server Component</span></div>
+                    <div class="text-slate-400 ml-8">│   ├── layout.tsx</div>
+                    <div class="text-slate-500 ml-8">│   ├── 📂 components/</div>
+                    <div class="text-brand-400 ml-12">│   │   └── <strong>ProjectForm.tsx</strong> <span class="text-slate-600"># Client Form</span></div>
+                    <div class="text-slate-500 ml-8">│   └── 📂 projects/</div>
+                    <div class="text-slate-400 ml-12">│       ├── page.tsx        <span class="text-slate-600"># List Projects</span></div>
+                    <div class="text-pink-400 ml-12">│       └── <strong>loading.tsx</strong>     <span class="text-slate-600"># Skeleton UI</span></div>
+                    <div class="text-slate-500 ml-4">├── 📂 lib/</div>
+                    <div class="text-blue-400 ml-8">│   ├── <strong>prisma.ts</strong>          <span class="text-slate-600"># Singleton Client</span></div>
+                    <div class="text-amber-400 ml-8">│   ├── <strong>validations.ts</strong>     <span class="text-slate-600"># Zod Schemas</span></div>
+                    <div class="text-purple-400 ml-8">│   └── <strong>types.ts</strong>           <span class="text-slate-600"># ActionResult type</span></div>
+                    <div class="text-slate-500 ml-4">├── 📂 prisma/</div>
+                    <div class="text-green-400 ml-8">│   └── <strong>schema.prisma</strong>      <span class="text-slate-600"># Database Schema</span></div>
+                    <div class="text-slate-400 ml-4">├── .env                   <span class="text-slate-600"># DATABASE_URL</span></div>
+                    <div class="text-slate-400 ml-4">└── package.json</div>
+                </div>
+            </div>
+
+            <!-- Checklist -->
+            <div class="bg-surface-800 border border-brand-500/30 rounded-xl p-6 glow-border">
+                <h3 class="font-semibold text-white mb-4 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+                    ⭐ Actionable Checklist — Phase 6 (Ultimate)
+                </h3>
+                <div class="space-y-2">
+                    <label class="checklist-item flex items-center gap-3 p-2 rounded-lg hover:bg-surface-700/50 cursor-pointer text-sm">
+                        <input type="checkbox" class="w-4 h-4 rounded border-slate-600 bg-surface-900 text-brand-500 focus:ring-brand-500/30">
+                        <span class="text-slate-300">สร้าง <code class="text-xs bg-surface-900 px-1.5 py-0.5 rounded">lib/validations.ts</code> — Zod Schemas</span>
+                    </label>
+                    <label class="checklist-item flex items-center gap-3 p-2 rounded-lg hover:bg-surface-700/50 cursor-pointer text-sm">
+                        <input type="checkbox" class="w-4 h-4 rounded border-slate-600 bg-surface-900 text-brand-500 focus:ring-brand-500/30">
+                        <span class="text-slate-300">สร้าง <code class="text-xs bg-surface-900 px-1.5 py-0.5 rounded">lib/types.ts</code> — ActionResult type</span>
+                    </label>
+                    <label class="checklist-item flex items-center gap-3 p-2 rounded-lg hover:bg-surface-700/50 cursor-pointer text-sm">
+                        <input type="checkbox" class="w-4 h-4 rounded border-slate-600 bg-surface-900 text-brand-500 focus:ring-brand-500/30">
+                        <span class="text-slate-300">แก้ <code class="text-xs bg-surface-900 px-1.5 py-0.5 rounded">actions.ts</code> — เพิ่ม safeParse + flatten</span>
+                    </label>
+                    <label class="checklist-item flex items-center gap-3 p-2 rounded-lg hover:bg-surface-700/50 cursor-pointer text-sm">
+                        <input type="checkbox" class="w-4 h-4 rounded border-slate-600 bg-surface-900 text-brand-500 focus:ring-brand-500/30">
+                        <span class="text-slate-300">สร้าง <code class="text-xs bg-surface-900 px-1.5 py-0.5 rounded">ProjectForm.tsx</code> — แสดง field-level errors</span>
+                    </label>
+                    <label class="checklist-item flex items-center gap-3 p-2 rounded-lg hover:bg-surface-700/50 cursor-pointer text-sm">
+                        <input type="checkbox" class="w-4 h-4 rounded border-slate-600 bg-surface-900 text-brand-500 focus:ring-brand-500/30">
+                        <span class="text-slate-300">ทดสอบ: กรอกชื่อสั้นเกิน → เห็น error "ต้องมีอย่างน้อย 5 ตัวอักษร"</span>
+                    </label>
+                    <label class="checklist-item flex items-center gap-3 p-2 rounded-lg hover:bg-surface-700/50 cursor-pointer text-sm">
+                        <input type="checkbox" class="w-4 h-4 rounded border-slate-600 bg-surface-900 text-brand-500 focus:ring-brand-500/30">
+                        <span class="text-slate-300">ทดสอบ: กรอกอีเมลผิด format → เห็น error "รูปแบบอีเมลไม่ถูกต้อง"</span>
+                    </label>
+                    <label class="checklist-item flex items-center gap-3 p-2 rounded-lg hover:bg-surface-700/50 cursor-pointer text-sm">
+                        <input type="checkbox" class="w-4 h-4 rounded border-slate-600 bg-surface-900 text-brand-500 focus:ring-brand-500/30">
+                        <span class="text-slate-300">ทดสอบ: กรอกข้อมูลถูกทั้งหมด → เห็น "สร้างโปรเจกต์สำเร็จ! 🎉"</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Final Note -->
+            <div class="bg-gradient-to-br from-brand-900/30 to-purple-900/20 border border-brand-500/20 rounded-xl p-6 mt-6">
+                <h3 class="text-lg font-semibold text-white mb-3">🎓 สรุปจบ Masterclass</h3>
+                <p class="text-sm text-slate-400 leading-relaxed mb-4">
+                    ยินดีด้วยนะ! ถ้าทำตามมาถึง Phase 6 ได้ แสดงว่าเข้าใจ Flow ทั้งหมดของ Next.js + Prisma + Zod แล้ว:
+                </p>
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
+                    <div class="bg-surface-800/80 rounded-lg p-2 text-center text-green-400">✅ Server Actions</div>
+                    <div class="bg-surface-800/80 rounded-lg p-2 text-center text-blue-400">✅ Prisma ORM</div>
+                    <div class="bg-surface-800/80 rounded-lg p-2 text-center text-amber-400">✅ Zod Validation</div>
+                    <div class="bg-surface-800/80 rounded-lg p-2 text-center text-purple-400">✅ Error Handling</div>
+                    <div class="bg-surface-800/80 rounded-lg p-2 text-center text-pink-400">✅ Optimistic UI</div>
+                    <div class="bg-surface-800/80 rounded-lg p-2 text-center text-brand-400">✅ Full Integration</div>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <div class="flex justify-between mt-8">
+                <button onclick="showPhase(5)" class="flex items-center gap-2 px-4 py-2 bg-surface-800 border border-slate-700 rounded-lg text-sm text-slate-300 hover:text-white hover:border-brand-500/50 transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12"/></svg> Phase 5
+                </button>
+                <button onclick="showPhase(0)" class="flex items-center gap-2 px-4 py-2 bg-surface-800 border border-slate-700 rounded-lg text-sm text-slate-300 hover:text-white hover:border-brand-500/50 transition-colors">
+                    🏠 กลับหน้าแรก
+                </button>
+            </div>
+        </section>
+
+        <!-- Search Results -->
+        <section id="search-results" class="phase-content hidden fade-in">
+            <h2 class="text-2xl font-bold text-white mb-2">🔍 ผลการค้นหา</h2>
+            <p id="searchQuery" class="text-slate-400 mb-6 text-sm"></p>
+            <div id="searchResultsList" class="space-y-3"></div>
+        </section>
+
+    </div>
+</main>
+
+<script>
+    // ============================================
+    //  STATE
+    // ============================================
+    let currentPhase = 0;
+    const completedPhases = new Set();
+
+    // ============================================
+    //  NAVIGATION
+    // ============================================
+    function showPhase(phase) {
+        // Hide all
+        document.querySelectorAll('.phase-content').forEach(el => el.classList.add('hidden'));
+        // Show target
+        const target = document.getElementById(`phase-${phase}`);
+        if (target) {
+            target.classList.remove('hidden');
+            // Re-trigger animation
+            target.classList.remove('fade-in');
+            void target.offsetWidth;
+            target.classList.add('fade-in');
+        }
+        // Update sidebar active state
+        document.querySelectorAll('.sidebar-link').forEach(link => {
+            link.classList.remove('active');
+            if (parseInt(link.dataset.phase) === phase) {
+                link.classList.add('active');
+            }
+        });
+        currentPhase = phase;
+        // Mark as viewed
+        if (phase > 0) {
+            completedPhases.add(phase);
+            updateProgress();
+        }
+        // Close mobile sidebar
+        closeSidebar();
+        // Scroll to top
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function updateProgress() {
+        const total = 6;
+        const done = completedPhases.size;
+        const pct = Math.round((done / total) * 100);
+        document.getElementById('progressText').textContent = `${done} / ${total}`;
+        document.getElementById('progressBar').style.width = `${pct}%`;
+    }
+
+    // ============================================
+    //  SIDEBAR (Mobile)
+    // ============================================
+    function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('mobileOverlay');
+        sidebar.classList.toggle('-translate-x-full');
+        overlay.classList.toggle('hidden');
+    }
+    function closeSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('mobileOverlay');
+        if (!sidebar.classList.contains('-translate-x-full') && window.innerWidth < 1024) {
+            sidebar.classList.add('-translate-x-full');
+            overlay.classList.add('hidden');
+        }
+    }
+    document.getElementById('mobileMenuBtn').addEventListener('click', toggleSidebar);
+
+    // ============================================
+    //  SEARCH
+    // ============================================
+    const searchableContent = [
+        { phase: 1, title: 'Simple CRUD — Server Actions', keywords: 'crud server action form prisma create ฟอร์ม สร้าง เริ่มต้น' },
+        { phase: 1, title: 'Server Components — ดึงข้อมูล', keywords: 'server component findmany list รายการ ดึงข้อมูล read' },
+        { phase: 1, title: 'Update Project — แก้ไขข้อมูล', keywords: 'update edit แก้ไข put prisma.update defaultvalue' },
+        { phase: 1, title: 'Delete Project — ลบข้อมูล', keywords: 'delete ลบ remove prisma.delete hidden input' },
+        { phase: 1, title: '"use server" — Server-side Code', keywords: 'use server directive คำสั่ง' },
+        { phase: 2, title: 'Prisma Schema Design', keywords: 'schema prisma model project task ออกแบบ database' },
+        { phase: 2, title: 'Prisma Client Singleton', keywords: 'singleton client prisma global connection' },
+        { phase: 2, title: 'Migration Commands', keywords: 'migrate migration push generate studio terminal คำสั่ง' },
+        { phase: 2, title: 'Relation — 1:N Project-Task', keywords: 'relation relationship one-to-many ความสัมพันธ์' },
+        { phase: 3, title: 'Zod Validation — ทำไมต้องใช้', keywords: 'zod validate validation ตรวจสอบ ดักข้อมูล ป้องกัน' },
+        { phase: 3, title: 'Zod Schema — min/max/email', keywords: 'min max email string number schema กฎ' },
+        { phase: 3, title: 'safeParse vs parse', keywords: 'safeparse parse error throw ข้อผิดพลาด' },
+        { phase: 3, title: 'z.infer — ดึง Type จาก Schema', keywords: 'infer type typescript interface' },
+        { phase: 4, title: 'try...catch — Error Handling', keywords: 'try catch error handling จัดการ ข้อผิดพลาด' },
+        { phase: 4, title: 'revalidatePath — Refresh Data', keywords: 'revalidatepath refresh cache อัปเดต รีเฟรช' },
+        { phase: 4, title: 'ActionResult — Return Status', keywords: 'actionresult success error message สถานะ ผลลัพธ์' },
+        { phase: 4, title: 'useActionState Hook', keywords: 'useactionstate useformstate hook state form' },
+        { phase: 5, title: 'Optimistic Updates', keywords: 'optimistic update useoptimistic ทันที instant' },
+        { phase: 5, title: 'Loading States — Skeleton UI', keywords: 'loading skeleton animate pulse โหลด' },
+        { phase: 5, title: 'loading.tsx — Auto Loading', keywords: 'loading.tsx automatic suspense' },
+        { phase: 6, title: '⭐ Ultimate actions.ts', keywords: 'ultimate integration zod prisma actions รวม ทั้งหมด' },
+        { phase: 6, title: '⭐ Zod Error → Form Display', keywords: 'flatten fielderrors form display error แสดง ฟอร์ม' },
+        { phase: 6, title: '⭐ ProjectForm + Error Messages', keywords: 'projectform component form error message ui' },
+        { phase: 6, title: 'โครงสร้างไฟล์สุดท้าย', keywords: 'file structure โครงสร้าง ไฟล์ folder' },
+    ];
+
+    function handleSearch(query) {
+        if (!query || query.length < 2) {
+            if (currentPhase === -1) showPhase(0);
+            return;
+        }
+        const q = query.toLowerCase();
+        const results = searchableContent.filter(item =>
+            item.title.toLowerCase().includes(q) ||
+            item.keywords.toLowerCase().includes(q)
+        );
+        showSearchResults(query, results);
+    }
+
+    function showSearchResults(query, results) {
+        document.querySelectorAll('.phase-content').forEach(el => el.classList.add('hidden'));
+        const section = document.getElementById('search-results');
+        section.classList.remove('hidden');
+        document.getElementById('searchQuery').textContent = `ค้นหา "${query}" — พบ ${results.length} รายการ`;
+        
+        const list = document.getElementById('searchResultsList');
+        if (results.length === 0) {
+            list.innerHTML = '<div class="text-slate-500 text-sm p-8 text-center">ไม่พบผลลัพธ์ — ลองค้นหาด้วยคำอื่น</div>';
+        } else {
+            list.innerHTML = results.map(r => `
+                <button onclick="showPhase(${r.phase}); document.getElementById('searchInput').value='';" 
+                    class="w-full text-left bg-surface-800 border border-slate-700/50 rounded-lg p-4 hover:border-brand-500/30 transition-colors">
+                    <div class="flex items-center gap-3">
+                        <span class="w-6 h-6 rounded-md bg-brand-500/10 flex items-center justify-center text-xs font-bold text-brand-400">${r.phase}</span>
+                        <div>
+                            <div class="text-sm text-white font-medium">${r.title}</div>
+                            <div class="text-xs text-slate-500">Phase ${r.phase}</div>
+                        </div>
+                    </div>
+                </button>
+            `).join('');
+        }
+        currentPhase = -1;
+        // Remove active from sidebar
+        document.querySelectorAll('.sidebar-link').forEach(link => link.classList.remove('active'));
+    }
+
+    // ============================================
+    //  COPY CODE
+    // ============================================
+    function copyCode(btn) {
+        const pre = btn.closest('.rounded-xl').querySelector('pre');
+        const code = pre.textContent;
+        navigator.clipboard.writeText(code).then(() => {
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Copied!';
+            btn.classList.add('text-green-400');
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.classList.remove('text-green-400');
+            }, 2000);
+        });
+    }
+
+    // ============================================
+    //  DEMO VALIDATION (Phase 6)
+    // ============================================
+    function demoValidate() {
+        const name = document.getElementById('demoName').value;
+        const email = document.getElementById('demoEmail').value;
+        const msgDiv = document.getElementById('demoMessage');
+        const nameErr = document.getElementById('demoNameError');
+        const emailErr = document.getElementById('demoEmailError');
+        const nameInput = document.getElementById('demoName');
+        const emailInput = document.getElementById('demoEmail');
+        
+        let errors = {};
+        let hasError = false;
+
+        // Reset
+        nameErr.classList.add('hidden');
+        emailErr.classList.add('hidden');
+        nameInput.classList.remove('border-red-500', 'border-green-500');
+        emailInput.classList.remove('border-red-500', 'border-green-500');
+        nameInput.classList.add('border-slate-700');
+        emailInput.classList.add('border-slate-700');
+
+        // Validate name
+        if (!name || name.length < 5) {
+            errors.name = 'ชื่อโปรเจกต์ต้องมีอย่างน้อย 5 ตัวอักษร';
+            hasError = true;
+        } else if (name.length > 50) {
+            errors.name = 'ชื่อโปรเจกต์ต้องไม่เกิน 50 ตัวอักษร';
+            hasError = true;
+        }
+
+        // Validate email
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!email) {
+            errors.email = 'กรุณากรอกอีเมล';
+            hasError = true;
+        } else if (!emailRegex.test(email)) {
+            errors.email = 'รูปแบบอีเมลไม่ถูกต้อง';
+            hasError = true;
+        }
+
+        // Show results
+        if (hasError) {
+            msgDiv.className = 'p-3 rounded-lg text-sm mb-3 bg-red-500/10 text-red-400 border border-red-500/20';
+            msgDiv.textContent = '❌ กรุณาตรวจสอบข้อมูลที่กรอก';
+            msgDiv.classList.remove('hidden');
+
+            if (errors.name) {
+                nameErr.textContent = '⚠️ ' + errors.name;
+                nameErr.classList.remove('hidden');
+                nameInput.classList.remove('border-slate-700');
+                nameInput.classList.add('border-red-500');
+            }
+            if (errors.email) {
+                emailErr.textContent = '⚠️ ' + errors.email;
+                emailErr.classList.remove('hidden');
+                emailInput.classList.remove('border-slate-700');
+                emailInput.classList.add('border-red-500');
+            }
+        } else {
+            msgDiv.className = 'p-3 rounded-lg text-sm mb-3 bg-green-500/10 text-green-400 border border-green-500/20';
+            msgDiv.textContent = '✅ สร้างโปรเจกต์สำเร็จ! 🎉';
+            msgDiv.classList.remove('hidden');
+            nameInput.classList.remove('border-slate-700');
+            nameInput.classList.add('border-green-500');
+            emailInput.classList.remove('border-slate-700');
+            emailInput.classList.add('border-green-500');
+        }
+    }
+
+    // ============================================
+    //  KEYBOARD SHORTCUTS
+    // ============================================
+    document.addEventListener('keydown', (e) => {
+        // Ctrl/Cmd + K → Focus search
+        if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+            e.preventDefault();
+            document.getElementById('searchInput').focus();
+        }
+        // Arrow keys for navigation (when not in input)
+        if (document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+            if (e.key === 'ArrowRight' && currentPhase < 6) {
+                showPhase(currentPhase + 1);
+            } else if (e.key === 'ArrowLeft' && currentPhase > 0) {
+                showPhase(currentPhase - 1);
+            }
+        }
+    });
+
+    // ============================================
+    //  INIT
+    // ============================================
+    showPhase(0);
+</script>
+
+</body>
+</html>
