@@ -303,30 +303,8 @@
                 <h3 class="text-lg font-semibold text-white mb-4">🧠 แนวคิดหลัก</h3>
                 <p class="text-sm text-slate-400 leading-relaxed mb-4">
                     เฮ้! ก่อนอื่นเลยนะ — ลืมเรื่อง Library เสริมไปก่อน ลืม Validation ไปก่อน ลืมทุกอย่างไปก่อน 
-                    เรากำลังจะทำ CRUD ที่ <strong class="text-white">ง่ายที่สุดในโลก</strong> ครบทั้ง 4 ตัว:
+                    เรากำลังจะทำ CRUD ที่ <strong class="text-white">ง่ายที่สุดในโลก</strong> คือ:
                 </p>
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center mb-4">
-                    <div class="bg-green-500/10 border border-green-500/20 rounded-lg px-3 py-3">
-                        <div class="text-green-400 font-bold text-lg mb-1">C</div>
-                        <div class="text-green-400 font-semibold text-xs">Create</div>
-                        <div class="text-[0.6rem] text-slate-500 mt-0.5">prisma.create()</div>
-                    </div>
-                    <div class="bg-blue-500/10 border border-blue-500/20 rounded-lg px-3 py-3">
-                        <div class="text-blue-400 font-bold text-lg mb-1">R</div>
-                        <div class="text-blue-400 font-semibold text-xs">Read</div>
-                        <div class="text-[0.6rem] text-slate-500 mt-0.5">prisma.findMany()</div>
-                    </div>
-                    <div class="bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-3">
-                        <div class="text-amber-400 font-bold text-lg mb-1">U</div>
-                        <div class="text-amber-400 font-semibold text-xs">Update</div>
-                        <div class="text-[0.6rem] text-slate-500 mt-0.5">prisma.update()</div>
-                    </div>
-                    <div class="bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-3">
-                        <div class="text-red-400 font-bold text-lg mb-1">D</div>
-                        <div class="text-red-400 font-semibold text-xs">Delete</div>
-                        <div class="text-[0.6rem] text-slate-500 mt-0.5">prisma.delete()</div>
-                    </div>
-                </div>
                 <div class="flex flex-col sm:flex-row items-center gap-3 text-center mb-4">
                     <div class="bg-green-500/10 border border-green-500/20 rounded-lg px-4 py-3 flex-1">
                         <div class="text-green-400 font-semibold text-sm">1. ฟอร์ม HTML</div>
@@ -340,7 +318,7 @@
                     <svg class="w-5 h-5 text-slate-600 rotate-90 sm:rotate-0 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
                     <div class="bg-purple-500/10 border border-purple-500/20 rounded-lg px-4 py-3 flex-1">
                         <div class="text-purple-400 font-semibold text-sm">3. Prisma</div>
-                        <div class="text-xs text-slate-500">จัดการ Database</div>
+                        <div class="text-xs text-slate-500">Save ลง Database</div>
                     </div>
                 </div>
                 <div class="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3">
@@ -368,41 +346,17 @@
 <span class="line"><span class="text-blue-400">import</span> { prisma } <span class="text-blue-400">from</span> <span class="text-green-400">"@/lib/prisma"</span></span>
 <span class="line"><span class="text-blue-400">import</span> { revalidatePath } <span class="text-blue-400">from</span> <span class="text-green-400">"next/cache"</span></span>
 <span class="line"></span>
-<span class="line"><span class="text-slate-500">// ✅ CREATE — เพิ่ม Project ใหม่</span></span>
+<span class="line"><span class="text-slate-500">// ✅ Action สำหรับเพิ่ม Project ใหม่</span></span>
 <span class="line"><span class="text-blue-400">export async function</span> <span class="text-yellow-300">createProject</span>(<span class="text-orange-300">formData</span>: <span class="text-green-300">FormData</span>) {</span>
 <span class="line">  <span class="text-blue-400">const</span> name = formData.<span class="text-yellow-300">get</span>(<span class="text-green-400">"name"</span>) <span class="text-blue-400">as</span> <span class="text-green-300">string</span></span>
 <span class="line">  <span class="text-blue-400">const</span> description = formData.<span class="text-yellow-300">get</span>(<span class="text-green-400">"description"</span>) <span class="text-blue-400">as</span> <span class="text-green-300">string</span></span>
 <span class="line"></span>
+<span class="line">  <span class="text-slate-500">// บันทึกลง Database ตรงๆ เลย!</span></span>
 <span class="line">  <span class="text-blue-400">await</span> prisma.project.<span class="text-yellow-300">create</span>({</span>
 <span class="line">    data: { name, description }</span>
 <span class="line">  })</span>
 <span class="line"></span>
-<span class="line">  <span class="text-yellow-300">revalidatePath</span>(<span class="text-green-400">"/"</span>)</span>
-<span class="line">}</span>
-<span class="line"></span>
-<span class="line"><span class="text-slate-500">// ✏️ UPDATE — แก้ไข Project</span></span>
-<span class="line"><span class="text-blue-400">export async function</span> <span class="text-yellow-300">updateProject</span>(<span class="text-orange-300">formData</span>: <span class="text-green-300">FormData</span>) {</span>
-<span class="line">  <span class="text-blue-400">const</span> id = formData.<span class="text-yellow-300">get</span>(<span class="text-green-400">"id"</span>) <span class="text-blue-400">as</span> <span class="text-green-300">string</span></span>
-<span class="line">  <span class="text-blue-400">const</span> name = formData.<span class="text-yellow-300">get</span>(<span class="text-green-400">"name"</span>) <span class="text-blue-400">as</span> <span class="text-green-300">string</span></span>
-<span class="line">  <span class="text-blue-400">const</span> description = formData.<span class="text-yellow-300">get</span>(<span class="text-green-400">"description"</span>) <span class="text-blue-400">as</span> <span class="text-green-300">string</span></span>
-<span class="line"></span>
-<span class="line">  <span class="text-blue-400">await</span> prisma.project.<span class="text-yellow-300">update</span>({</span>
-<span class="line">    where: { id },          <span class="text-slate-500">// ← หา record ที่ต้องการแก้</span></span>
-<span class="line">    data: { name, description }  <span class="text-slate-500">// ← ข้อมูลใหม่</span></span>
-<span class="line">  })</span>
-<span class="line"></span>
-<span class="line">  <span class="text-yellow-300">revalidatePath</span>(<span class="text-green-400">"/"</span>)</span>
-<span class="line">}</span>
-<span class="line"></span>
-<span class="line"><span class="text-slate-500">// 🗑️ DELETE — ลบ Project</span></span>
-<span class="line"><span class="text-blue-400">export async function</span> <span class="text-yellow-300">deleteProject</span>(<span class="text-orange-300">formData</span>: <span class="text-green-300">FormData</span>) {</span>
-<span class="line">  <span class="text-blue-400">const</span> id = formData.<span class="text-yellow-300">get</span>(<span class="text-green-400">"id"</span>) <span class="text-blue-400">as</span> <span class="text-green-300">string</span></span>
-<span class="line"></span>
-<span class="line">  <span class="text-blue-400">await</span> prisma.project.<span class="text-yellow-300">delete</span>({</span>
-<span class="line">    where: { id }  <span class="text-slate-500">// ← ลบตาม id</span></span>
-<span class="line">  })</span>
-<span class="line"></span>
-<span class="line">  <span class="text-yellow-300">revalidatePath</span>(<span class="text-green-400">"/"</span>)</span>
+<span class="line">  <span class="text-yellow-300">revalidatePath</span>(<span class="text-green-400">"/"</span>)  <span class="text-slate-500">// ← บอกให้ Next.js โหลดข้อมูลใหม่</span></span>
 <span class="line">}</span></code></pre>
             </div>
 
@@ -422,17 +376,17 @@
                 </div>
                 <pre class="p-4 overflow-x-auto"><code class="text-sm font-mono code-block"><span class="line"><span class="text-slate-500">// app/page.tsx — Server Component (ค่า default)</span></span>
 <span class="line"><span class="text-blue-400">import</span> { prisma } <span class="text-blue-400">from</span> <span class="text-green-400">"@/lib/prisma"</span></span>
-<span class="line"><span class="text-blue-400">import</span> { createProject, deleteProject } <span class="text-blue-400">from</span> <span class="text-green-400">"./actions"</span></span>
+<span class="line"><span class="text-blue-400">import</span> { createProject } <span class="text-blue-400">from</span> <span class="text-green-400">"./actions"</span></span>
 <span class="line"></span>
 <span class="line"><span class="text-blue-400">export default async function</span> <span class="text-yellow-300">HomePage</span>() {</span>
-<span class="line">  <span class="text-slate-500">// ✅ READ — ดึงข้อมูลบน Server ได้เลย! ไม่ต้อง useEffect</span></span>
+<span class="line">  <span class="text-slate-500">// ✅ ดึงข้อมูลบน Server ได้เลย! ไม่ต้อง useEffect</span></span>
 <span class="line">  <span class="text-blue-400">const</span> projects = <span class="text-blue-400">await</span> prisma.project.<span class="text-yellow-300">findMany</span>({</span>
 <span class="line">    orderBy: { createdAt: <span class="text-green-400">"desc"</span> }</span>
 <span class="line">  })</span>
 <span class="line"></span>
 <span class="line">  <span class="text-blue-400">return</span> (</span>
 <span class="line">    &lt;<span class="text-red-400">div</span> <span class="text-yellow-300">className</span>=<span class="text-green-400">"max-w-2xl mx-auto p-8"</span>&gt;</span>
-<span class="line">      <span class="text-slate-500">{/* 📝 CREATE — ฟอร์มเพิ่ม Project */}</span></span>
+<span class="line">      <span class="text-slate-500">{/* 📝 ฟอร์มเพิ่ม Project */}</span></span>
 <span class="line">      &lt;<span class="text-red-400">form</span> <span class="text-yellow-300">action</span>={<span class="text-yellow-300">createProject</span>} <span class="text-yellow-300">className</span>=<span class="text-green-400">"space-y-4 mb-8"</span>&gt;</span>
 <span class="line">        &lt;<span class="text-red-400">input</span></span>
 <span class="line">          <span class="text-yellow-300">name</span>=<span class="text-green-400">"name"</span></span>
@@ -450,131 +404,18 @@
 <span class="line">        &lt;/<span class="text-red-400">button</span>&gt;</span>
 <span class="line">      &lt;/<span class="text-red-400">form</span>&gt;</span>
 <span class="line"></span>
-<span class="line">      <span class="text-slate-500">{/* 📋 READ — แสดงรายการ + ปุ่มแก้ไข/ลบ */}</span></span>
+<span class="line">      <span class="text-slate-500">{/* 📋 แสดงรายการ Projects */}</span></span>
 <span class="line">      &lt;<span class="text-red-400">ul</span> <span class="text-yellow-300">className</span>=<span class="text-green-400">"space-y-2"</span>&gt;</span>
 <span class="line">        {projects.<span class="text-yellow-300">map</span>((p) =&gt; (</span>
 <span class="line">          &lt;<span class="text-red-400">li</span> <span class="text-yellow-300">key</span>={p.id} <span class="text-yellow-300">className</span>=<span class="text-green-400">"border p-4 rounded"</span>&gt;</span>
 <span class="line">            &lt;<span class="text-red-400">h3</span> <span class="text-yellow-300">className</span>=<span class="text-green-400">"font-bold"</span>&gt;{p.name}&lt;/<span class="text-red-400">h3</span>&gt;</span>
 <span class="line">            &lt;<span class="text-red-400">p</span> <span class="text-yellow-300">className</span>=<span class="text-green-400">"text-gray-500"</span>&gt;{p.description}&lt;/<span class="text-red-400">p</span>&gt;</span>
-<span class="line"></span>
-<span class="line">            <span class="text-slate-500">{/* 🗑️ DELETE — ปุ่มลบ (ง่ายที่สุด!) */}</span></span>
-<span class="line">            &lt;<span class="text-red-400">form</span> <span class="text-yellow-300">action</span>={<span class="text-yellow-300">deleteProject</span>} <span class="text-yellow-300">className</span>=<span class="text-green-400">"mt-2"</span>&gt;</span>
-<span class="line">              &lt;<span class="text-red-400">input</span> <span class="text-yellow-300">type</span>=<span class="text-green-400">"hidden"</span> <span class="text-yellow-300">name</span>=<span class="text-green-400">"id"</span> <span class="text-yellow-300">value</span>={p.id} /&gt;</span>
-<span class="line">              &lt;<span class="text-red-400">button</span> <span class="text-yellow-300">className</span>=<span class="text-green-400">"text-red-500 text-sm hover:underline"</span>&gt;</span>
-<span class="line">                ลบ</span>
-<span class="line">              &lt;/<span class="text-red-400">button</span>&gt;</span>
-<span class="line">            &lt;/<span class="text-red-400">form</span>&gt;</span>
 <span class="line">          &lt;/<span class="text-red-400">li</span>&gt;</span>
 <span class="line">        ))}</span>
 <span class="line">      &lt;/<span class="text-red-400">ul</span>&gt;</span>
 <span class="line">    &lt;/<span class="text-red-400">div</span>&gt;</span>
 <span class="line">  )</span>
 <span class="line">}</span></code></pre>
-            </div>
-
-            <!-- Code: Edit Form Component -->
-            <div class="bg-surface-800 border border-slate-700/50 rounded-xl overflow-hidden mb-6">
-                <div class="flex items-center justify-between px-4 py-3 bg-surface-900/50 border-b border-slate-700/50">
-                    <div class="flex items-center gap-2">
-                        <span class="w-3 h-3 rounded-full bg-red-500/60"></span>
-                        <span class="w-3 h-3 rounded-full bg-yellow-500/60"></span>
-                        <span class="w-3 h-3 rounded-full bg-green-500/60"></span>
-                        <span class="text-xs text-slate-500 ml-2 font-mono">app/projects/[id]/edit/page.tsx — UPDATE</span>
-                    </div>
-                    <button onclick="copyCode(this)" class="text-xs text-slate-500 hover:text-brand-400 transition-colors flex items-center gap-1">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
-                        Copy
-                    </button>
-                </div>
-                <pre class="p-4 overflow-x-auto"><code class="text-sm font-mono code-block"><span class="line"><span class="text-slate-500">// app/projects/[id]/edit/page.tsx</span></span>
-<span class="line"><span class="text-slate-500">// ✏️ หน้าฟอร์มแก้ไข — ใช้ Dynamic Route [id]</span></span>
-<span class="line"></span>
-<span class="line"><span class="text-blue-400">import</span> { prisma } <span class="text-blue-400">from</span> <span class="text-green-400">"@/lib/prisma"</span></span>
-<span class="line"><span class="text-blue-400">import</span> { updateProject } <span class="text-blue-400">from</span> <span class="text-green-400">"@/app/actions"</span></span>
-<span class="line"><span class="text-blue-400">import</span> { notFound } <span class="text-blue-400">from</span> <span class="text-green-400">"next/navigation"</span></span>
-<span class="line"></span>
-<span class="line"><span class="text-blue-400">export default async function</span> <span class="text-yellow-300">EditPage</span>({</span>
-<span class="line">  params,</span>
-<span class="line">}: {</span>
-<span class="line">  params: { id: <span class="text-green-300">string</span> }</span>
-<span class="line">}) {</span>
-<span class="line">  <span class="text-slate-500">// ดึงข้อมูลเดิมมาแสดงในฟอร์ม</span></span>
-<span class="line">  <span class="text-blue-400">const</span> project = <span class="text-blue-400">await</span> prisma.project.<span class="text-yellow-300">findUnique</span>({</span>
-<span class="line">    where: { id: params.id }</span>
-<span class="line">  })</span>
-<span class="line"></span>
-<span class="line">  <span class="text-blue-400">if</span> (!project) <span class="text-yellow-300">notFound</span>()  <span class="text-slate-500">// ← ถ้าไม่เจอ → 404</span></span>
-<span class="line"></span>
-<span class="line">  <span class="text-blue-400">return</span> (</span>
-<span class="line">    &lt;<span class="text-red-400">form</span> <span class="text-yellow-300">action</span>={<span class="text-yellow-300">updateProject</span>} <span class="text-yellow-300">className</span>=<span class="text-green-400">"space-y-4 max-w-lg mx-auto p-8"</span>&gt;</span>
-<span class="line">      <span class="text-slate-500">{/* ส่ง id ไปด้วย (ซ่อนไว้) */}</span></span>
-<span class="line">      &lt;<span class="text-red-400">input</span> <span class="text-yellow-300">type</span>=<span class="text-green-400">"hidden"</span> <span class="text-yellow-300">name</span>=<span class="text-green-400">"id"</span> <span class="text-yellow-300">value</span>={project.id} /&gt;</span>
-<span class="line"></span>
-<span class="line">      &lt;<span class="text-red-400">input</span></span>
-<span class="line">        <span class="text-yellow-300">name</span>=<span class="text-green-400">"name"</span></span>
-<span class="line">        <span class="text-yellow-300">defaultValue</span>={project.name}  <span class="text-slate-500">// ← แสดงค่าเดิม!</span></span>
-<span class="line">        <span class="text-yellow-300">className</span>=<span class="text-green-400">"border p-2 rounded w-full"</span></span>
-<span class="line">        <span class="text-yellow-300">required</span></span>
-<span class="line">      /&gt;</span>
-<span class="line">      &lt;<span class="text-red-400">textarea</span></span>
-<span class="line">        <span class="text-yellow-300">name</span>=<span class="text-green-400">"description"</span></span>
-<span class="line">        <span class="text-yellow-300">defaultValue</span>={project.description ?? <span class="text-green-400">""</span>}</span>
-<span class="line">        <span class="text-yellow-300">className</span>=<span class="text-green-400">"border p-2 rounded w-full"</span></span>
-<span class="line">      /&gt;</span>
-<span class="line">      &lt;<span class="text-red-400">button</span> <span class="text-yellow-300">type</span>=<span class="text-green-400">"submit"</span> <span class="text-yellow-300">className</span>=<span class="text-green-400">"bg-amber-500 text-white px-4 py-2 rounded"</span>&gt;</span>
-<span class="line">        บันทึกการแก้ไข</span>
-<span class="line">      &lt;/<span class="text-red-400">button</span>&gt;</span>
-<span class="line">    &lt;/<span class="text-red-400">form</span>&gt;</span>
-<span class="line">  )</span>
-<span class="line">}</span></code></pre>
-            </div>
-
-            <!-- CRUD Summary Box -->
-            <div class="bg-surface-800 border border-slate-700/50 rounded-xl p-6 mb-6">
-                <h3 class="text-lg font-semibold text-white mb-4">📊 สรุป CRUD ทั้ง 4 ตัว</h3>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm">
-                        <thead>
-                            <tr class="text-left border-b border-slate-700">
-                                <th class="pb-3 text-slate-400 font-medium">Operation</th>
-                                <th class="pb-3 text-slate-400 font-medium">Prisma Method</th>
-                                <th class="pb-3 text-slate-400 font-medium">ใช้ยังไง</th>
-                            </tr>
-                        </thead>
-                        <tbody class="text-slate-300">
-                            <tr class="border-b border-slate-700/50">
-                                <td class="py-2.5"><span class="text-green-400 font-semibold">Create</span></td>
-                                <td class="py-2.5"><code class="text-xs bg-surface-900 px-1.5 py-0.5 rounded">prisma.project.create()</code></td>
-                                <td class="py-2.5 text-xs text-slate-500">ส่ง data object ที่ต้องการสร้าง</td>
-                            </tr>
-                            <tr class="border-b border-slate-700/50">
-                                <td class="py-2.5"><span class="text-blue-400 font-semibold">Read</span></td>
-                                <td class="py-2.5"><code class="text-xs bg-surface-900 px-1.5 py-0.5 rounded">prisma.project.findMany()</code></td>
-                                <td class="py-2.5 text-xs text-slate-500">ดึงข้อมูลทั้งหมด หรือ findUnique() ดึงตัวเดียว</td>
-                            </tr>
-                            <tr class="border-b border-slate-700/50">
-                                <td class="py-2.5"><span class="text-amber-400 font-semibold">Update</span></td>
-                                <td class="py-2.5"><code class="text-xs bg-surface-900 px-1.5 py-0.5 rounded">prisma.project.update()</code></td>
-                                <td class="py-2.5 text-xs text-slate-500">ระบุ where + data ที่จะแก้</td>
-                            </tr>
-                            <tr>
-                                <td class="py-2.5"><span class="text-red-400 font-semibold">Delete</span></td>
-                                <td class="py-2.5"><code class="text-xs bg-surface-900 px-1.5 py-0.5 rounded">prisma.project.delete()</code></td>
-                                <td class="py-2.5 text-xs text-slate-500">ระบุ where → ลบทิ้ง</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Update/Delete Tip -->
-            <div class="bg-amber-500/5 border border-amber-500/20 rounded-xl p-5 mb-6">
-                <h4 class="text-amber-400 font-semibold text-sm mb-3">💡 เทคนิค: ส่ง id ผ่าน hidden input</h4>
-                <p class="text-sm text-slate-400 leading-relaxed">
-                    สังเกตมั้ย? ทั้ง Update และ Delete จำเป็นต้องรู้ว่าจะแก้/ลบ <strong class="text-white">ตัวไหน</strong> — เราเลยใส่ 
-                    <code class="bg-surface-700 px-1.5 py-0.5 rounded text-xs">&lt;input type="hidden" name="id" value={p.id} /&gt;</code> 
-                    ไว้ในฟอร์ม เพื่อส่ง id ไปกับ FormData โดยที่ User ไม่เห็น
-                </p>
             </div>
 
             <!-- Key Insight -->
@@ -613,23 +454,15 @@
                     </label>
                     <label class="checklist-item flex items-center gap-3 p-2 rounded-lg hover:bg-surface-700/50 cursor-pointer text-sm">
                         <input type="checkbox" class="w-4 h-4 rounded border-slate-600 bg-surface-900 text-brand-500 focus:ring-brand-500/30">
-                        <span class="text-slate-300">สร้างไฟล์ <code class="text-xs bg-surface-900 px-1.5 py-0.5 rounded">app/actions.ts</code> — เขียน create, update, delete</span>
+                        <span class="text-slate-300">สร้างไฟล์ <code class="text-xs bg-surface-900 px-1.5 py-0.5 rounded">app/actions.ts</code> — Server Action</span>
                     </label>
                     <label class="checklist-item flex items-center gap-3 p-2 rounded-lg hover:bg-surface-700/50 cursor-pointer text-sm">
                         <input type="checkbox" class="w-4 h-4 rounded border-slate-600 bg-surface-900 text-brand-500 focus:ring-brand-500/30">
-                        <span class="text-slate-300">แก้ไข <code class="text-xs bg-surface-900 px-1.5 py-0.5 rounded">app/page.tsx</code> — ฟอร์มสร้าง + รายการ + ปุ่มลบ</span>
-                    </label>
-                    <label class="checklist-item flex items-center gap-3 p-2 rounded-lg hover:bg-surface-700/50 cursor-pointer text-sm">
-                        <input type="checkbox" class="w-4 h-4 rounded border-slate-600 bg-surface-900 text-brand-500 focus:ring-brand-500/30">
-                        <span class="text-slate-300">สร้าง <code class="text-xs bg-surface-900 px-1.5 py-0.5 rounded">app/projects/[id]/edit/page.tsx</code> — หน้าแก้ไข</span>
+                        <span class="text-slate-300">แก้ไข <code class="text-xs bg-surface-900 px-1.5 py-0.5 rounded">app/page.tsx</code> — ฟอร์ม + แสดงรายการ</span>
                     </label>
                     <label class="checklist-item flex items-center gap-3 p-2 rounded-lg hover:bg-surface-700/50 cursor-pointer text-sm">
                         <input type="checkbox" class="w-4 h-4 rounded border-slate-600 bg-surface-900 text-brand-500 focus:ring-brand-500/30">
                         <span class="text-slate-300"><code class="text-xs bg-surface-900 px-1.5 py-0.5 rounded">npx prisma db push</code> — Sync Schema กับ DB</span>
-                    </label>
-                    <label class="checklist-item flex items-center gap-3 p-2 rounded-lg hover:bg-surface-700/50 cursor-pointer text-sm">
-                        <input type="checkbox" class="w-4 h-4 rounded border-slate-600 bg-surface-900 text-brand-500 focus:ring-brand-500/30">
-                        <span class="text-slate-300">ทดสอบครบ: สร้าง → ดู → แก้ไข → ลบ ได้สำเร็จ</span>
                     </label>
                 </div>
             </div>
@@ -675,104 +508,7 @@
                 </div>
             </div>
 
-            <!-- Step 1: Installation -->
-            <div class="bg-surface-800 border border-slate-700/50 rounded-xl p-6 mb-6">
-                <h3 class="text-lg font-semibold text-white mb-4">📦 Step 1: ติดตั้ง Prisma</h3>
-                <p class="text-sm text-slate-400 leading-relaxed mb-4">
-                    ก่อนจะเขียน Schema ได้ ต้องติดตั้ง Prisma ก่อน — มี 2 package ที่ต้องลง:
-                </p>
-                <div class="space-y-3 mb-4">
-                    <div class="bg-surface-900 rounded-lg p-3">
-                        <div class="flex items-center justify-between mb-1">
-                            <code class="text-sm font-mono text-green-400">npm install prisma --save-dev</code>
-                            <span class="tag bg-purple-500/20 text-purple-300">Dev Tool</span>
-                        </div>
-                        <p class="text-xs text-slate-500">Prisma CLI — ใช้สร้าง Migration, generate client, เปิด Studio ฯลฯ</p>
-                    </div>
-                    <div class="bg-surface-900 rounded-lg p-3">
-                        <div class="flex items-center justify-between mb-1">
-                            <code class="text-sm font-mono text-green-400">npm install @prisma/client</code>
-                            <span class="tag bg-blue-500/20 text-blue-300">Runtime</span>
-                        </div>
-                        <p class="text-xs text-slate-500">Prisma Client — ตัวเชื่อมต่อ DB ที่ใช้จริงในโค้ด (prisma.project.create() ฯลฯ)</p>
-                    </div>
-                </div>
-                <div class="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 mb-4">
-                    <p class="text-xs text-amber-300">💡 <strong>สรุป:</strong> <code class="bg-amber-500/20 px-1.5 py-0.5 rounded text-xs">prisma</code> = CLI สำหรับ dev | <code class="bg-amber-500/20 px-1.5 py-0.5 rounded text-xs">@prisma/client</code> = ตัวเชื่อม DB ในโค้ดจริง — ต้องลงทั้งคู่!</p>
-                </div>
-            </div>
-
-            <!-- Step 2: prisma init -->
-            <div class="bg-surface-800 border border-slate-700/50 rounded-xl p-6 mb-6">
-                <h3 class="text-lg font-semibold text-white mb-4">⚡ Step 2: Initialize Prisma</h3>
-                <p class="text-sm text-slate-400 leading-relaxed mb-4">
-                    รันคำสั่งนี้เพื่อสร้างไฟล์ตั้งต้น:
-                </p>
-                <div class="bg-surface-900 rounded-lg p-3 mb-4">
-                    <div class="flex items-center justify-between mb-1">
-                        <code class="text-sm font-mono text-green-400">npx prisma init</code>
-                    </div>
-                    <p class="text-xs text-slate-500 mb-3">สร้างโฟลเดอร์และไฟล์ให้อัตโนมัติ:</p>
-                    <div class="bg-surface-800 rounded-lg p-3 font-mono text-xs">
-                        <div class="text-slate-400">📁 โปรเจกต์ของคุณ</div>
-                        <div class="text-slate-500 ml-4">├── <span class="text-blue-400">prisma/</span></div>
-                        <div class="text-slate-500 ml-8">└── <span class="text-yellow-300">schema.prisma</span> <span class="text-slate-600">← เขียน Model ที่นี่</span></div>
-                        <div class="text-slate-500 ml-4">└── <span class="text-green-400">.env</span> <span class="text-slate-600">← ใส่ DATABASE_URL ที่นี่</span></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Step 3: .env setup -->
-            <div class="bg-surface-800 border border-slate-700/50 rounded-xl overflow-hidden mb-6">
-                <div class="flex items-center justify-between px-4 py-3 bg-surface-900/50 border-b border-slate-700/50">
-                    <div class="flex items-center gap-2">
-                        <span class="w-3 h-3 rounded-full bg-red-500/60"></span>
-                        <span class="w-3 h-3 rounded-full bg-yellow-500/60"></span>
-                        <span class="w-3 h-3 rounded-full bg-green-500/60"></span>
-                        <span class="text-xs text-slate-500 ml-2 font-mono">.env</span>
-                    </div>
-                    <button onclick="copyCode(this)" class="text-xs text-slate-500 hover:text-brand-400 transition-colors flex items-center gap-1">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
-                        Copy
-                    </button>
-                </div>
-                <pre class="p-4 overflow-x-auto"><code class="text-sm font-mono code-block"><span class="line"><span class="text-slate-500"># .env — ตั้งค่า Database URL</span></span>
-<span class="line"></span>
-<span class="line"><span class="text-slate-500"># 🐘 PostgreSQL (แนะนำสำหรับ Production)</span></span>
-<span class="line"><span class="text-yellow-300">DATABASE_URL</span>=<span class="text-green-400">"postgresql://USER:PASSWORD@HOST:5432/DBNAME"</span></span>
-<span class="line"></span>
-<span class="line"><span class="text-slate-500"># 🪶 SQLite (ง่ายสุด! แนะนำสำหรับเริ่มต้น/ลองเล่น)</span></span>
-<span class="line"><span class="text-slate-500"># DATABASE_URL="file:./dev.db"</span></span>
-<span class="line"></span>
-<span class="line"><span class="text-slate-500"># 💡 ถ้าใช้ SQLite → เปลี่ยน provider ใน schema.prisma เป็น "sqlite"</span></span></code></pre>
-            </div>
-
-            <!-- SQLite vs PostgreSQL Tip -->
-            <div class="bg-blue-500/5 border border-blue-500/20 rounded-xl p-5 mb-6">
-                <h4 class="text-blue-400 font-semibold text-sm mb-3">🤔 SQLite vs PostgreSQL — เลือกอะไรดี?</h4>
-                <div class="grid sm:grid-cols-2 gap-3">
-                    <div class="bg-surface-800 rounded-lg p-3">
-                        <div class="text-green-400 font-semibold text-sm mb-2">🪶 SQLite <span class="text-xs text-slate-500 font-normal">— เริ่มต้น</span></div>
-                        <ul class="text-xs text-slate-400 space-y-1">
-                            <li>✅ ไม่ต้องติดตั้ง DB Server</li>
-                            <li>✅ เก็บเป็นไฟล์ <code class="text-xs bg-surface-900 px-1 rounded">dev.db</code> ในโปรเจกต์</li>
-                            <li>✅ เหมาะสำหรับลองเล่น/prototype</li>
-                            <li>⚠️ ไม่เหมาะ production</li>
-                        </ul>
-                    </div>
-                    <div class="bg-surface-800 rounded-lg p-3">
-                        <div class="text-blue-400 font-semibold text-sm mb-2">🐘 PostgreSQL <span class="text-xs text-slate-500 font-normal">— Production</span></div>
-                        <ul class="text-xs text-slate-400 space-y-1">
-                            <li>✅ รองรับ concurrent users</li>
-                            <li>✅ ใช้ได้กับ Vercel, Railway, Supabase</li>
-                            <li>✅ มี Advanced features (JSON, Full-text search)</li>
-                            <li>⚠️ ต้องมี DB Server (local หรือ cloud)</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Step 4: Schema Code -->
+            <!-- Schema Code -->
             <div class="bg-surface-800 border border-slate-700/50 rounded-xl overflow-hidden mb-6">
                 <div class="flex items-center justify-between px-4 py-3 bg-surface-900/50 border-b border-slate-700/50">
                     <div class="flex items-center gap-2">
@@ -939,23 +675,11 @@
                 <div class="space-y-2">
                     <label class="checklist-item flex items-center gap-3 p-2 rounded-lg hover:bg-surface-700/50 cursor-pointer text-sm">
                         <input type="checkbox" class="w-4 h-4 rounded border-slate-600 bg-surface-900 text-brand-500 focus:ring-brand-500/30">
-                        <span class="text-slate-300">ติดตั้ง <code class="text-xs bg-surface-900 px-1.5 py-0.5 rounded">npm install prisma --save-dev</code></span>
-                    </label>
-                    <label class="checklist-item flex items-center gap-3 p-2 rounded-lg hover:bg-surface-700/50 cursor-pointer text-sm">
-                        <input type="checkbox" class="w-4 h-4 rounded border-slate-600 bg-surface-900 text-brand-500 focus:ring-brand-500/30">
-                        <span class="text-slate-300">ติดตั้ง <code class="text-xs bg-surface-900 px-1.5 py-0.5 rounded">npm install @prisma/client</code></span>
-                    </label>
-                    <label class="checklist-item flex items-center gap-3 p-2 rounded-lg hover:bg-surface-700/50 cursor-pointer text-sm">
-                        <input type="checkbox" class="w-4 h-4 rounded border-slate-600 bg-surface-900 text-brand-500 focus:ring-brand-500/30">
-                        <span class="text-slate-300">รัน <code class="text-xs bg-surface-900 px-1.5 py-0.5 rounded">npx prisma init</code> — สร้างไฟล์ตั้งต้น</span>
+                        <span class="text-slate-300">สร้าง/แก้ไข <code class="text-xs bg-surface-900 px-1.5 py-0.5 rounded">prisma/schema.prisma</code></span>
                     </label>
                     <label class="checklist-item flex items-center gap-3 p-2 rounded-lg hover:bg-surface-700/50 cursor-pointer text-sm">
                         <input type="checkbox" class="w-4 h-4 rounded border-slate-600 bg-surface-900 text-brand-500 focus:ring-brand-500/30">
                         <span class="text-slate-300">ตั้งค่า <code class="text-xs bg-surface-900 px-1.5 py-0.5 rounded">.env</code> → DATABASE_URL</span>
-                    </label>
-                    <label class="checklist-item flex items-center gap-3 p-2 rounded-lg hover:bg-surface-700/50 cursor-pointer text-sm">
-                        <input type="checkbox" class="w-4 h-4 rounded border-slate-600 bg-surface-900 text-brand-500 focus:ring-brand-500/30">
-                        <span class="text-slate-300">สร้าง/แก้ไข <code class="text-xs bg-surface-900 px-1.5 py-0.5 rounded">prisma/schema.prisma</code></span>
                     </label>
                     <label class="checklist-item flex items-center gap-3 p-2 rounded-lg hover:bg-surface-700/50 cursor-pointer text-sm">
                         <input type="checkbox" class="w-4 h-4 rounded border-slate-600 bg-surface-900 text-brand-500 focus:ring-brand-500/30">
@@ -2066,9 +1790,7 @@
     // ============================================
     const searchableContent = [
         { phase: 1, title: 'Simple CRUD — Server Actions', keywords: 'crud server action form prisma create ฟอร์ม สร้าง เริ่มต้น' },
-        { phase: 1, title: 'Server Components — ดึงข้อมูล', keywords: 'server component findmany list รายการ ดึงข้อมูล read' },
-        { phase: 1, title: 'Update Project — แก้ไขข้อมูล', keywords: 'update edit แก้ไข put prisma.update defaultvalue' },
-        { phase: 1, title: 'Delete Project — ลบข้อมูล', keywords: 'delete ลบ remove prisma.delete hidden input' },
+        { phase: 1, title: 'Server Components — ดึงข้อมูล', keywords: 'server component findmany list รายการ ดึงข้อมูล' },
         { phase: 1, title: '"use server" — Server-side Code', keywords: 'use server directive คำสั่ง' },
         { phase: 2, title: 'Prisma Schema Design', keywords: 'schema prisma model project task ออกแบบ database' },
         { phase: 2, title: 'Prisma Client Singleton', keywords: 'singleton client prisma global connection' },
