@@ -1,0 +1,1710 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Git & GitHub สำหรับผู้เริ่มต้น | Interactive Tutorial</title>
+  <style>
+    /* ================================================
+       CSS VARIABLES — ปรับสีหลักได้ที่นี่ที่เดียว
+       ================================================ */
+    :root {
+      --primary:      #f05033;
+      --primary-dark: #c0392b;
+      --accent:       #0366d6;
+      --success:      #28a745;
+      --warning:      #ffc107;
+      --danger:       #dc3545;
+      --purple:       #6f42c1;
+      --bg:           #f6f8fa;
+      --card:         #ffffff;
+      --text:         #24292e;
+      --muted:        #586069;
+      --border:       #e1e4e8;
+      --term-bg:      #1e1e1e;
+      --term-txt:     #d4d4d4;
+      --shadow:       0 2px 14px rgba(0,0,0,0.08);
+      --radius:       12px;
+    }
+
+    /* === RESET & BASE === */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.65;
+      font-size: 15px;
+    }
+
+    /* ================================================
+       HEADER
+       ================================================ */
+    .site-header {
+      background: linear-gradient(135deg, #f05033 0%, #c0392b 100%);
+      color: #fff;
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      box-shadow: 0 2px 20px rgba(240,80,51,.35);
+    }
+    .hdr-inner {
+      max-width: 1140px;
+      margin: 0 auto;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .hdr-logo { font-size: 2rem; line-height: 1; }
+    .hdr-title { flex: 1; }
+    .hdr-title h1 { font-size: 1.2rem; font-weight: 700; }
+    .hdr-title p  { font-size: 0.78rem; opacity: .85; margin-top: 2px; }
+
+    .hdr-prog { text-align: right; }
+    .hdr-prog span { font-size: 0.78rem; }
+    .prog-wrap {
+      background: rgba(255,255,255,.3);
+      border-radius: 100px;
+      height: 8px;
+      width: 160px;
+      margin-top: 5px;
+      overflow: hidden;
+    }
+    .prog-fill {
+      height: 100%;
+      background: #fff;
+      border-radius: 100px;
+      width: 0%;
+      transition: width .5s ease;
+    }
+
+    @media (max-width: 520px) {
+      .hdr-inner { flex-wrap: wrap; gap: 8px; }
+      .hdr-prog { width: 100%; display: flex; align-items: center; gap: 10px; }
+      .prog-wrap { flex: 1; width: auto; }
+    }
+
+    /* ================================================
+       LAYOUT: sidebar + content
+       ================================================ */
+    .main-wrap {
+      max-width: 1140px;
+      margin: 0 auto;
+      padding: 24px;
+      display: grid;
+      grid-template-columns: 250px 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+    @media (max-width: 820px) {
+      .main-wrap { grid-template-columns: 1fr; padding: 14px; }
+      .sidebar   { position: static !important; }
+    }
+
+    /* ================================================
+       SIDEBAR
+       ================================================ */
+    .sidebar { position: sticky; top: 76px; }
+    .sidebar-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .sb-head {
+      background: #24292e;
+      color: #fff;
+      padding: 12px 16px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: .6px;
+      text-transform: uppercase;
+    }
+    .sb-nav { list-style: none; }
+    .sb-nav li a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 11px 16px;
+      text-decoration: none;
+      color: var(--muted);
+      font-size: 0.84rem;
+      border-bottom: 1px solid var(--border);
+      transition: all .2s;
+    }
+    .sb-nav li a:hover, .sb-nav li a.active {
+      background: #fff5f3;
+      color: var(--primary);
+      border-left: 3px solid var(--primary);
+      padding-left: 13px;
+    }
+    .sb-nav li a.done { color: var(--success); }
+    .step-num {
+      background: var(--bg);
+      border-radius: 50%;
+      width: 24px; height: 24px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .72rem; font-weight: 700;
+      flex-shrink: 0;
+      transition: all .3s;
+    }
+    .sb-nav li a.active .step-num,
+    .sb-nav li a.done  .step-num { background: var(--primary); color: #fff; }
+    .sb-nav li a.done  .step-num { background: var(--success); }
+
+    /* ================================================
+       STEP SECTIONS
+       ================================================ */
+    .content-col { display: flex; flex-direction: column; gap: 20px; }
+
+    .step-sec {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .step-hdr {
+      padding: 18px 22px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: flex-start; gap: 14px;
+      cursor: pointer; user-select: none;
+      transition: background .2s;
+    }
+    .step-hdr:hover { background: #fafbfc; }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 11px;
+      border-radius: 20px;
+      font-size: .7rem; font-weight: 700;
+      white-space: nowrap;
+      color: #fff;
+      margin-top: 3px;
+    }
+    .badge-green  { background: var(--success); }
+    .badge-blue   { background: var(--accent); }
+    .badge-purple { background: var(--purple); }
+    .badge-orange { background: #fd7e14; }
+    .badge-red    { background: var(--primary); }
+
+    .step-title-wrap { flex: 1; }
+    .step-title { font-size: 1.08rem; font-weight: 700; margin-bottom: 3px; }
+    .step-sub   { font-size: .82rem; color: var(--muted); }
+    .step-arrow { color: var(--muted); font-size: 1rem; transition: transform .3s; }
+    .step-sec.open .step-arrow { transform: rotate(180deg); }
+
+    .step-body {
+      padding: 24px;
+      display: none;
+    }
+    .step-sec.open .step-body {
+      display: block;
+      animation: fadeUp .3s ease;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ================================================
+       TYPOGRAPHY HELPERS
+       ================================================ */
+    h2.sh {
+      font-size: 1rem; font-weight: 700;
+      margin: 20px 0 10px;
+      padding-bottom: 7px;
+      border-bottom: 2px solid var(--border);
+    }
+    h3.ssh { font-size: .9rem; font-weight: 700; margin: 14px 0 7px; }
+    p { font-size: .9rem; margin: 8px 0; color: var(--text); }
+    p + p { margin-top: 4px; }
+    code {
+      background: #eef0f3;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'Cascadia Code','Fira Code','Courier New',monospace;
+      font-size: .85rem;
+    }
+    a { color: var(--accent); }
+
+    /* ================================================
+       INFO CARDS
+       ================================================ */
+    .info-card {
+      display: flex; gap: 12px;
+      border-radius: 8px; padding: 14px 16px;
+      margin: 14px 0;
+      font-size: .88rem;
+    }
+    .info-card.blue   { background: #f0f7ff; border: 1px solid #b3d7ff; }
+    .info-card.yellow { background: #fffbea; border: 1px solid #ffe082; }
+    .info-card.green  { background: #f0fff4; border: 1px solid #9be9a8; }
+    .info-card.purple { background: #f8f4ff; border: 1px solid #c8b1ff; }
+    .ic-icon { font-size: 1.3rem; flex-shrink: 0; line-height: 1.3; }
+
+    /* ================================================
+       CODE BLOCK
+       ================================================ */
+    .cb { background: #1e1e1e; border-radius: 9px; overflow: hidden; margin: 12px 0; }
+    .cb-bar {
+      background: #2d2d2d;
+      padding: 7px 14px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .cb-lang { color: #858585; font-size: .72rem; font-family: monospace; }
+    .copy-btn {
+      background: transparent; border: 1px solid #555; color: #aaa;
+      padding: 3px 10px; border-radius: 4px; font-size: .72rem;
+      cursor: pointer; transition: all .2s; font-family: inherit;
+    }
+    .copy-btn:hover { background: #444; color: #fff; }
+    .copy-btn.copied { border-color: #4ec9b0; color: #4ec9b0; }
+    .cb-code {
+      padding: 16px;
+      font-family: 'Cascadia Code','Fira Code','Courier New',monospace;
+      font-size: .84rem; color: #d4d4d4;
+      overflow-x: auto; white-space: pre; line-height: 1.9;
+    }
+    .c-g { color: #4ec9b0; }   /* green  */
+    .c-y { color: #dcdcaa; }   /* yellow */
+    .c-b { color: #9cdcfe; }   /* blue   */
+    .c-o { color: #ce9178; }   /* orange */
+    .c-cm{ color: #6a9955; }   /* comment*/
+    .c-r { color: #f44747; }   /* red    */
+    .c-p { color: #c586c0; }   /* purple */
+
+    /* ================================================
+       TERMINAL SIMULATOR
+       ================================================ */
+    .terminal { background: #1e1e1e; border-radius: 10px; overflow: hidden; margin: 14px 0; }
+    .term-bar {
+      background: #3c3c3c; padding: 9px 14px;
+      display: flex; align-items: center; gap: 7px;
+    }
+    .tdot { width: 12px; height: 12px; border-radius: 50%; }
+    .tdot.r { background: #ff5f57; }
+    .tdot.y { background: #febc2e; }
+    .tdot.g { background: #28c840; }
+    .term-lbl { color: #999; font-size: .76rem; margin-left: 6px; }
+    .term-body {
+      padding: 14px 16px;
+      min-height: 120px; max-height: 320px;
+      overflow-y: auto;
+      font-family: 'Cascadia Code','Fira Code','Courier New',monospace;
+      font-size: .82rem; color: #d4d4d4;
+      line-height: 1.9; white-space: pre-wrap;
+    }
+    .t-prompt { color: #4ec9b0; }
+    .t-cmd    { color: #dcdcaa; }
+    .t-res    { color: #9cdcfe; }
+    .t-ok     { color: #4ec9b0; }
+    .t-err    { color: #f44747; }
+    .t-cmt    { color: #6a9955; }
+    .term-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 14px; border-top: 1px solid #3c3c3c;
+    }
+    .term-inp-lbl { color: #4ec9b0; font-size: .82rem; white-space: nowrap; font-family: monospace; }
+    .term-inp {
+      flex: 1; background: transparent; border: none; outline: none;
+      color: #dcdcaa;
+      font-family: 'Cascadia Code','Fira Code','Courier New',monospace;
+      font-size: .82rem;
+    }
+    .term-btn {
+      background: #4ec9b0; color: #1e1e1e; border: none; border-radius: 4px;
+      padding: 4px 12px; font-size: .75rem; font-weight: 700;
+      cursor: pointer; transition: background .2s;
+    }
+    .term-btn:hover { background: #3db89e; }
+
+    /* ================================================
+       QUIZ
+       ================================================ */
+    .quiz-card {
+      background: #fafbfc; border: 1px solid var(--border);
+      border-radius: 10px; padding: 18px 20px; margin: 14px 0;
+    }
+    .quiz-q { font-weight: 700; font-size: .95rem; margin-bottom: 14px; }
+    .quiz-opts { display: flex; flex-direction: column; gap: 9px; }
+    .qopt {
+      display: flex; align-items: center; gap: 10px;
+      padding: 11px 15px; background: #fff;
+      border: 2px solid var(--border); border-radius: 8px;
+      cursor: pointer; transition: all .2s; font-size: .88rem;
+      text-align: left; font-family: inherit;
+    }
+    .qopt:hover:not(.disabled) { border-color: var(--primary); background: #fff5f3; }
+    .qopt.correct  { border-color: var(--success); background: #f0fff4; color: #155724; }
+    .qopt.wrong    { border-color: var(--danger);  background: #fff5f5; color: #721c24; }
+    .qopt.disabled { pointer-events: none; }
+    .quiz-fb {
+      margin-top: 10px; padding: 10px 14px;
+      border-radius: 7px; font-size: .87rem; display: none;
+    }
+    .quiz-fb.show    { display: block; }
+    .quiz-fb.correct { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    .quiz-fb.wrong   { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+
+    /* ================================================
+       GRID CARDS (summary)
+       ================================================ */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 14px; margin: 14px 0;
+    }
+    .cmd-card {
+      background: #fff; border: 1px solid var(--border);
+      border-top: 4px solid var(--primary);
+      border-radius: 9px; padding: 14px;
+    }
+    .cmd-tag {
+      display: block;
+      font-family: monospace; font-size: .82rem;
+      background: #1e1e1e; color: #4ec9b0;
+      padding: 7px 10px; border-radius: 5px;
+      margin-bottom: 8px;
+    }
+    .cmd-desc { font-size: .82rem; color: var(--muted); }
+
+    /* ================================================
+       TABS
+       ================================================ */
+    .tabs { margin: 14px 0; }
+    .tab-list {
+      display: flex; gap: 3px;
+      border-bottom: 2px solid var(--border);
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      padding: 7px 16px; border: none; background: transparent;
+      font-size: .83rem; cursor: pointer; color: var(--muted);
+      border-bottom: 3px solid transparent; margin-bottom: -2px;
+      border-radius: 6px 6px 0 0; transition: all .2s; font-family: inherit;
+    }
+    .tab-btn:hover    { color: var(--text); background: #f6f8fa; }
+    .tab-btn.active   { color: var(--primary); border-bottom-color: var(--primary); font-weight: 700; }
+    .tab-pane         { display: none; padding-top: 14px; }
+    .tab-pane.active  { display: block; }
+
+    /* ================================================
+       CHECKLIST
+       ================================================ */
+    .checklist { list-style: none; display: flex; flex-direction: column; gap: 7px; margin: 12px 0; }
+    .checklist li {
+      display: flex; align-items: flex-start; gap: 10px;
+      padding: 9px 13px; background: #fafbfc;
+      border: 1px solid var(--border); border-radius: 7px;
+      font-size: .88rem; cursor: pointer; transition: all .2s;
+      user-select: none;
+    }
+    .checklist li:hover { background: #f0f7ff; }
+    .checklist li.done  { background: #f0fff4; border-color: #9be9a8; color: var(--muted); text-decoration: line-through; }
+    .cl-ico { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+
+    /* ================================================
+       DIAGRAM BOX
+       ================================================ */
+    .diagram {
+      background: #fff; border: 1px solid var(--border);
+      border-radius: 10px; padding: 18px; margin: 14px 0;
+      overflow-x: auto;
+    }
+    .diagram-title {
+      text-align: center; font-size: .74rem;
+      color: var(--muted); margin-bottom: 14px;
+      font-weight: 700; text-transform: uppercase; letter-spacing: .8px;
+    }
+
+    /* ================================================
+       REAL-WORLD CARD
+       ================================================ */
+    .rwc {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: #fff; border-radius: 10px; padding: 18px 20px; margin: 14px 0;
+    }
+    .rwc-lbl  { font-size: .7rem; text-transform: uppercase; letter-spacing: 1px; opacity: .8; margin-bottom: 6px; }
+    .rwc-ttl  { font-size: 1rem; font-weight: 700; margin-bottom: 7px; }
+    .rwc-text { font-size: .87rem; opacity: .9; line-height: 1.7; }
+    .rwc code { background: rgba(255,255,255,.18); color: #fff; }
+
+    /* ================================================
+       BUTTONS
+       ================================================ */
+    .btn {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 9px 20px; border-radius: 8px;
+      font-size: .88rem; font-weight: 700; cursor: pointer; border: none;
+      transition: all .2s; font-family: inherit; text-decoration: none;
+    }
+    .btn-red    { background: var(--primary); color: #fff; }
+    .btn-red:hover   { background: var(--primary-dark); transform: translateY(-1px); }
+    .btn-dark   { background: #24292e; color: #fff; }
+    .btn-dark:hover  { background: #444; }
+    .btn-out    { background: transparent; color: var(--primary); border: 2px solid var(--primary); }
+    .btn-out:hover   { background: var(--primary); color: #fff; }
+    .btn-green  { background: var(--success); color: #fff; }
+    .btn-white  { background: #fff; color: var(--primary); }
+    .btn-white:hover { background: #fef2ef; }
+
+    /* ================================================
+       CHECKPOINT BANNER
+       ================================================ */
+    .checkpoint {
+      background: linear-gradient(135deg, #2c3e50, #34495e);
+      color: #fff; border-radius: 12px; padding: 18px 22px;
+      display: flex; align-items: center; gap: 16px; margin: 18px 0;
+    }
+    .cp-ico  { font-size: 2.4rem; }
+    .cp-ttl  { font-size: 1rem; font-weight: 700; margin-bottom: 4px; }
+    .cp-txt  { font-size: .83rem; opacity: .85; }
+
+    /* ================================================
+       SCORE DISPLAY
+       ================================================ */
+    .score-wrap { text-align: center; padding: 18px; }
+    .score-ring {
+      width: 96px; height: 96px; border-radius: 50%;
+      background: var(--primary); color: #fff;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      margin: 0 auto 14px; font-size: 1.4rem; font-weight: 700;
+      transition: background .4s;
+    }
+    .score-ring small { font-size: .65rem; opacity: .8; }
+
+    /* ================================================
+       NEXT-STEP STEPS (numbered)
+       ================================================ */
+    .steps-list { display: flex; flex-direction: column; gap: 11px; margin: 14px 0; }
+    .step-row {
+      display: flex; gap: 12px; align-items: flex-start;
+      padding: 13px; background: #fafbfc;
+      border: 1px solid var(--border); border-radius: 8px; font-size: .88rem;
+    }
+    .step-n {
+      background: var(--primary); color: #fff; border-radius: 50%;
+      width: 26px; height: 26px; display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: .8rem; flex-shrink: 0;
+    }
+
+    /* ================================================
+       CONGRATS
+       ================================================ */
+    .congrats {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: #fff; border-radius: 12px; padding: 28px 24px; text-align: center;
+      margin-top: 18px;
+    }
+    .congrats-ico  { font-size: 3rem; margin-bottom: 10px; }
+    .congrats-ttl  { font-size: 1.15rem; font-weight: 700; margin-bottom: 7px; }
+    .congrats-txt  { font-size: .88rem; opacity: .9; }
+
+    /* ================================================
+       SCROLLBAR
+       ================================================ */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f1f1; }
+    ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #999; }
+  </style>
+</head>
+<body>
+
+<!-- ============================================================
+     HEADER
+     ============================================================ -->
+<header class="site-header">
+  <div class="hdr-inner">
+    <div class="hdr-logo">🦊</div>
+    <div class="hdr-title">
+      <h1>Git &amp; GitHub สำหรับผู้เริ่มต้น</h1>
+      <p>Interactive Step-by-step Tutorial · Beginner Level</p>
+    </div>
+    <div class="hdr-prog">
+      <span id="progTxt">0 / 9 เสร็จแล้ว</span>
+      <div class="prog-wrap"><div class="prog-fill" id="progFill"></div></div>
+    </div>
+  </div>
+</header>
+
+<!-- ============================================================
+     MAIN LAYOUT
+     ============================================================ -->
+<div class="main-wrap">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-box">
+      <div class="sb-head">📋 สารบัญ</div>
+      <ul class="sb-nav" id="sbNav">
+        <li><a href="#s1" class="nav-link"><span class="step-num">1</span>Git คืออะไร?</a></li>
+        <li><a href="#s2" class="nav-link"><span class="step-num">2</span>ติดตั้ง Git</a></li>
+        <li><a href="#s3" class="nav-link"><span class="step-num">3</span>คำสั่งพื้นฐาน</a></li>
+        <li><a href="#s4" class="nav-link"><span class="step-num">4</span>Git Workflow</a></li>
+        <li><a href="#s5" class="nav-link"><span class="step-num">5</span>GitHub คืออะไร?</a></li>
+        <li><a href="#s6" class="nav-link"><span class="step-num">6</span>Push &amp; Pull</a></li>
+        <li><a href="#s7" class="nav-link"><span class="step-num">7</span>Branching</a></li>
+        <li><a href="#s8" class="nav-link"><span class="step-num">8</span>🎯 Checkpoint Quiz</a></li>
+        <li><a href="#s9" class="nav-link"><span class="step-num">9</span>📚 สรุปบทเรียน</a></li>
+      </ul>
+    </div>
+  </aside>
+
+  <!-- CONTENT -->
+  <main class="content-col">
+
+    <!-- ============================================================
+         STEP 1 — Git คืออะไร?
+         ============================================================ -->
+    <section class="step-sec" id="s1">
+      <div class="step-hdr" onclick="toggleStep('s1')">
+        <span class="badge badge-green">Beginner</span>
+        <div class="step-title-wrap">
+          <div class="step-title">🐙 Step 1 — Git คืออะไร?</div>
+          <div class="step-sub">เข้าใจแนวคิดพื้นฐานก่อนเริ่มใช้งาน</div>
+        </div>
+        <span class="step-arrow">▼</span>
+      </div>
+      <div class="step-body">
+
+        <!-- Real-world use case -->
+        <div class="rwc">
+          <div class="rwc-lbl">🌍 Real-world Use Case</div>
+          <div class="rwc-ttl">สมมติว่าคุณกำลังพัฒนาเว็บร้านอาหาร...</div>
+          <div class="rwc-text">
+            คุณเพิ่มฟีเจอร์ "จองโต๊ะ" แต่มันทำให้หน้าหลักพัง!
+            คุณต้องการย้อนกลับไปสถานะก่อนหน้า — <strong>Git ทำสิ่งนี้ได้ในไม่กี่วินาที</strong> โดยไม่ต้องลบไฟล์เองเลย
+          </div>
+        </div>
+
+        <h2 class="sh">Git คืออะไร?</h2>
+        <p>Git คือ <strong>ระบบจัดการเวอร์ชัน (Version Control System — VCS)</strong> ที่ช่วยให้คุณ:</p>
+
+        <!-- Interactive checklist — คลิกเพื่อ Mark ว่าเข้าใจแล้ว -->
+        <ul class="checklist" id="cl1">
+          <li onclick="toggleCl(this)"><span class="cl-ico">☐</span> บันทึกประวัติการเปลี่ยนแปลงโค้ดทุกครั้ง</li>
+          <li onclick="toggleCl(this)"><span class="cl-ico">☐</span> ย้อนกลับไปสถานะก่อนหน้าได้ทุกเมื่อ</li>
+          <li onclick="toggleCl(this)"><span class="cl-ico">☐</span> ทำงานร่วมกับทีมโดยไม่ทับโค้ดกัน</li>
+          <li onclick="toggleCl(this)"><span class="cl-ico">☐</span> ทดลองฟีเจอร์ใหม่ใน branch แยกได้ปลอดภัย</li>
+        </ul>
+        <p style="font-size:.78rem;color:var(--muted)">👆 กดแต่ละข้อเพื่อ mark ว่าเข้าใจแล้ว</p>
+
+        <div class="info-card purple">
+          <span class="ic-icon">💡</span>
+          <div>
+            <strong>เปรียบเทียบแบบง่าย</strong><br>
+            Git เหมือน <strong>"Save Game"</strong> ในวิดีโอเกม — คุณ save ได้บ่อยแค่ไหนก็ได้
+            และกลับมาจุดที่ save ได้เสมอ แม้จะตายหรือพลาดก็ไม่ต้องเริ่มใหม่ตั้งแต่ต้น
+          </div>
+        </div>
+
+        <h2 class="sh">Git vs GitHub ต่างกันอย่างไร?</h2>
+        <div class="diagram">
+          <div class="diagram-title">Git ≠ GitHub</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+            <div style="text-align:center;padding:18px 12px;background:#fff5f3;border-radius:8px;border:2px solid var(--primary);">
+              <div style="font-size:2.2rem;margin-bottom:8px;">🛠️</div>
+              <div style="font-weight:700;color:var(--primary);margin-bottom:6px;">Git</div>
+              <div style="font-size:.8rem;color:#555;line-height:1.6;">
+                โปรแกรม / เครื่องมือ<br>
+                ทำงานบน<strong>เครื่องคุณ</strong><br>
+                ติดตามการเปลี่ยนแปลง
+              </div>
+            </div>
+            <div style="text-align:center;padding:18px 12px;background:#f0f7ff;border-radius:8px;border:2px solid var(--accent);">
+              <div style="font-size:2.2rem;margin-bottom:8px;">☁️</div>
+              <div style="font-weight:700;color:var(--accent);margin-bottom:6px;">GitHub</div>
+              <div style="font-size:.8rem;color:#555;line-height:1.6;">
+                เว็บไซต์ / Cloud<br>
+                เก็บ repository <strong>ออนไลน์</strong><br>
+                ทำงานร่วมกับทีม
+              </div>
+            </div>
+          </div>
+          <p style="text-align:center;font-size:.78rem;color:var(--muted);margin-top:12px;">
+            <strong>Git</strong> = เครื่องมือที่ใช้จัดการ &nbsp;|&nbsp; <strong>GitHub</strong> = พื้นที่เก็บโค้ดออนไลน์
+          </p>
+        </div>
+
+        <button class="btn btn-red" onclick="markDone('s1')">✅ เข้าใจแล้ว ไปต่อ →</button>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         STEP 2 — ติดตั้ง Git
+         ============================================================ -->
+    <section class="step-sec" id="s2">
+      <div class="step-hdr" onclick="toggleStep('s2')">
+        <span class="badge badge-green">Beginner</span>
+        <div class="step-title-wrap">
+          <div class="step-title">⚙️ Step 2 — ติดตั้ง Git &amp; ตั้งค่าเริ่มต้น</div>
+          <div class="step-sub">ดาวน์โหลดและ config Git บนเครื่องของคุณ</div>
+        </div>
+        <span class="step-arrow">▼</span>
+      </div>
+      <div class="step-body">
+
+        <!-- Tab: เลือก OS -->
+        <div class="tabs">
+          <div class="tab-list">
+            <button class="tab-btn active" onclick="switchTab('inst','win',this)">🪟 Windows</button>
+            <button class="tab-btn" onclick="switchTab('inst','mac',this)">🍎 macOS</button>
+            <button class="tab-btn" onclick="switchTab('inst','lnx',this)">🐧 Linux</button>
+          </div>
+          <div>
+            <div id="inst-win" class="tab-pane active">
+              <p>1. ดาวน์โหลดจาก <strong>git-scm.com</strong> แล้วรัน installer หรือใช้ winget:</p>
+              <div class="cb">
+                <div class="cb-bar"><span class="cb-lang">PowerShell / cmd</span>
+                  <button class="copy-btn" onclick="cp(this,'winget install Git.Git')">Copy</button></div>
+                <div class="cb-code">winget install Git.Git</div>
+              </div>
+              <p>2. เปิด <strong>Git Bash</strong> (ติดมากับ installer) แล้วตรวจสอบ:</p>
+              <div class="cb">
+                <div class="cb-bar"><span class="cb-lang">Git Bash</span>
+                  <button class="copy-btn" onclick="cp(this,'git --version')">Copy</button></div>
+                <div class="cb-code"><span class="c-g">git</span> --version
+<span class="c-cm"># ควรเห็น: git version 2.x.x</span></div>
+              </div>
+            </div>
+            <div id="inst-mac" class="tab-pane">
+              <p>ใช้ Homebrew (แนะนำ) หรือ Xcode Command Line Tools:</p>
+              <div class="cb">
+                <div class="cb-bar"><span class="cb-lang">Terminal</span>
+                  <button class="copy-btn" onclick="cp(this,'brew install git')">Copy</button></div>
+                <div class="cb-code"><span class="c-cm"># ผ่าน Homebrew</span>
+brew install git
+
+<span class="c-cm"># หรือผ่าน Xcode</span>
+xcode-select --install</div>
+              </div>
+            </div>
+            <div id="inst-lnx" class="tab-pane">
+              <div class="cb">
+                <div class="cb-bar"><span class="cb-lang">Ubuntu / Debian</span>
+                  <button class="copy-btn" onclick="cp(this,'sudo apt update && sudo apt install git')">Copy</button></div>
+                <div class="cb-code">sudo apt update
+sudo apt install git</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <h2 class="sh">ตั้งค่า Identity (ทำครั้งเดียว)</h2>
+        <p>Git ต้องรู้จักตัวตนของคุณ เพื่อบันทึกว่า commit นี้ทำโดยใคร:</p>
+        <div class="cb">
+          <div class="cb-bar"><span class="cb-lang">Terminal</span>
+            <button class="copy-btn" onclick="cp(this,'git config --global user.name \"Your Name\"\ngit config --global user.email \"you@example.com\"\ngit config --list')">Copy</button></div>
+          <div class="cb-code"><span class="c-cm"># ตั้งชื่อ</span>
+<span class="c-g">git</span> config <span class="c-b">--global</span> user.name <span class="c-o">"Your Name"</span>
+
+<span class="c-cm"># ตั้งอีเมล (ใช้อีเมลเดียวกับ GitHub)</span>
+<span class="c-g">git</span> config <span class="c-b">--global</span> user.email <span class="c-o">"you@example.com"</span>
+
+<span class="c-cm"># ตรวจสอบการตั้งค่า</span>
+<span class="c-g">git</span> config <span class="c-b">--list</span></div>
+        </div>
+
+        <div class="info-card yellow">
+          <span class="ic-icon">⚠️</span>
+          <div>ใช้ <strong>อีเมลเดียวกับที่สมัคร GitHub</strong> เพื่อให้ commit ของคุณแสดงในโปรไฟล์อย่างถูกต้อง</div>
+        </div>
+
+        <button class="btn btn-red" onclick="markDone('s2')">✅ ติดตั้งเสร็จแล้ว ไปต่อ →</button>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         STEP 3 — คำสั่งพื้นฐาน (Terminal Simulator)
+         ============================================================ -->
+    <section class="step-sec" id="s3">
+      <div class="step-hdr" onclick="toggleStep('s3')">
+        <span class="badge badge-blue">Practice</span>
+        <div class="step-title-wrap">
+          <div class="step-title">⌨️ Step 3 — คำสั่ง Git พื้นฐาน</div>
+          <div class="step-sub">ลองพิมพ์คำสั่งใน Terminal จำลองได้เลย!</div>
+        </div>
+        <span class="step-arrow">▼</span>
+      </div>
+      <div class="step-body">
+
+        <p>ลองพิมพ์คำสั่ง Git ในเทอร์มินัลด้านล่าง — พิมพ์ <code>help</code> เพื่อดูคำสั่งที่รองรับ</p>
+
+        <!-- Terminal Simulator -->
+        <div class="terminal">
+          <div class="term-bar">
+            <div class="tdot r"></div>
+            <div class="tdot y"></div>
+            <div class="tdot g"></div>
+            <span class="term-lbl">Git Terminal Simulator — ~/my-project</span>
+          </div>
+          <div class="term-body" id="termOut">
+<span class="t-cmt"># ยินดีต้อนรับสู่ Git Terminal Simulator!</span>
+<span class="t-cmt"># พิมพ์ help เพื่อดูคำสั่งที่ใช้ได้</span></div>
+          <div class="term-row">
+            <span class="term-inp-lbl">~/my-project $</span>
+            <input type="text" class="term-inp" id="termIn" placeholder="พิมพ์คำสั่ง git ที่นี่..." autocomplete="off" spellcheck="false" />
+            <button class="term-btn" onclick="runCmd()">Enter ↵</button>
+          </div>
+        </div>
+
+        <h2 class="sh">คำสั่งที่ควรรู้จักก่อน</h2>
+        <div class="card-grid">
+          <div class="cmd-card"><code class="cmd-tag">git init</code><div class="cmd-desc">เริ่มต้น Git repository ใหม่</div></div>
+          <div class="cmd-card"><code class="cmd-tag">git status</code><div class="cmd-desc">ดูสถานะไฟล์ที่เปลี่ยนแปลง</div></div>
+          <div class="cmd-card"><code class="cmd-tag">git add .</code><div class="cmd-desc">เพิ่มทุกไฟล์เข้า Staging Area</div></div>
+          <div class="cmd-card"><code class="cmd-tag">git commit -m ""</code><div class="cmd-desc">บันทึก snapshot พร้อม message</div></div>
+          <div class="cmd-card"><code class="cmd-tag">git log</code><div class="cmd-desc">ดูประวัติ commit ทั้งหมด</div></div>
+          <div class="cmd-card"><code class="cmd-tag">git diff</code><div class="cmd-desc">ดูโค้ดที่แตกต่างก่อน stage</div></div>
+        </div>
+
+        <button class="btn btn-red" onclick="markDone('s3')">✅ ฝึกแล้ว ไปต่อ →</button>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         STEP 4 — Git Workflow (Interactive Demo)
+         ============================================================ -->
+    <section class="step-sec" id="s4">
+      <div class="step-hdr" onclick="toggleStep('s4')">
+        <span class="badge badge-blue">Practice</span>
+        <div class="step-title-wrap">
+          <div class="step-title">🔄 Step 4 — Git Workflow</div>
+          <div class="step-sub">Working → Staging → Repository — กด Demo เพื่อดูภาพรวม</div>
+        </div>
+        <span class="step-arrow">▼</span>
+      </div>
+      <div class="step-body">
+
+        <!-- Interactive Workflow Diagram -->
+        <div class="diagram">
+          <div class="diagram-title">กด git add .  และ  git commit  เพื่อดูการเคลื่อนของไฟล์</div>
+          <div style="display:grid;grid-template-columns:1fr auto 1fr auto 1fr;align-items:center;gap:8px;text-align:center;">
+
+            <!-- Working Dir -->
+            <div id="wArea" style="background:#fff5f3;border:2px dashed var(--primary);border-radius:10px;padding:18px 10px;transition:box-shadow .4s;">
+              <div style="font-size:2rem;margin-bottom:6px;">📝</div>
+              <div style="font-weight:700;color:var(--primary);font-size:.88rem;">Working Directory</div>
+              <div style="font-size:.75rem;color:#666;margin-top:4px;">ไฟล์ที่คุณกำลังแก้ไข</div>
+              <div id="wFiles" style="margin-top:10px;font-size:.75rem;color:var(--muted);">
+                📄 index.html<br>🎨 style.css<br>⚡ app.js
+              </div>
+            </div>
+
+            <!-- → git add -->
+            <div style="display:flex;flex-direction:column;align-items:center;gap:5px;">
+              <button class="btn btn-out" style="font-size:.72rem;padding:6px 10px;white-space:nowrap;" onclick="doAdd()">git add .</button>
+              <div style="font-size:1.3rem;color:var(--muted);">→</div>
+            </div>
+
+            <!-- Staging -->
+            <div id="sArea" style="background:#f0f7ff;border:2px dashed var(--accent);border-radius:10px;padding:18px 10px;transition:box-shadow .4s;">
+              <div style="font-size:2rem;margin-bottom:6px;">📦</div>
+              <div style="font-weight:700;color:var(--accent);font-size:.88rem;">Staging Area</div>
+              <div style="font-size:.75rem;color:#666;margin-top:4px;">รอ commit</div>
+              <div id="sFiles" style="margin-top:10px;font-size:.75rem;color:var(--muted);min-height:48px;"></div>
+            </div>
+
+            <!-- → git commit -->
+            <div style="display:flex;flex-direction:column;align-items:center;gap:5px;">
+              <button class="btn btn-out" style="font-size:.72rem;padding:6px 10px;border-color:var(--success);color:var(--success);white-space:nowrap;" onclick="doCommit()">git commit</button>
+              <div style="font-size:1.3rem;color:var(--muted);">→</div>
+            </div>
+
+            <!-- Repository -->
+            <div id="rArea" style="background:#f0fff4;border:2px dashed var(--success);border-radius:10px;padding:18px 10px;transition:box-shadow .4s;">
+              <div style="font-size:2rem;margin-bottom:6px;">🗄️</div>
+              <div style="font-weight:700;color:var(--success);font-size:.88rem;">Repository</div>
+              <div style="font-size:.75rem;color:#666;margin-top:4px;">ประวัติ commit</div>
+              <div id="rLogs" style="margin-top:10px;font-size:.74rem;color:var(--success);min-height:48px;"></div>
+            </div>
+          </div>
+
+          <div style="text-align:center;margin-top:14px;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;">
+            <button class="btn btn-dark" style="font-size:.78rem;padding:7px 14px;" onclick="resetWf()">🔄 Reset Demo</button>
+            <span id="wfStatus" style="font-size:.83rem;color:var(--muted);"></span>
+          </div>
+        </div>
+
+        <div class="rwc">
+          <div class="rwc-lbl">🌍 Real-world Use Case</div>
+          <div class="rwc-ttl">วัน ๆ ของ Developer</div>
+          <div class="rwc-text">
+            1. เปิดไฟล์ แก้โค้ด (Working Directory)<br>
+            2. <code>git add .</code> — เลือกสิ่งที่จะ save<br>
+            3. <code>git commit -m "fix: แก้บัก login หน้า mobile"</code><br>
+            4. วนซ้ำทุก feature หรือ bug fix เล็ก ๆ เพื่อประวัติที่ชัดเจน
+          </div>
+        </div>
+
+        <button class="btn btn-red" onclick="markDone('s4')">✅ เข้าใจแล้ว ไปต่อ →</button>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         STEP 5 — GitHub
+         ============================================================ -->
+    <section class="step-sec" id="s5">
+      <div class="step-hdr" onclick="toggleStep('s5')">
+        <span class="badge badge-green">Beginner</span>
+        <div class="step-title-wrap">
+          <div class="step-title">🐙 Step 5 — GitHub คืออะไร?</div>
+          <div class="step-sub">สร้าง Repository บน GitHub ครั้งแรก</div>
+        </div>
+        <span class="step-arrow">▼</span>
+      </div>
+      <div class="step-body">
+
+        <p>GitHub คือ <strong>Cloud Platform</strong> ที่เก็บ Git repository ของคุณออนไลน์ ทำให้:</p>
+        <ul style="margin:10px 0 10px 20px;display:flex;flex-direction:column;gap:5px;font-size:.88rem;">
+          <li>โค้ดไม่หายแม้เครื่องคุณพัง</li>
+          <li>ทำงานร่วมกับทีม/เพื่อนได้จากทุกที่</li>
+          <li>แสดง Portfolio ให้ HR/ลูกค้าดูได้</li>
+          <li>รับ contribution จาก Open Source community</li>
+        </ul>
+
+        <h2 class="sh">สร้าง Repository ครั้งแรก (Step-by-step)</h2>
+        <div class="steps-list">
+          <div class="step-row"><div class="step-n">1</div><div>เข้า <strong>github.com</strong> และ Login (สมัครฟรีถ้ายังไม่มีบัญชี)</div></div>
+          <div class="step-row"><div class="step-n">2</div><div>กดปุ่ม <strong>"New"</strong> (สีเขียว บริเวณด้านซ้ายมือ)</div></div>
+          <div class="step-row"><div class="step-n">3</div><div>ตั้งชื่อ Repository เช่น <code>my-first-repo</code> — เลือก Public หรือ Private</div></div>
+          <div class="step-row"><div class="step-n">4</div><div>กด <strong>"Create repository"</strong> — เสร็จแล้ว! 🎉</div></div>
+        </div>
+
+        <div class="info-card green">
+          <span class="ic-icon">✅</span>
+          <div>
+            <strong>เคล็ดลับ:</strong> ตั้งชื่อ repository ให้สื่อความหมาย เช่น
+            <code>portfolio-website</code>, <code>todo-app</code> — ไม่ใช่ <code>asdf123</code> 😅
+          </div>
+        </div>
+
+        <button class="btn btn-red" onclick="markDone('s5')">✅ เข้าใจแล้ว ไปต่อ →</button>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         STEP 6 — Push & Pull
+         ============================================================ -->
+    <section class="step-sec" id="s6">
+      <div class="step-hdr" onclick="toggleStep('s6')">
+        <span class="badge badge-blue">Practice</span>
+        <div class="step-title-wrap">
+          <div class="step-title">🚀 Step 6 — Push &amp; Pull</div>
+          <div class="step-sub">เชื่อมต่อ Local กับ GitHub และซิงค์โค้ด</div>
+        </div>
+        <span class="step-arrow">▼</span>
+      </div>
+      <div class="step-body">
+
+        <!-- Diagram -->
+        <div class="diagram">
+          <div class="diagram-title">Local ↔ GitHub (Remote)</div>
+          <div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:16px;text-align:center;">
+            <div style="background:#fff5f3;border-radius:9px;padding:18px;border:2px solid var(--primary);">
+              <div style="font-size:2.5rem;">💻</div>
+              <div style="font-weight:700;color:var(--primary);margin-top:7px;">Local Machine</div>
+              <div style="font-size:.78rem;color:#666;margin-top:4px;">เครื่องของคุณ</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:9px;align-items:center;">
+              <div style="background:#f0fff4;padding:5px 12px;border-radius:20px;font-size:.78rem;color:var(--success);font-weight:700;">⬆️ git push</div>
+              <div style="width:52px;height:2px;background:var(--border);"></div>
+              <div style="background:#fff0f5;padding:5px 12px;border-radius:20px;font-size:.78rem;color:#d63384;font-weight:700;">⬇️ git pull</div>
+            </div>
+            <div style="background:#f0f7ff;border-radius:9px;padding:18px;border:2px solid var(--accent);">
+              <div style="font-size:2.5rem;">☁️</div>
+              <div style="font-weight:700;color:var(--accent);margin-top:7px;">GitHub Remote</div>
+              <div style="font-size:.78rem;color:#666;margin-top:4px;">Cloud Storage</div>
+            </div>
+          </div>
+        </div>
+
+        <h2 class="sh">Workflow: เชื่อม Local กับ GitHub (ครั้งแรก)</h2>
+        <div class="cb">
+          <div class="cb-bar"><span class="cb-lang">Terminal</span>
+            <button class="copy-btn" onclick="cp(this,`git init\ngit add .\ngit commit -m 'first commit'\ngit remote add origin https://github.com/username/my-first-repo.git\ngit push -u origin main`)">Copy All</button></div>
+          <div class="cb-code"><span class="c-cm"># 1. เริ่มต้น Git (ถ้ายังไม่ได้ init)</span>
+<span class="c-g">git</span> init
+
+<span class="c-cm"># 2. Stage ทุกไฟล์</span>
+<span class="c-g">git</span> add .
+
+<span class="c-cm"># 3. Commit ครั้งแรก</span>
+<span class="c-g">git</span> commit -m <span class="c-o">"first commit"</span>
+
+<span class="c-cm"># 4. เชื่อมกับ remote (GitHub)</span>
+<span class="c-g">git</span> remote add origin https://github.com/<span class="c-b">username</span>/<span class="c-b">my-first-repo</span>.git
+
+<span class="c-cm"># 5. Push ขึ้น GitHub ครั้งแรก (-u ตั้ง upstream)</span>
+<span class="c-g">git</span> push -u origin main</div>
+        </div>
+
+        <!-- Tab: push / pull / clone -->
+        <div class="tabs">
+          <div class="tab-list">
+            <button class="tab-btn active" onclick="switchTab('rmt','push',this)">⬆️ push</button>
+            <button class="tab-btn" onclick="switchTab('rmt','pull',this)">⬇️ pull</button>
+            <button class="tab-btn" onclick="switchTab('rmt','clone',this)">📋 clone</button>
+          </div>
+          <div>
+            <div id="rmt-push" class="tab-pane active">
+              <p><strong>git push</strong> — ส่งโค้ดจากเครื่องขึ้น GitHub</p>
+              <div class="cb">
+                <div class="cb-bar"><span class="cb-lang">Terminal</span>
+                  <button class="copy-btn" onclick="cp(this,'git push origin main')">Copy</button></div>
+                <div class="cb-code"><span class="c-cm"># Push ไปยัง branch main</span>
+git push origin main
+
+<span class="c-cm"># ครั้งแรกใช้ -u เพื่อ set upstream (ครั้งต่อไปพิมพ์แค่ git push)</span>
+git push -u origin main</div>
+              </div>
+            </div>
+            <div id="rmt-pull" class="tab-pane">
+              <p><strong>git pull</strong> — ดึงโค้ดล่าสุดจาก GitHub มาที่เครื่อง</p>
+              <div class="cb">
+                <div class="cb-bar"><span class="cb-lang">Terminal</span>
+                  <button class="copy-btn" onclick="cp(this,'git pull origin main')">Copy</button></div>
+                <div class="cb-code"><span class="c-cm"># Pull โค้ดล่าสุดจาก GitHub</span>
+git pull origin main
+
+<span class="c-cm"># ถ้า set upstream ไว้แล้ว ใช้แค่นี้</span>
+git pull</div>
+              </div>
+              <div class="rwc">
+                <div class="rwc-lbl">🌍 Real-world Use Case</div>
+                <div class="rwc-ttl">เพื่อนร่วมทีม push โค้ดใหม่ขึ้น GitHub</div>
+                <div class="rwc-text">ก่อนเริ่มทำงานทุกเช้า ให้ <code>git pull</code> เสมอเพื่อให้มีโค้ดล่าสุดในเครื่อง และหลีกเลี่ยง conflict</div>
+              </div>
+            </div>
+            <div id="rmt-clone" class="tab-pane">
+              <p><strong>git clone</strong> — คัดลอก repository จาก GitHub ลงเครื่อง</p>
+              <div class="cb">
+                <div class="cb-bar"><span class="cb-lang">Terminal</span>
+                  <button class="copy-btn" onclick="cp(this,'git clone https://github.com/username/repo.git')">Copy</button></div>
+                <div class="cb-code"><span class="c-cm"># Clone repo ลงโฟลเดอร์ใหม่</span>
+git clone https://github.com/<span class="c-b">username</span>/<span class="c-b">repo</span>.git
+
+<span class="c-cm"># จะได้โฟลเดอร์ repo/ โดยอัตโนมัติ</span>
+cd repo</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn btn-red" onclick="markDone('s6')">✅ เข้าใจแล้ว ไปต่อ →</button>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         STEP 7 — Branching
+         ============================================================ -->
+    <section class="step-sec" id="s7">
+      <div class="step-hdr" onclick="toggleStep('s7')">
+        <span class="badge badge-blue">Practice</span>
+        <div class="step-title-wrap">
+          <div class="step-title">🌿 Step 7 — Branching (สาขา)</div>
+          <div class="step-sub">แยก branch ทำฟีเจอร์ใหม่โดยไม่กระทบ main</div>
+        </div>
+        <span class="step-arrow">▼</span>
+      </div>
+      <div class="step-body">
+
+        <div class="info-card purple">
+          <span class="ic-icon">💡</span>
+          <div>
+            <strong>Branch คืออะไร?</strong><br>
+            คิดว่า branch เหมือน "เส้นทางขนาน" ของโค้ด —
+            คุณทำงานบน branch ใหม่โดยไม่กระทบ <code>main</code> จนกว่าจะพร้อม merge
+          </div>
+        </div>
+
+        <!-- SVG Branch Diagram -->
+        <div class="diagram">
+          <div class="diagram-title">Branch Visualization — main &amp; feature/login</div>
+          <svg width="100%" viewBox="0 0 620 170" style="overflow:visible;max-width:620px;display:block;margin:0 auto;">
+            <!-- main line -->
+            <line x1="30" y1="44" x2="590" y2="44" stroke="#0366d6" stroke-width="3"/>
+            <!-- feature lines -->
+            <line x1="190" y1="44" x2="310" y2="120" stroke="#28a745" stroke-width="3"/>
+            <line x1="310" y1="120" x2="430" y2="120" stroke="#28a745" stroke-width="3"/>
+            <line x1="430" y1="120" x2="490" y2="44" stroke="#28a745" stroke-width="2.5" stroke-dasharray="5,3"/>
+
+            <!-- main commits -->
+            <circle cx="30"  cy="44" r="13" fill="#0366d6"/>
+            <text x="30"  y="48" text-anchor="middle" fill="white" font-size="9" font-weight="bold">C1</text>
+            <circle cx="120" cy="44" r="13" fill="#0366d6"/>
+            <text x="120" y="48" text-anchor="middle" fill="white" font-size="9" font-weight="bold">C2</text>
+            <circle cx="190" cy="44" r="13" fill="#0366d6"/>
+            <text x="190" y="48" text-anchor="middle" fill="white" font-size="9" font-weight="bold">C3</text>
+            <circle cx="310" cy="44" r="13" fill="#0366d6"/>
+            <text x="310" y="48" text-anchor="middle" fill="white" font-size="9" font-weight="bold">C4</text>
+            <!-- feature commits -->
+            <circle cx="310" cy="120" r="13" fill="#28a745"/>
+            <text x="310" y="124" text-anchor="middle" fill="white" font-size="9" font-weight="bold">F1</text>
+            <circle cx="430" cy="120" r="13" fill="#28a745"/>
+            <text x="430" y="124" text-anchor="middle" fill="white" font-size="9" font-weight="bold">F2</text>
+            <!-- merge commit -->
+            <circle cx="490" cy="44" r="15" fill="#6f42c1"/>
+            <text x="490" y="48" text-anchor="middle" fill="white" font-size="9" font-weight="bold">M</text>
+            <!-- last main commit -->
+            <circle cx="580" cy="44" r="13" fill="#0366d6"/>
+            <text x="580" y="48" text-anchor="middle" fill="white" font-size="9" font-weight="bold">C5</text>
+
+            <!-- labels -->
+            <text x="70"  y="28" fill="#0366d6" font-size="11" font-weight="bold">main branch</text>
+            <text x="310" y="150" text-anchor="middle" fill="#28a745" font-size="11" font-weight="bold">feature/login branch</text>
+            <text x="490" y="30" text-anchor="middle" fill="#6f42c1" font-size="10" font-weight="bold">merge</text>
+            <text x="195" y="80" fill="#888" font-size="9">checkout -b</text>
+          </svg>
+        </div>
+
+        <h2 class="sh">คำสั่ง Branch ที่ใช้บ่อย</h2>
+        <div class="cb">
+          <div class="cb-bar"><span class="cb-lang">Terminal</span>
+            <button class="copy-btn" onclick="cp(this,'git checkout -b feature/login')">Copy</button></div>
+          <div class="cb-code"><span class="c-cm"># ดู branch ทั้งหมด (* = branch ปัจจุบัน)</span>
+<span class="c-g">git</span> branch
+
+<span class="c-cm"># สร้าง branch ใหม่</span>
+<span class="c-g">git</span> branch <span class="c-b">feature/login</span>
+
+<span class="c-cm"># สลับไปยัง branch นั้น</span>
+<span class="c-g">git</span> checkout <span class="c-b">feature/login</span>
+
+<span class="c-cm"># ⚡ สร้าง + สลับในคำสั่งเดียว (แนะนำ!)</span>
+<span class="c-g">git</span> checkout -b <span class="c-b">feature/login</span>
+
+<span class="c-cm"># เมื่อทำงานเสร็จ: กลับ main แล้ว merge</span>
+<span class="c-g">git</span> checkout main
+<span class="c-g">git</span> merge <span class="c-b">feature/login</span>
+
+<span class="c-cm"># ลบ branch หลัง merge เสร็จ</span>
+<span class="c-g">git</span> branch -d <span class="c-b">feature/login</span></div>
+        </div>
+
+        <div class="rwc">
+          <div class="rwc-lbl">🌍 Real-world Use Case</div>
+          <div class="rwc-ttl">ทีม 3 คน ทำงานพร้อมกันโดยไม่ชนกัน</div>
+          <div class="rwc-text">
+            • นัท: <code>feature/navbar</code> — ทำ Navigation bar<br>
+            • มิ้น: <code>feature/login</code> — ทำระบบ Login<br>
+            • โบ้: <code>fix/mobile-layout</code> — แก้ layout หน้า Mobile<br>
+            ทำงานพร้อมกัน 3 คน แล้วค่อย merge รวมกันตอนสิ้นวัน
+          </div>
+        </div>
+
+        <button class="btn btn-red" onclick="markDone('s7')">✅ เข้าใจแล้ว ไปต่อ →</button>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         STEP 8 — Checkpoint Quiz
+         ============================================================ -->
+    <section class="step-sec" id="s8">
+      <div class="step-hdr" onclick="toggleStep('s8')">
+        <span class="badge badge-purple">Quiz</span>
+        <div class="step-title-wrap">
+          <div class="step-title">🎯 Step 8 — Checkpoint Quiz</div>
+          <div class="step-sub">วัดความเข้าใจก่อนไปสรุปบทเรียน</div>
+        </div>
+        <span class="step-arrow">▼</span>
+      </div>
+      <div class="step-body">
+
+        <div class="checkpoint">
+          <div class="cp-ico">🎯</div>
+          <div>
+            <div class="cp-ttl">Checkpoint — วัดความเข้าใจ</div>
+            <div class="cp-txt">ตอบ 5 ข้อต่อไปนี้เพื่อดูว่าคุณเข้าใจ Git &amp; GitHub แค่ไหนแล้ว</div>
+          </div>
+        </div>
+
+        <!-- Q1 -->
+        <div class="quiz-card" id="q1" data-ans="false">
+          <div class="quiz-q">1. คำสั่งใดใช้ <strong>เริ่มต้น Git repository ใหม่</strong>?</div>
+          <div class="quiz-opts">
+            <button class="qopt" onclick="ans('q1',this,false)">🔴 <code>git start</code></button>
+            <button class="qopt" onclick="ans('q1',this,true)">🟢 <code>git init</code></button>
+            <button class="qopt" onclick="ans('q1',this,false)">🔵 <code>git new</code></button>
+            <button class="qopt" onclick="ans('q1',this,false)">🟡 <code>git create</code></button>
+          </div>
+          <div class="quiz-fb" id="q1-fb"></div>
+        </div>
+
+        <!-- Q2 -->
+        <div class="quiz-card" id="q2" data-ans="false">
+          <div class="quiz-q">2. ลำดับ Git Workflow ที่ถูกต้องคือข้อใด?</div>
+          <div class="quiz-opts">
+            <button class="qopt" onclick="ans('q2',this,false)">commit → add → push</button>
+            <button class="qopt" onclick="ans('q2',this,true)">add → commit → push</button>
+            <button class="qopt" onclick="ans('q2',this,false)">push → add → commit</button>
+            <button class="qopt" onclick="ans('q2',this,false)">init → push → commit</button>
+          </div>
+          <div class="quiz-fb" id="q2-fb"></div>
+        </div>
+
+        <!-- Q3 -->
+        <div class="quiz-card" id="q3" data-ans="false">
+          <div class="quiz-q">3. <code>git add .</code> ทำอะไร?</div>
+          <div class="quiz-opts">
+            <button class="qopt" onclick="ans('q3',this,false)">บันทึก commit ลง repository</button>
+            <button class="qopt" onclick="ans('q3',this,false)">ส่งโค้ดขึ้น GitHub</button>
+            <button class="qopt" onclick="ans('q3',this,true)">เพิ่มทุกไฟล์ที่เปลี่ยนแปลงเข้า Staging Area</button>
+            <button class="qopt" onclick="ans('q3',this,false)">สร้าง branch ใหม่</button>
+          </div>
+          <div class="quiz-fb" id="q3-fb"></div>
+        </div>
+
+        <!-- Q4 -->
+        <div class="quiz-card" id="q4" data-ans="false">
+          <div class="quiz-q">4. ต้องการทำงาน feature ใหม่โดยไม่กระทบ main — ต้องทำอะไร?</div>
+          <div class="quiz-opts">
+            <button class="qopt" onclick="ans('q4',this,false)">สร้าง repository ใหม่</button>
+            <button class="qopt" onclick="ans('q4',this,true)">สร้าง Branch ใหม่</button>
+            <button class="qopt" onclick="ans('q4',this,false)">ลบไฟล์เดิมก่อน</button>
+            <button class="qopt" onclick="ans('q4',this,false)">ใช้ git clone ใหม่</button>
+          </div>
+          <div class="quiz-fb" id="q4-fb"></div>
+        </div>
+
+        <!-- Q5 -->
+        <div class="quiz-card" id="q5" data-ans="false">
+          <div class="quiz-q">5. ความแตกต่างระหว่าง <strong>Git</strong> และ <strong>GitHub</strong> คืออะไร?</div>
+          <div class="quiz-opts">
+            <button class="qopt" onclick="ans('q5',this,false)">Git กับ GitHub เป็นสิ่งเดียวกัน</button>
+            <button class="qopt" onclick="ans('q5',this,false)">GitHub ทำงานบนเครื่อง, Git อยู่บน Cloud</button>
+            <button class="qopt" onclick="ans('q5',this,true)">Git คือเครื่องมือจัดการเวอร์ชัน, GitHub คือ Cloud สำหรับเก็บ repo ออนไลน์</button>
+            <button class="qopt" onclick="ans('q5',this,false)">Git ใช้ฟรี, GitHub ต้องจ่ายเงิน</button>
+          </div>
+          <div class="quiz-fb" id="q5-fb"></div>
+        </div>
+
+        <!-- Result (hidden) -->
+        <div id="qResult" style="display:none;" class="score-wrap">
+          <div class="score-ring" id="scoreRing">
+            <span id="scoreNum">0</span>
+            <small>/ 5</small>
+          </div>
+          <div id="scoreMsg" style="font-size:1rem;font-weight:700;margin-bottom:6px;"></div>
+          <div id="scoreInfo" style="font-size:.83rem;color:var(--muted);"></div>
+          <button class="btn btn-out" style="margin-top:14px;" onclick="resetQuiz()">🔄 ลองใหม่</button>
+        </div>
+
+        <button class="btn btn-red" style="margin-top:12px;" onclick="markDone('s8')">✅ ทำแบบทดสอบเสร็จแล้ว →</button>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         STEP 9 — สรุปบทเรียน
+         ============================================================ -->
+    <section class="step-sec" id="s9">
+      <div class="step-hdr" onclick="toggleStep('s9')">
+        <span class="badge badge-orange">Summary</span>
+        <div class="step-title-wrap">
+          <div class="step-title">📚 Step 9 — สรุปสิ่งที่เรียนรู้</div>
+          <div class="step-sub">ทบทวนทุกคำสั่งและแนวคิดสำคัญในบทเรียนนี้</div>
+        </div>
+        <span class="step-arrow">▼</span>
+      </div>
+      <div class="step-body">
+
+        <h2 class="sh">📋 คำสั่ง Git ที่ต้องจำ</h2>
+        <div class="card-grid">
+          <div class="cmd-card"><code class="cmd-tag">git init</code><div class="cmd-desc">เริ่ม Git repository ใหม่</div></div>
+          <div class="cmd-card"><code class="cmd-tag">git clone &lt;url&gt;</code><div class="cmd-desc">คัดลอก repo จาก GitHub</div></div>
+          <div class="cmd-card"><code class="cmd-tag">git status</code><div class="cmd-desc">ดูสถานะไฟล์</div></div>
+          <div class="cmd-card"><code class="cmd-tag">git add .</code><div class="cmd-desc">Stage ทุกไฟล์</div></div>
+          <div class="cmd-card"><code class="cmd-tag">git commit -m ""</code><div class="cmd-desc">บันทึก snapshot พร้อม message</div></div>
+          <div class="cmd-card"><code class="cmd-tag">git push</code><div class="cmd-desc">ส่งโค้ดขึ้น GitHub</div></div>
+          <div class="cmd-card"><code class="cmd-tag">git pull</code><div class="cmd-desc">ดึงโค้ดจาก GitHub</div></div>
+          <div class="cmd-card"><code class="cmd-tag">git log --oneline</code><div class="cmd-desc">ดูประวัติ commit แบบสั้น</div></div>
+          <div class="cmd-card"><code class="cmd-tag">git branch &lt;name&gt;</code><div class="cmd-desc">สร้าง branch ใหม่</div></div>
+          <div class="cmd-card"><code class="cmd-tag">git checkout &lt;name&gt;</code><div class="cmd-desc">สลับ branch</div></div>
+          <div class="cmd-card"><code class="cmd-tag">git merge &lt;name&gt;</code><div class="cmd-desc">รวม branch เข้าด้วยกัน</div></div>
+          <div class="cmd-card"><code class="cmd-tag">git diff</code><div class="cmd-desc">ดูความเปลี่ยนแปลงก่อน stage</div></div>
+        </div>
+
+        <h2 class="sh">🗺️ Standard Git Workflow สมบูรณ์</h2>
+        <div class="cb">
+          <div class="cb-bar"><span class="cb-lang">Standard Daily Workflow</span>
+            <button class="copy-btn" onclick="cp(this,`# เริ่ม project\nmkdir my-project && cd my-project\ngit init\ngit remote add origin https://github.com/you/my-project.git\n\n# ทำงานทุกวัน\ngit pull                          # ดึงโค้ดล่าสุดก่อนทำงาน\ngit checkout -b feature/navbar    # สร้าง branch ใหม่\n# ...แก้โค้ด...\ngit status\ngit add .\ngit commit -m \"feat: add navbar\"\ngit push origin feature/navbar\n\n# Merge กลับ main\ngit checkout main\ngit merge feature/navbar\ngit push origin main`)">Copy</button></div>
+          <div class="cb-code"><span class="c-cm"># === เริ่ม project ใหม่ ===</span>
+mkdir my-project <span class="c-p">&&</span> cd my-project
+<span class="c-g">git</span> init
+<span class="c-g">git</span> remote add origin https://github.com/you/my-project.git
+
+<span class="c-cm"># === ทำงานทุกวัน ===</span>
+<span class="c-g">git</span> pull                          <span class="c-cm"># ดึงโค้ดล่าสุดก่อนทำงาน</span>
+<span class="c-g">git</span> checkout -b <span class="c-b">feature/navbar</span>    <span class="c-cm"># สร้าง branch ใหม่</span>
+
+<span class="c-cm"># ...แก้โค้ด...</span>
+
+<span class="c-g">git</span> status                        <span class="c-cm"># ดูอะไรเปลี่ยน</span>
+<span class="c-g">git</span> add .                         <span class="c-cm"># Stage ทุกอย่าง</span>
+<span class="c-g">git</span> commit -m <span class="c-o">"feat: add navbar"</span>  <span class="c-cm"># Commit</span>
+<span class="c-g">git</span> push origin <span class="c-b">feature/navbar</span>   <span class="c-cm"># Push ขึ้น GitHub</span>
+
+<span class="c-cm"># === Merge กลับ main ===</span>
+<span class="c-g">git</span> checkout main
+<span class="c-g">git</span> merge <span class="c-b">feature/navbar</span>
+<span class="c-g">git</span> push origin main</div>
+        </div>
+
+        <h2 class="sh">🚀 ขั้นตอนถัดไปหลังจบบทเรียนนี้</h2>
+        <!-- Interactive checklist -->
+        <ul class="checklist" id="cl2">
+          <li onclick="toggleCl(this)"><span class="cl-ico">☐</span> สร้าง GitHub account และ repository แรกของคุณ</li>
+          <li onclick="toggleCl(this)"><span class="cl-ico">☐</span> Push โปรเจกต์ปัจจุบันขึ้น GitHub</li>
+          <li onclick="toggleCl(this)"><span class="cl-ico">☐</span> ลองสร้าง Pull Request ครั้งแรก</li>
+          <li onclick="toggleCl(this)"><span class="cl-ico">☐</span> เรียนรู้ .gitignore เพื่อ exclude ไฟล์ที่ไม่ต้อง track (เช่น node_modules)</li>
+          <li onclick="toggleCl(this)"><span class="cl-ico">☐</span> ลอง Fork และ contribute ใน Open Source project เล็ก ๆ</li>
+        </ul>
+
+        <!-- Congrats -->
+        <div class="congrats">
+          <div class="congrats-ico">🎉</div>
+          <div class="congrats-ttl">ยินดีด้วย! คุณเรียนจบ Git &amp; GitHub พื้นฐานแล้ว</div>
+          <div class="congrats-txt">
+            ตอนนี้คุณรู้จัก Version Control — ทักษะที่ Developer ทุกคนต้องมี
+          </div>
+          <button class="btn btn-white" style="margin-top:16px;" onclick="markDone('s9')">
+            🏆 จบบทเรียนแล้ว!
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+</div><!-- end .main-wrap -->
+
+<!-- ============================================================
+     JAVASCRIPT
+     ============================================================ -->
+<script>
+"use strict";
+
+/* ================================================
+   STATE
+   ================================================ */
+const STEPS = ['s1','s2','s3','s4','s5','s6','s7','s8','s9'];
+const doneSet = new Set();
+
+/* Quiz state */
+let qScore = 0;
+let qAnswered = 0;
+
+/* Terminal state */
+const ts = {
+  inited:    false,
+  staged:    false,
+  committed: false,
+  logs:      []
+};
+
+/* Workflow demo state */
+let wfStage = 0;
+
+/* ================================================
+   STEP ACCORDION
+   ================================================ */
+/**
+ * เปิด/ปิด step section
+ */
+function toggleStep(id) {
+  const sec = document.getElementById(id);
+  const wasOpen = sec.classList.contains('open');
+  sec.classList.toggle('open');
+  if (!wasOpen) {
+    setTimeout(() => sec.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+    highlightNav(id);
+  } else {
+    highlightNav(null);
+  }
+}
+
+/**
+ * Mark step ว่าเสร็จแล้ว แล้วเปิด step ถัดไปอัตโนมัติ
+ */
+function markDone(id) {
+  doneSet.add(id);
+  updateProgress();
+
+  /* อัปเดต sidebar */
+  const link = document.querySelector(`.nav-link[href="#${id}"]`);
+  if (link) {
+    link.classList.add('done');
+    link.querySelector('.step-num').textContent = '✓';
+  }
+
+  /* เปิด step ถัดไป */
+  const idx = STEPS.indexOf(id);
+  const next = STEPS[idx + 1];
+  if (next) {
+    const nextSec = document.getElementById(next);
+    if (nextSec && !nextSec.classList.contains('open')) {
+      setTimeout(() => {
+        nextSec.classList.add('open');
+        nextSec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        highlightNav(next);
+      }, 350);
+    }
+  }
+}
+
+function highlightNav(id) {
+  document.querySelectorAll('.nav-link').forEach(a => a.classList.remove('active'));
+  if (id) {
+    const a = document.querySelector(`.nav-link[href="#${id}"]`);
+    if (a) a.classList.add('active');
+  }
+}
+
+function updateProgress() {
+  const done = doneSet.size;
+  const total = STEPS.length;
+  const pct = Math.round((done / total) * 100);
+  document.getElementById('progFill').style.width = pct + '%';
+  document.getElementById('progTxt').textContent = `${done} / ${total} เสร็จแล้ว`;
+}
+
+/* ================================================
+   TABS
+   ================================================ */
+/**
+ * สลับ tab — group คือ prefix ของ id, panel คือ suffix
+ */
+function switchTab(group, panel, btn) {
+  /* ซ่อนทุก panel ในกลุ่ม */
+  document.querySelectorAll(`[id^="${group}-"]`).forEach(el => el.classList.remove('active'));
+  const target = document.getElementById(`${group}-${panel}`);
+  if (target) target.classList.add('active');
+
+  /* อัปเดต active button */
+  btn.closest('.tab-list').querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+/* ================================================
+   CHECKLIST
+   ================================================ */
+/** Toggle checklist item */
+function toggleCl(el) {
+  const ico = el.querySelector('.cl-ico');
+  if (el.classList.contains('done')) {
+    el.classList.remove('done');
+    ico.textContent = '☐';
+  } else {
+    el.classList.add('done');
+    ico.textContent = '✅';
+  }
+}
+
+/* ================================================
+   COPY CODE
+   ================================================ */
+/** คัดลอก text ไป clipboard */
+function cp(btn, text) {
+  const write = () => {
+    const orig = btn.textContent;
+    btn.textContent = '✓ Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = orig; btn.classList.remove('copied'); }, 2000);
+  };
+
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(write).catch(fallback);
+  } else { fallback(); }
+
+  function fallback() {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;opacity:0';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); write(); } catch (_) {}
+    document.body.removeChild(ta);
+  }
+}
+
+/* ================================================
+   TERMINAL SIMULATOR
+   ================================================ */
+/** Escape HTML สำหรับ output */
+function esc(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+/** คำสั่งที่รองรับ */
+const CMDS = {
+  'help': () =>
+    `<span class="t-cmt"># คำสั่งที่ใช้ได้:</span>
+<span class="t-res">  git init            เริ่ม repository ใหม่</span>
+<span class="t-res">  git status          ดูสถานะไฟล์</span>
+<span class="t-res">  git add .           Stage ทุกไฟล์</span>
+<span class="t-res">  git commit -m "msg" บันทึก snapshot</span>
+<span class="t-res">  git log             ดูประวัติ commit</span>
+<span class="t-res">  git log --oneline   ดูประวัติแบบสั้น</span>
+<span class="t-res">  git branch          ดู branch ทั้งหมด</span>
+<span class="t-res">  git diff            ดูความเปลี่ยนแปลง</span>
+<span class="t-res">  ls / dir            แสดงไฟล์ในโฟลเดอร์</span>
+<span class="t-res">  clear               ล้างหน้าจอ</span>`,
+
+  'git init': () => {
+    const msg = ts.inited
+      ? `<span class="t-err">Reinitialized existing Git repository in ~/my-project/.git/</span>`
+      : `<span class="t-ok">Initialized empty Git repository in ~/my-project/.git/</span>`;
+    ts.inited = true;
+    return msg;
+  },
+
+  'git status': () => {
+    if (!ts.inited) return notRepo();
+    if (ts.staged) return `On branch main\n<span class="t-ok">Changes to be committed:</span>\n  <span class="t-ok">new file: index.html</span>\n  <span class="t-ok">new file: style.css</span>\n  <span class="t-ok">new file: app.js</span>`;
+    if (!ts.committed && !ts.staged)
+      return `On branch main\n<span class="t-err">Untracked files:</span>\n  <span class="t-err">index.html</span>\n  <span class="t-err">style.css</span>\n  <span class="t-err">app.js</span>\n<span class="t-cmt"># ใช้ git add . เพื่อ track</span>`;
+    return `On branch main\n<span class="t-ok">nothing to commit, working tree clean</span>`;
+  },
+
+  'git add .': () => {
+    if (!ts.inited) return notRepo();
+    ts.staged = true;
+    return `<span class="t-ok">staged: index.html</span>\n<span class="t-ok">staged: style.css</span>\n<span class="t-ok">staged: app.js</span>`;
+  },
+
+  'git commit': () => `<span class="t-err">error: switch 'm' requires a value</span>\n<span class="t-cmt"># ลอง: git commit -m "ข้อความ"</span>`,
+
+  'git log': () => {
+    if (!ts.inited) return notRepo();
+    if (ts.logs.length === 0) return `<span class="t-err">fatal: no commits yet on branch 'main'</span>`;
+    return ts.logs.map(c =>
+      `<span class="t-res">commit ${c.hash}</span>\nAuthor: You <you@example.com>\nDate: ${c.date}\n\n    ${c.msg}`
+    ).join('\n\n');
+  },
+
+  'git log --oneline': () => {
+    if (!ts.inited) return notRepo();
+    if (ts.logs.length === 0) return `<span class="t-err">fatal: no commits yet</span>`;
+    return ts.logs.map(c => `<span class="t-res">${c.hash.slice(0,7)}</span> ${c.msg}`).join('\n');
+  },
+
+  'git branch': () => {
+    if (!ts.inited) return notRepo();
+    return `<span class="t-ok">* main</span>`;
+  },
+
+  'git diff': () => {
+    if (!ts.inited) return notRepo();
+    return `<span class="t-cmt"># ไม่มีความแตกต่าง</span>`;
+  },
+
+  'ls':  () => `index.html  style.css  app.js`,
+  'dir': () => `index.html  style.css  app.js`,
+};
+
+function notRepo() {
+  return `<span class="t-err">fatal: not a git repository (no .git folder)</span>\n<span class="t-cmt"># ลอง: git init ก่อน</span>`;
+}
+
+/**
+ * รันคำสั่งใน Terminal Simulator
+ */
+function runCmd() {
+  const inp = document.getElementById('termIn');
+  const raw = inp.value.trim();
+  if (!raw) return;
+
+  const out = document.getElementById('termOut');
+
+  if (raw === 'clear') {
+    out.innerHTML = '';
+    inp.value = '';
+    return;
+  }
+
+  /* แสดง prompt + คำสั่ง */
+  out.innerHTML += `\n<span><span class="t-prompt">~/my-project $</span> <span class="t-cmd">${esc(raw)}</span></span>`;
+
+  let result;
+
+  /* git commit -m "xxx" */
+  const commitRx = /^git commit -m ["'](.+)["']$/;
+  const cMatch = raw.match(commitRx);
+  if (cMatch) {
+    if (!ts.inited) {
+      result = notRepo();
+    } else if (!ts.staged) {
+      result = `<span class="t-err">On branch main\nnothing to commit, working tree clean</span>\n<span class="t-cmt"># ลอง: git add . ก่อน</span>`;
+    } else {
+      const hash = (Math.random().toString(16) + Math.random().toString(16)).replace('0.','').slice(0,40);
+      ts.logs.unshift({ hash, msg: cMatch[1], date: new Date().toUTCString() });
+      ts.staged = false;
+      ts.committed = true;
+      result = `<span class="t-ok">[main ${hash.slice(0,7)}] ${esc(cMatch[1])}</span>\n 3 files changed, 42 insertions(+)`;
+    }
+  } else if (CMDS[raw]) {
+    result = CMDS[raw]();
+  } else if (raw.startsWith('git ')) {
+    result = `<span class="t-err">git: '${esc(raw.slice(4))}' is not a git command. See 'git help'.</span>`;
+  } else {
+    result = `<span class="t-err">command not found: ${esc(raw)}</span>`;
+  }
+
+  if (result != null) out.innerHTML += `\n<span>${result}</span>\n`;
+
+  inp.value = '';
+  const body = out.parentElement;
+  body.scrollTop = body.scrollHeight;
+}
+
+/* Enter key ใน terminal */
+document.addEventListener('DOMContentLoaded', () => {
+  const ti = document.getElementById('termIn');
+  if (ti) ti.addEventListener('keydown', e => { if (e.key === 'Enter') runCmd(); });
+  /* เปิด step 1 อัตโนมัติ */
+  const s1 = document.getElementById('s1');
+  s1.classList.add('open');
+  highlightNav('s1');
+});
+
+/* ================================================
+   WORKFLOW DEMO
+   ================================================ */
+function doAdd() {
+  if (wfStage >= 1) {
+    document.getElementById('wfStatus').textContent = '✅ staged แล้ว — ลอง git commit';
+    return;
+  }
+  wfStage = 1;
+  document.getElementById('sFiles').innerHTML =
+    `<div style="color:var(--accent)">📄 index.html<br>🎨 style.css<br>⚡ app.js</div>`;
+  flash('sArea', '0 0 0 3px #0366d6');
+  document.getElementById('wfStatus').textContent = '📦 ไฟล์อยู่ใน Staging Area แล้ว!';
+}
+
+function doCommit() {
+  if (wfStage < 1) {
+    document.getElementById('wfStatus').textContent = '⚠️ ต้อง git add . ก่อน!';
+    flash('wArea', '0 0 0 3px var(--primary)');
+    return;
+  }
+  if (wfStage >= 2) {
+    document.getElementById('wfStatus').textContent = '✅ committed แล้ว!';
+    return;
+  }
+  wfStage = 2;
+  document.getElementById('sFiles').innerHTML = '';
+  document.getElementById('rLogs').innerHTML =
+    `<span style="color:var(--success)">🔵 abc1234 — first commit</span>`;
+  flash('rArea', '0 0 0 3px #28a745');
+  document.getElementById('wfStatus').textContent = '🎉 Commit สำเร็จ! โค้ดบันทึกแล้ว';
+}
+
+function resetWf() {
+  wfStage = 0;
+  document.getElementById('sFiles').innerHTML = '';
+  document.getElementById('rLogs').innerHTML = '';
+  document.getElementById('wfStatus').textContent = '🔄 Reset แล้ว — ลอง git add . ใหม่';
+}
+
+function flash(id, shadow) {
+  const el = document.getElementById(id);
+  el.style.boxShadow = shadow;
+  setTimeout(() => el.style.boxShadow = '', 900);
+}
+
+/* ================================================
+   QUIZ
+   ================================================ */
+const QUIZ_FB = {
+  q1: {
+    ok: '✅ ถูกต้อง! <code>git init</code> สร้าง .git folder และเริ่มต้น repository ใหม่',
+    no: '❌ ไม่ถูก — คำสั่งที่ถูกต้องคือ <code>git init</code>'
+  },
+  q2: {
+    ok: '✅ ถูกต้อง! add → commit → push คือลำดับที่ถูกต้องในทุกวัน',
+    no: '❌ ไม่ถูก — ลำดับที่ถูกต้องคือ <code>git add</code> → <code>git commit</code> → <code>git push</code>'
+  },
+  q3: {
+    ok: '✅ ถูกต้อง! <code>git add .</code> เพิ่มทุกไฟล์เข้า Staging Area เพื่อรอ commit',
+    no: '❌ ไม่ถูก — <code>git add .</code> แค่ stage ไฟล์, ยังไม่ได้ commit หรือ push'
+  },
+  q4: {
+    ok: '✅ ถูกต้อง! Branch ช่วยแยกทำงานโดยไม่กระทบ main',
+    no: '❌ ไม่ถูก — ใช้ <code>git checkout -b feature/xxx</code> สร้าง branch ใหม่'
+  },
+  q5: {
+    ok: '✅ ถูกต้อง! Git = เครื่องมือ local, GitHub = Cloud platform สำหรับ host repo',
+    no: '❌ ไม่ถูก — Git คือเครื่องมือที่ทำงานบนเครื่อง, GitHub คือเว็บไซต์เก็บ repo ออนไลน์'
+  }
+};
+
+/**
+ * ตอบคำถาม quiz
+ */
+function ans(qId, btn, isCorrect) {
+  const card = document.getElementById(qId);
+  if (card.dataset.ans === 'true') return; /* ป้องกันกดซ้ำ */
+  card.dataset.ans = 'true';
+
+  card.querySelectorAll('.qopt').forEach(b => b.classList.add('disabled'));
+  btn.classList.add(isCorrect ? 'correct' : 'wrong');
+
+  const fb = document.getElementById(`${qId}-fb`);
+  fb.classList.add('show', isCorrect ? 'correct' : 'wrong');
+  fb.innerHTML = QUIZ_FB[qId][isCorrect ? 'ok' : 'no'];
+
+  if (isCorrect) qScore++;
+  qAnswered++;
+
+  if (qAnswered === 5) setTimeout(showResult, 500);
+}
+
+function showResult() {
+  const wrap   = document.getElementById('qResult');
+  const ring   = document.getElementById('scoreRing');
+  const sNum   = document.getElementById('scoreNum');
+  const sMsg   = document.getElementById('scoreMsg');
+  const sInfo  = document.getElementById('scoreInfo');
+
+  sNum.textContent = qScore;
+  wrap.style.display = 'block';
+
+  if (qScore === 5) {
+    ring.style.background = '#28a745';
+    sMsg.textContent = '🌟 ยอดเยี่ยม! คุณเข้าใจทุกข้อ!';
+    sInfo.textContent = 'คุณพร้อมใช้ Git ในงานจริงแล้ว!';
+  } else if (qScore >= 3) {
+    ring.style.background = '#ffc107';
+    sMsg.textContent = '👍 ดี! แต่ยังมีบางส่วนที่ควรทบทวน';
+    sInfo.textContent = 'กลับไปอ่าน Step ที่ตอบผิดอีกครั้งนะ';
+  } else {
+    ring.style.background = '#dc3545';
+    sMsg.textContent = '📖 ยังต้องฝึกเพิ่มอีกนิดนึง!';
+    sInfo.textContent = 'ไม่เป็นไร — ลองทบทวนบทเรียนแล้วทำใหม่';
+  }
+  wrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function resetQuiz() {
+  qScore = 0;
+  qAnswered = 0;
+  ['q1','q2','q3','q4','q5'].forEach(id => {
+    const card = document.getElementById(id);
+    card.dataset.ans = 'false';
+    card.querySelectorAll('.qopt').forEach(b => b.classList.remove('correct','wrong','disabled'));
+    const fb = document.getElementById(`${id}-fb`);
+    fb.classList.remove('show','correct','wrong');
+    fb.innerHTML = '';
+  });
+  document.getElementById('qResult').style.display = 'none';
+}
+</script>
+</body>
+</html>

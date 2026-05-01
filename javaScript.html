@@ -1,0 +1,1771 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JavaScript เบื้องต้น — Interactive Learning</title>
+  <style>
+    /* ===== CSS Variables & Reset ===== */
+    :root {
+      --yellow: #f7df1e;
+      --dark: #1a1a2e;
+      --darker: #0f0f1a;
+      --card: #16213e;
+      --card2: #1e2d50;
+      --accent: #f7df1e;
+      --accent2: #ff6b6b;
+      --accent3: #4ecdc4;
+      --accent4: #a8edea;
+      --text: #e8eaf6;
+      --text-muted: #9ea7c7;
+      --green: #51cf66;
+      --red: #ff6b6b;
+      --orange: #ffa94d;
+      --radius: 14px;
+      --shadow: 0 4px 24px rgba(0,0,0,0.4);
+      --font: 'Segoe UI', 'Sarabun', sans-serif;
+      --code-bg: #0d1117;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--darker);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 16px;
+      line-height: 1.7;
+    }
+
+    /* ===== Scrollbar ===== */
+    ::-webkit-scrollbar { width: 7px; }
+    ::-webkit-scrollbar-track { background: var(--darker); }
+    ::-webkit-scrollbar-thumb { background: #3a3a6a; border-radius: 10px; }
+
+    /* ===== Header ===== */
+    header {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%);
+      padding: 48px 24px 40px;
+      text-align: center;
+      border-bottom: 3px solid var(--yellow);
+      position: relative;
+      overflow: hidden;
+    }
+    header::before {
+      content: 'JS';
+      position: absolute;
+      font-size: 220px;
+      font-weight: 900;
+      color: rgba(247,223,30,0.05);
+      right: -20px;
+      top: -40px;
+      pointer-events: none;
+      letter-spacing: -10px;
+    }
+    .badge-level {
+      display: inline-block;
+      background: var(--yellow);
+      color: #1a1a2e;
+      font-weight: 700;
+      font-size: 0.75rem;
+      padding: 4px 14px;
+      border-radius: 99px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+    header h1 {
+      font-size: clamp(1.8rem, 5vw, 3rem);
+      font-weight: 900;
+      color: var(--yellow);
+      text-shadow: 0 2px 16px rgba(247,223,30,0.3);
+      margin-bottom: 10px;
+    }
+    header p {
+      color: var(--text-muted);
+      font-size: 1.05rem;
+      max-width: 560px;
+      margin: 0 auto;
+    }
+
+    /* ===== Progress Bar ===== */
+    .progress-bar-wrap {
+      background: var(--card);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      border-bottom: 1px solid #2a2a4a;
+    }
+    .progress-label { font-size: 0.82rem; color: var(--text-muted); white-space: nowrap; }
+    .progress-track {
+      flex: 1;
+      height: 8px;
+      background: #2a2a4a;
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--yellow), var(--accent3));
+      border-radius: 99px;
+      width: 0%;
+      transition: width 0.5s cubic-bezier(.4,0,.2,1);
+    }
+    .progress-pct { font-size: 0.82rem; font-weight: 700; color: var(--yellow); min-width: 36px; text-align: right; }
+
+    /* ===== TOC ===== */
+    .toc {
+      background: var(--card);
+      border: 1px solid #2a2a4a;
+      border-radius: var(--radius);
+      padding: 24px;
+      margin: 32px auto;
+      max-width: 860px;
+    }
+    .toc h2 { font-size: 1rem; color: var(--yellow); margin-bottom: 14px; text-transform: uppercase; letter-spacing: 1px; }
+    .toc ol { padding-left: 22px; }
+    .toc li { margin-bottom: 6px; }
+    .toc a { color: var(--accent3); text-decoration: none; font-size: 0.95rem; transition: color 0.2s; }
+    .toc a:hover { color: var(--yellow); }
+
+    /* ===== Main Container ===== */
+    main { max-width: 860px; margin: 0 auto; padding: 0 20px 80px; }
+
+    /* ===== Section ===== */
+    .section {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 32px 28px;
+      margin-bottom: 32px;
+      border: 1px solid #2a2a4a;
+      box-shadow: var(--shadow);
+    }
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+    .section-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #f7df1e33, #f7df1e11);
+      border: 1.5px solid #f7df1e55;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      flex-shrink: 0;
+    }
+    .section h2 {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: var(--yellow);
+    }
+    .section h3 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--accent3);
+      margin: 22px 0 8px;
+    }
+    .section p, .section li {
+      color: #c8d0e8;
+      font-size: 0.97rem;
+    }
+    .section ul, .section ol { padding-left: 22px; margin-top: 8px; }
+    .section li { margin-bottom: 5px; }
+
+    /* ===== Code Block ===== */
+    .code-block {
+      background: var(--code-bg);
+      border: 1px solid #2a2a4a;
+      border-radius: 10px;
+      padding: 18px 20px;
+      margin: 14px 0;
+      overflow-x: auto;
+      position: relative;
+    }
+    .code-block pre {
+      font-family: 'Consolas', 'Fira Code', monospace;
+      font-size: 0.9rem;
+      line-height: 1.7;
+      color: #e8eaf6;
+      white-space: pre;
+    }
+    /* Simple syntax highlight */
+    .kw { color: #ff79c6; }   /* keyword */
+    .str { color: #f1fa8c; }  /* string */
+    .num { color: #bd93f9; }  /* number */
+    .cmt { color: #6272a4; font-style: italic; } /* comment */
+    .fn { color: #50fa7b; }   /* function */
+    .op { color: #ff79c6; }   /* operator */
+    .var { color: #8be9fd; }  /* variable */
+
+    /* ===== Callout Boxes ===== */
+    .callout {
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin: 14px 0;
+      font-size: 0.93rem;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+    .callout-icon { font-size: 1.2rem; flex-shrink: 0; margin-top: 1px; }
+    .callout.tip { background: #0d2c1a; border-left: 3px solid var(--green); }
+    .callout.warn { background: #2c1a0d; border-left: 3px solid var(--orange); }
+    .callout.info { background: #0d1a2c; border-left: 3px solid var(--accent3); }
+    .callout.real { background: #1a0d2c; border-left: 3px solid #bd93f9; }
+
+    /* ===== Buttons ===== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 10px 22px;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      transition: all 0.18s;
+    }
+    .btn-yellow { background: var(--yellow); color: #1a1a2e; }
+    .btn-yellow:hover { background: #ffe066; transform: translateY(-1px); box-shadow: 0 4px 14px rgba(247,223,30,0.3); }
+    .btn-outline { background: transparent; color: var(--accent3); border: 1.5px solid var(--accent3); }
+    .btn-outline:hover { background: var(--accent3); color: #1a1a2e; }
+    .btn-red { background: var(--red); color: #fff; }
+    .btn-red:hover { background: #ff4d4d; }
+    .btn-green { background: var(--green); color: #1a1a2e; }
+    .btn-green:hover { background: #40c057; }
+
+    /* ===== Interactive Demo ===== */
+    .demo-area {
+      background: var(--card2);
+      border-radius: 12px;
+      padding: 22px;
+      margin: 18px 0;
+      border: 1px solid #2e3a5e;
+    }
+    .demo-area label {
+      display: block;
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .demo-input {
+      width: 100%;
+      background: var(--code-bg);
+      border: 1.5px solid #2a2a4a;
+      border-radius: 8px;
+      color: var(--text);
+      font-family: 'Consolas', monospace;
+      font-size: 0.92rem;
+      padding: 10px 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .demo-input:focus { border-color: var(--yellow); }
+    .demo-output {
+      background: var(--code-bg);
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-top: 12px;
+      font-family: 'Consolas', monospace;
+      font-size: 0.9rem;
+      min-height: 42px;
+      color: var(--accent3);
+      border: 1px solid #1e2d50;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .demo-row { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+
+    /* ===== Quiz ===== */
+    .quiz-box {
+      background: var(--card2);
+      border-radius: 12px;
+      padding: 22px;
+      margin: 18px 0;
+      border: 1px solid #2e3a5e;
+    }
+    .quiz-question {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 14px;
+    }
+    .quiz-options { display: flex; flex-direction: column; gap: 9px; }
+    .quiz-opt {
+      background: #1a1a2e;
+      border: 1.5px solid #2a2a4a;
+      border-radius: 8px;
+      padding: 11px 16px;
+      cursor: pointer;
+      font-size: 0.93rem;
+      color: var(--text);
+      transition: all 0.18s;
+      text-align: left;
+    }
+    .quiz-opt:hover { border-color: var(--yellow); background: #23234a; }
+    .quiz-opt.correct { border-color: var(--green); background: #0d2c1a; color: var(--green); }
+    .quiz-opt.wrong { border-color: var(--red); background: #2c0d0d; color: var(--red); }
+    .quiz-feedback {
+      margin-top: 12px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 0.92rem;
+      font-weight: 600;
+      display: none;
+    }
+    .quiz-feedback.show { display: block; }
+    .quiz-feedback.ok { background: #0d2c1a; color: var(--green); border-left: 3px solid var(--green); }
+    .quiz-feedback.no { background: #2c0d0d; color: var(--red); border-left: 3px solid var(--red); }
+
+    /* ===== Checkpoint ===== */
+    .checkpoint {
+      background: linear-gradient(135deg, #1a1a2e, #1e2d50);
+      border: 1.5px solid var(--yellow);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin: 28px 0;
+    }
+    .checkpoint-title {
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--yellow);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+    .checkpoint-list { list-style: none; padding: 0; }
+    .checkpoint-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 9px 0;
+      border-bottom: 1px solid #2a2a4a;
+      font-size: 0.93rem;
+      color: #c8d0e8;
+      cursor: pointer;
+    }
+    .checkpoint-item:last-child { border-bottom: none; }
+    .cp-check {
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      border: 2px solid #3a3a6a;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      transition: all 0.2s;
+      margin-top: 1px;
+    }
+    .checkpoint-item.checked .cp-check {
+      background: var(--green);
+      border-color: var(--green);
+      color: #fff;
+    }
+    .checkpoint-item.checked { color: var(--green); }
+
+    /* ===== Summary ===== */
+    .summary {
+      background: linear-gradient(135deg, #1a1a2e, #0d2c1a);
+      border: 2px solid var(--green);
+      border-radius: var(--radius);
+      padding: 32px 28px;
+      margin-bottom: 32px;
+    }
+    .summary h2 { color: var(--green); font-size: 1.4rem; margin-bottom: 18px; }
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+    .summary-card {
+      background: #0d1a0d;
+      border: 1px solid #1d4a1d;
+      border-radius: 10px;
+      padding: 16px;
+    }
+    .summary-card .s-icon { font-size: 1.8rem; margin-bottom: 6px; }
+    .summary-card h4 { color: var(--green); font-size: 0.9rem; margin-bottom: 4px; }
+    .summary-card p { color: #9ea7c7; font-size: 0.82rem; line-height: 1.5; }
+
+    /* ===== Score Board ===== */
+    .scoreboard {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      border: 1px solid #2a2a4a;
+      margin-top: 24px;
+    }
+    .score-num {
+      font-size: 3rem;
+      font-weight: 900;
+      color: var(--yellow);
+      line-height: 1;
+    }
+    .score-label { color: var(--text-muted); font-size: 0.88rem; margin-top: 4px; }
+
+    /* ===== Tabs ===== */
+    .tabs { display: flex; gap: 6px; margin-bottom: -1px; flex-wrap: wrap; }
+    .tab-btn {
+      padding: 8px 18px;
+      border-radius: 8px 8px 0 0;
+      border: 1px solid #2a2a4a;
+      border-bottom: none;
+      background: #1a1a2e;
+      color: var(--text-muted);
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.18s;
+    }
+    .tab-btn.active { background: var(--card2); color: var(--yellow); border-color: #3a3a6a; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* ===== Type Visualizer ===== */
+    .type-badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      font-family: 'Consolas', monospace;
+    }
+    .type-string { background: #f1fa8c22; color: #f1fa8c; border: 1px solid #f1fa8c44; }
+    .type-number { background: #bd93f922; color: #bd93f9; border: 1px solid #bd93f944; }
+    .type-boolean { background: #ff79c622; color: #ff79c6; border: 1px solid #ff79c644; }
+    .type-undefined { background: #6272a422; color: #6272a4; border: 1px solid #6272a444; }
+    .type-null { background: #ff5f5722; color: #ff5f57; border: 1px solid #ff5f5744; }
+    .type-object { background: #8be9fd22; color: #8be9fd; border: 1px solid #8be9fd44; }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 600px) {
+      .section { padding: 20px 16px; }
+      header { padding: 36px 16px 28px; }
+      .demo-row { flex-direction: column; }
+    }
+
+    /* ===== Animations ===== */
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+    .section { animation: fadeIn 0.4s ease both; }
+
+    /* ===== Confetti pop ===== */
+    .pop-anim {
+      animation: pop 0.4s cubic-bezier(.4,0,.2,1);
+    }
+    @keyframes pop {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.08); }
+      100% { transform: scale(1); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ===== HEADER ===== -->
+<header>
+  <div class="badge-level">🟡 Beginner Level</div>
+  <h1>JavaScript เบื้องต้น</h1>
+  <p>เรียนรู้ภาษา JavaScript จากศูนย์ — ด้วยการลงมือทำจริง ทุก Concept มี Demo ให้ทดลองเลย</p>
+</header>
+
+<!-- ===== PROGRESS ===== -->
+<div class="progress-bar-wrap">
+  <span class="progress-label">📈 ความคืบหน้า</span>
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+  <span class="progress-pct" id="progressPct">0%</span>
+</div>
+
+<main>
+
+  <!-- ===== TOC ===== -->
+  <div class="toc">
+    <h2>📋 สารบัญ</h2>
+    <ol>
+      <li><a href="#s1">JavaScript คืออะไร?</a></li>
+      <li><a href="#s2">Variables — ตัวแปร</a></li>
+      <li><a href="#s3">Data Types — ชนิดข้อมูล</a></li>
+      <li><a href="#s4">Operators — ตัวดำเนินการ</a></li>
+      <li><a href="#s5">Control Flow — if / else</a></li>
+      <li><a href="#s6">Loops — การวนซ้ำ</a></li>
+      <li><a href="#s7">Functions — ฟังก์ชัน</a></li>
+      <li><a href="#s8">Arrays — อาร์เรย์</a></li>
+      <li><a href="#s9">Objects — ออบเจ็กต์</a></li>
+      <li><a href="#s10">DOM Basics — ควบคุมหน้าเว็บ</a></li>
+      <li><a href="#checkpoint">✅ Checkpoint รวม</a></li>
+      <li><a href="#summary">🏆 สรุปสิ่งที่เรียนรู้</a></li>
+    </ol>
+  </div>
+
+  <!-- ===================== SECTION 1 ===================== -->
+  <div class="section" id="s1">
+    <div class="section-header">
+      <div class="section-icon">🌐</div>
+      <h2>1. JavaScript คืออะไร?</h2>
+    </div>
+
+    <p>JavaScript (JS) คือ ภาษาโปรแกรมที่ทำให้เว็บไซต์ <strong>"มีชีวิต"</strong> ได้ — เพิ่มการโต้ตอบ, ตรวจสอบฟอร์ม, โหลดข้อมูลแบบ Real-time และอีกมากมาย</p>
+
+    <div class="callout info">
+      <span class="callout-icon">💡</span>
+      <div>เว็บทุกเว็บที่คุณใช้งาน — Facebook, YouTube, Google — <strong>ล้วนใช้ JavaScript</strong> ทั้งสิ้น</div>
+    </div>
+
+    <h3>JavaScript อยู่ตรงไหนใน Fullstack?</h3>
+    <div class="code-block"><pre><span class="cmt">// Stack ของ Web Development</span>
+HTML  → โครงสร้าง (กระดูก)
+CSS   → รูปแบบ (หน้าตา)
+JS    → พฤติกรรม (ชีวิตจิตใจ)
+
+<span class="cmt">// ตัวอย่าง Real-world ที่เจอทุกวัน</span>
+- กดปุ่ม "Like" → JS อัปเดต counter
+- กรอก Form → JS ตรวจสอบ Email
+- เลื่อนหน้า → JS โหลดข้อมูลเพิ่ม (Infinite Scroll)
+- ค้นหาสินค้า → JS กรอง + แสดงผลทันที</pre></div>
+
+    <h3>🚀 ทดลองด้วยตัวเอง — Hello World!</h3>
+    <div class="demo-area">
+      <label>พิมพ์ชื่อของคุณ:</label>
+      <input class="demo-input" id="hw-name" type="text" placeholder="เช่น สมชาย" maxlength="30" />
+      <div class="demo-row">
+        <button class="btn btn-yellow" onclick="runHelloWorld()">▶ รัน Hello World</button>
+        <button class="btn btn-outline" onclick="clearHW()">🗑 ล้าง</button>
+      </div>
+      <div class="demo-output" id="hw-output">ผลลัพธ์จะแสดงที่นี่...</div>
+    </div>
+
+    <div class="callout real">
+      <span class="callout-icon">🌍</span>
+      <div><strong>Real-world:</strong> ฟังก์ชัน "ยินดีต้อนรับ, [ชื่อ]!" ที่เห็นใน Dashboard ทุกเว็บ — ทำงานแบบนี้ทุกครั้ง</div>
+    </div>
+
+    <!-- Quiz 1 -->
+    <div class="quiz-box" id="quiz1">
+      <div class="quiz-question">❓ ข้อ 1: JavaScript ทำหน้าที่อะไรในการพัฒนาเว็บ?</div>
+      <div class="quiz-options">
+        <button class="quiz-opt" onclick="answerQuiz('quiz1',this,false)">กำหนดโครงสร้าง HTML</button>
+        <button class="quiz-opt" onclick="answerQuiz('quiz1',this,false)">จัดสไตล์ด้วย CSS</button>
+        <button class="quiz-opt" onclick="answerQuiz('quiz1',this,true)">เพิ่มพฤติกรรมและ Interactivity</button>
+        <button class="quiz-opt" onclick="answerQuiz('quiz1',this,false)">จัดการ Database โดยตรง</button>
+      </div>
+      <div class="quiz-feedback" id="quiz1-fb"></div>
+    </div>
+  </div>
+
+  <!-- ===================== SECTION 2 ===================== -->
+  <div class="section" id="s2">
+    <div class="section-header">
+      <div class="section-icon">📦</div>
+      <h2>2. Variables — ตัวแปร</h2>
+    </div>
+
+    <p>ตัวแปรคือ <strong>"กล่อง"</strong> สำหรับเก็บข้อมูล ใน JavaScript มี 3 แบบ:</p>
+
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab(this,'tab-var-let')">let</button>
+      <button class="tab-btn" onclick="switchTab(this,'tab-var-const')">const</button>
+      <button class="tab-btn" onclick="switchTab(this,'tab-var-var')">var (เก่า)</button>
+    </div>
+    <div class="code-block" style="border-radius: 0 10px 10px 10px; margin-top:0;">
+      <div id="tab-var-let" class="tab-content active"><pre><span class="kw">let</span> <span class="var">age</span> <span class="op">=</span> <span class="num">25</span>;          <span class="cmt">// เปลี่ยนค่าได้</span>
+<span class="var">age</span> <span class="op">=</span> <span class="num">26</span>;              <span class="cmt">// ✅ OK — อัปเดตได้</span>
+
+<span class="kw">let</span> <span class="var">userName</span> <span class="op">=</span> <span class="str">"สมชาย"</span>;  <span class="cmt">// เก็บชื่อ</span>
+<span class="kw">let</span> <span class="var">isLoggedIn</span> <span class="op">=</span> <span class="kw">false</span>; <span class="cmt">// สถานะ login</span></pre></div>
+      <div id="tab-var-const" class="tab-content"><pre><span class="kw">const</span> <span class="var">API_URL</span> <span class="op">=</span> <span class="str">"https://api.example.com"</span>;
+<span class="cmt">// ❌ API_URL = "other" → Error! เปลี่ยนไม่ได้</span>
+
+<span class="kw">const</span> <span class="var">TAX_RATE</span> <span class="op">=</span> <span class="num">0.07</span>;  <span class="cmt">// VAT 7% — ค่าคงที่</span>
+<span class="kw">const</span> <span class="var">MAX_RETRY</span> <span class="op">=</span> <span class="num">3</span>;     <span class="cmt">// จำนวนครั้ง retry สูงสุด</span>
+
+<span class="cmt">// ✅ ใช้ const ก่อนเสมอ ถ้าจะเปลี่ยนค่าค่อยใช้ let</span></pre></div>
+      <div id="tab-var-var" class="tab-content"><pre><span class="kw">var</span> <span class="var">oldStyle</span> <span class="op">=</span> <span class="str">"หลีกเลี่ยงการใช้"</span>;
+<span class="cmt">// var มีปัญหาเรื่อง Scope และ Hoisting</span>
+<span class="cmt">// นักพัฒนาสมัยใหม่ไม่ใช้ var แล้ว</span>
+<span class="cmt">// ✅ ใช้ let หรือ const แทนเสมอ</span></pre></div>
+    </div>
+
+    <h3>🔬 ทดลองสร้างตัวแปร</h3>
+    <div class="demo-area">
+      <label>ชื่อตัวแปร (ภาษาอังกฤษ):</label>
+      <input class="demo-input" id="var-name-in" type="text" placeholder="เช่น myName" maxlength="30" style="margin-bottom:8px;" />
+      <label>ค่าที่ต้องการเก็บ:</label>
+      <input class="demo-input" id="var-val-in" type="text" placeholder='เช่น "สมชาย" หรือ 25 หรือ true' maxlength="50" />
+      <div class="demo-row">
+        <button class="btn btn-yellow" onclick="runVarDemo()">▶ ประกาศตัวแปร</button>
+        <button class="btn btn-outline" onclick="clearVarDemo()">🗑 ล้าง</button>
+      </div>
+      <div class="demo-output" id="var-output">ผลลัพธ์จะแสดงที่นี่...</div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">✅</span>
+      <div><strong>หลักตั้งชื่อตัวแปรที่ดี:</strong> ใช้ camelCase เช่น <code>firstName</code>, <code>totalPrice</code>, <code>isUserLoggedIn</code> — อ่านรู้เรื่องทันที</div>
+    </div>
+
+    <!-- Quiz 2 -->
+    <div class="quiz-box" id="quiz2">
+      <div class="quiz-question">❓ ข้อ 2: ควรใช้ <code>const</code> เมื่อไหร่?</div>
+      <div class="quiz-options">
+        <button class="quiz-opt" onclick="answerQuiz('quiz2',this,false)">เมื่อต้องการเปลี่ยนค่าบ่อย ๆ</button>
+        <button class="quiz-opt" onclick="answerQuiz('quiz2',this,true)">เมื่อค่าไม่เปลี่ยนแปลงตลอดโปรแกรม</button>
+        <button class="quiz-opt" onclick="answerQuiz('quiz2',this,false)">เมื่อต้องการ Scope กว้าง ๆ</button>
+        <button class="quiz-opt" onclick="answerQuiz('quiz2',this,false)">เมื่อต้องการประกาศหลายบรรทัด</button>
+      </div>
+      <div class="quiz-feedback" id="quiz2-fb"></div>
+    </div>
+  </div>
+
+  <!-- ===================== SECTION 3 ===================== -->
+  <div class="section" id="s3">
+    <div class="section-header">
+      <div class="section-icon">🔤</div>
+      <h2>3. Data Types — ชนิดข้อมูล</h2>
+    </div>
+
+    <p>JavaScript มี 7 ชนิดข้อมูลหลัก (Primitive Types):</p>
+
+    <div class="code-block"><pre><span class="kw">let</span> <span class="var">name</span>    <span class="op">=</span> <span class="str">"สมชาย"</span>;     <span class="cmt">// String — ข้อความ</span>
+<span class="kw">let</span> <span class="var">age</span>     <span class="op">=</span> <span class="num">25</span>;          <span class="cmt">// Number — ตัวเลข</span>
+<span class="kw">let</span> <span class="var">price</span>   <span class="op">=</span> <span class="num">99.99</span>;      <span class="cmt">// Number — ทศนิยมก็เป็น Number</span>
+<span class="kw">let</span> <span class="var">isAdmin</span> <span class="op">=</span> <span class="kw">true</span>;        <span class="cmt">// Boolean — true/false</span>
+<span class="kw">let</span> <span class="var">nothing</span> <span class="op">=</span> <span class="kw">null</span>;        <span class="cmt">// Null — ตั้งใจให้ว่าง</span>
+<span class="kw">let</span> <span class="var">notSet</span>;                <span class="cmt">// Undefined — ยังไม่กำหนดค่า</span>
+<span class="kw">let</span> <span class="var">user</span>    <span class="op">=</span> { <span class="var">id</span>: <span class="num">1</span> };   <span class="cmt">// Object — ออบเจ็กต์</span></pre></div>
+
+    <h3>🔬 Type Checker — ตรวจชนิดข้อมูล</h3>
+    <div class="demo-area">
+      <label>ใส่ค่าที่ต้องการตรวจ (typeof):</label>
+      <input class="demo-input" id="type-in" type="text" placeholder='เช่น "hello" หรือ 42 หรือ true หรือ null' maxlength="60" />
+      <div class="demo-row">
+        <button class="btn btn-yellow" onclick="checkType()">🔍 ตรวจ Type</button>
+      </div>
+      <div class="demo-output" id="type-output">ผลลัพธ์จะแสดงที่นี่...</div>
+    </div>
+
+    <h3>String Methods — เครื่องมือจัดการข้อความ</h3>
+    <div class="demo-area">
+      <label>ใส่ข้อความ:</label>
+      <input class="demo-input" id="str-in" type="text" placeholder="เช่น hello world" maxlength="60" />
+      <div class="demo-row">
+        <button class="btn btn-yellow" onclick="runStrMethod('upper')">🔠 toUpperCase</button>
+        <button class="btn btn-yellow" onclick="runStrMethod('lower')">🔡 toLowerCase</button>
+        <button class="btn btn-yellow" onclick="runStrMethod('len')">📏 length</button>
+        <button class="btn btn-yellow" onclick="runStrMethod('trim')">✂ trim</button>
+        <button class="btn btn-yellow" onclick="runStrMethod('reverse')">🔄 reverse</button>
+      </div>
+      <div class="demo-output" id="str-output">ผลลัพธ์จะแสดงที่นี่...</div>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div><strong>Gotcha!</strong> <code>typeof null</code> คืนค่า <code>"object"</code> — นี่เป็น Bug เก่าใน JavaScript ที่ยังคงอยู่เพื่อความ Backward-compatible</div>
+    </div>
+
+    <!-- Quiz 3 -->
+    <div class="quiz-box" id="quiz3">
+      <div class="quiz-question">❓ ข้อ 3: <code>typeof "JavaScript"</code> จะได้ผลลัพธ์คืออะไร?</div>
+      <div class="quiz-options">
+        <button class="quiz-opt" onclick="answerQuiz('quiz3',this,false)">number</button>
+        <button class="quiz-opt" onclick="answerQuiz('quiz3',this,true)">string</button>
+        <button class="quiz-opt" onclick="answerQuiz('quiz3',this,false)">text</button>
+        <button class="quiz-opt" onclick="answerQuiz('quiz3',this,false)">object</button>
+      </div>
+      <div class="quiz-feedback" id="quiz3-fb"></div>
+    </div>
+  </div>
+
+  <!-- ===================== SECTION 4 ===================== -->
+  <div class="section" id="s4">
+    <div class="section-header">
+      <div class="section-icon">🧮</div>
+      <h2>4. Operators — ตัวดำเนินการ</h2>
+    </div>
+
+    <div class="code-block"><pre><span class="cmt">// Arithmetic (คณิตศาสตร์)</span>
+<span class="num">10</span> <span class="op">+</span> <span class="num">3</span>   <span class="cmt">// 13  บวก</span>
+<span class="num">10</span> <span class="op">-</span> <span class="num">3</span>   <span class="cmt">// 7   ลบ</span>
+<span class="num">10</span> <span class="op">*</span> <span class="num">3</span>   <span class="cmt">// 30  คูณ</span>
+<span class="num">10</span> <span class="op">/</span> <span class="num">3</span>   <span class="cmt">// 3.33 หาร</span>
+<span class="num">10</span> <span class="op">%</span> <span class="num">3</span>   <span class="cmt">// 1   เศษ (modulo)</span>
+<span class="num">2</span> <span class="op">**</span> <span class="num">10</span>  <span class="cmt">// 1024 ยกกำลัง</span>
+
+<span class="cmt">// Comparison (เปรียบเทียบ)</span>
+<span class="num">5</span> <span class="op">===</span> <span class="num">5</span>   <span class="cmt">// true  เท่ากัน (แนะนำ)</span>
+<span class="num">5</span> <span class="op">!==</span> <span class="num">6</span>   <span class="cmt">// true  ไม่เท่ากัน</span>
+<span class="num">5</span> <span class="op">></span> <span class="num">3</span>    <span class="cmt">// true  มากกว่า</span>
+<span class="num">5</span> <span class="op">>=</span> <span class="num">5</span>   <span class="cmt">// true  มากกว่าหรือเท่ากับ</span>
+
+<span class="cmt">// Logical (ตรรกะ)</span>
+<span class="kw">true</span> <span class="op">&&</span> <span class="kw">true</span>   <span class="cmt">// true  AND</span>
+<span class="kw">true</span> <span class="op">||</span> <span class="kw">false</span>  <span class="cmt">// true  OR</span>
+<span class="op">!</span><span class="kw">true</span>          <span class="cmt">// false NOT</span></pre></div>
+
+    <h3>🧮 เครื่องคิดเลข JavaScript</h3>
+    <div class="demo-area">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <div style="flex:1;min-width:80px;">
+          <label>ตัวเลขแรก:</label>
+          <input class="demo-input" id="calc-a" type="number" value="10" />
+        </div>
+        <div style="flex:1;min-width:80px;">
+          <label>ตัวเลขที่สอง:</label>
+          <input class="demo-input" id="calc-b" type="number" value="3" />
+        </div>
+      </div>
+      <div class="demo-row" style="margin-top:12px;">
+        <button class="btn btn-yellow" onclick="calc('+')">+ บวก</button>
+        <button class="btn btn-yellow" onclick="calc('-')">− ลบ</button>
+        <button class="btn btn-yellow" onclick="calc('*')">× คูณ</button>
+        <button class="btn btn-yellow" onclick="calc('/')">÷ หาร</button>
+        <button class="btn btn-yellow" onclick="calc('%')">% เศษ</button>
+        <button class="btn btn-yellow" onclick="calc('**')">^ ยกกำลัง</button>
+      </div>
+      <div class="demo-output" id="calc-output">ผลลัพธ์จะแสดงที่นี่...</div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">✅</span>
+      <div>ใช้ <strong><code>===</code></strong> (triple equals) แทน <code>==</code> เสมอ — <code>===</code> เปรียบเทียบทั้งค่าและชนิดข้อมูล ป้องกัน Bug แปลก ๆ ได้</div>
+    </div>
+
+    <!-- Quiz 4 -->
+    <div class="quiz-box" id="quiz4">
+      <div class="quiz-question">❓ ข้อ 4: <code>10 % 3</code> ได้ผลลัพธ์เท่าไหร่?</div>
+      <div class="quiz-options">
+        <button class="quiz-opt" onclick="answerQuiz('quiz4',this,false)">3</button>
+        <button class="quiz-opt" onclick="answerQuiz('quiz4',this,false)">0</button>
+        <button class="quiz-opt" onclick="answerQuiz('quiz4',this,true)">1</button>
+        <button class="quiz-opt" onclick="answerQuiz('quiz4',this,false)">3.33</button>
+      </div>
+      <div class="quiz-feedback" id="quiz4-fb"></div>
+    </div>
+  </div>
+
+  <!-- ===================== SECTION 5 ===================== -->
+  <div class="section" id="s5">
+    <div class="section-header">
+      <div class="section-icon">🔀</div>
+      <h2>5. Control Flow — if / else</h2>
+    </div>
+
+    <p>ใช้ <strong>if/else</strong> เพื่อให้โปรแกรมตัดสินใจ — เหมือนเราวางเงื่อนไขในชีวิตจริง</p>
+
+    <div class="code-block"><pre><span class="kw">const</span> <span class="var">score</span> <span class="op">=</span> <span class="num">75</span>;
+
+<span class="kw">if</span> (<span class="var">score</span> <span class="op">>=</span> <span class="num">80</span>) {
+  <span class="fn">console</span>.<span class="fn">log</span>(<span class="str">"ผ่านระดับ A"</span>);
+} <span class="kw">else if</span> (<span class="var">score</span> <span class="op">>=</span> <span class="num">70</span>) {
+  <span class="fn">console</span>.<span class="fn">log</span>(<span class="str">"ผ่านระดับ B"</span>);  <span class="cmt">// ← จะทำงานตรงนี้</span>
+} <span class="kw">else if</span> (<span class="var">score</span> <span class="op">>=</span> <span class="num">60</span>) {
+  <span class="fn">console</span>.<span class="fn">log</span>(<span class="str">"ผ่านระดับ C"</span>);
+} <span class="kw">else</span> {
+  <span class="fn">console</span>.<span class="fn">log</span>(<span class="str">"ไม่ผ่าน"</span>);
+}</pre></div>
+
+    <div class="callout real">
+      <span class="callout-icon">🌍</span>
+      <div><strong>Real-world:</strong> ระบบ Login ตรวจสอบว่า password ถูกไหม, ตะกร้าสินค้าตรวจสอบ Stock ก่อน checkout</div>
+    </div>
+
+    <h3>🎮 ทดสอบเกรดนักศึกษา</h3>
+    <div class="demo-area">
+      <label>ใส่คะแนน (0–100):</label>
+      <input class="demo-input" id="grade-in" type="number" min="0" max="100" placeholder="เช่น 75" />
+      <div class="demo-row">
+        <button class="btn btn-yellow" onclick="checkGrade()">📊 ตรวจเกรด</button>
+      </div>
+      <div class="demo-output" id="grade-output">ผลลัพธ์จะแสดงที่นี่...</div>
+    </div>
+
+    <h3>🚦 Ternary Operator — เขียนสั้น ๆ</h3>
+    <div class="code-block"><pre><span class="cmt">// แทน if/else ได้ในบรรทัดเดียว</span>
+<span class="kw">const</span> <span class="var">status</span> <span class="op">=</span> <span class="var">age</span> <span class="op">>=</span> <span class="num">18</span> <span class="op">?</span> <span class="str">"ผู้ใหญ่"</span> <span class="op">:</span> <span class="str">"เยาวชน"</span>;
+<span class="cmt">//            เงื่อนไข ? ถ้าจริง : ถ้าเท็จ</span></pre></div>
+
+    <!-- Quiz 5 -->
+    <div class="quiz-box" id="quiz5">
+      <div class="quiz-question">❓ ข้อ 5: ถ้า <code>score = 65</code> โค้ดข้างบนจะ log อะไร?</div>
+      <div class="quiz-options">
+        <button class="quiz-opt" onclick="answerQuiz('quiz5',this,false)">ผ่านระดับ A</button>
+        <button class="quiz-opt" onclick="answerQuiz('quiz5',this,false)">ผ่านระดับ B</button>
+        <button class="quiz-opt" onclick="answerQuiz('quiz5',this,true)">ผ่านระดับ C</button>
+        <button class="quiz-opt" onclick="answerQuiz('quiz5',this,false)">ไม่ผ่าน</button>
+      </div>
+      <div class="quiz-feedback" id="quiz5-fb"></div>
+    </div>
+  </div>
+
+  <!-- ===================== SECTION 6 ===================== -->
+  <div class="section" id="s6">
+    <div class="section-header">
+      <div class="section-icon">🔁</div>
+      <h2>6. Loops — การวนซ้ำ</h2>
+    </div>
+
+    <p>ใช้ Loop เพื่อทำซ้ำงาน — ไม่ต้องเขียน Code ซ้ำ ๆ</p>
+
+    <div class="code-block"><pre><span class="cmt">// for loop — วนจำนวนครั้งที่รู้</span>
+<span class="kw">for</span> (<span class="kw">let</span> <span class="var">i</span> <span class="op">=</span> <span class="num">1</span>; <span class="var">i</span> <span class="op"><=</span> <span class="num">5</span>; <span class="var">i</span><span class="op">++</span>) {
+  <span class="fn">console</span>.<span class="fn">log</span>(<span class="str">"รายการที่"</span>, <span class="var">i</span>);
+}
+
+<span class="cmt">// while loop — วนจนกว่าเงื่อนไขเป็นเท็จ</span>
+<span class="kw">let</span> <span class="var">count</span> <span class="op">=</span> <span class="num">0</span>;
+<span class="kw">while</span> (<span class="var">count</span> <span class="op"><</span> <span class="num">3</span>) {
+  <span class="fn">console</span>.<span class="fn">log</span>(<span class="str">"retry #"</span> <span class="op">+</span> <span class="var">count</span>);
+  <span class="var">count</span><span class="op">++</span>;
+}
+
+<span class="cmt">// for...of — วนผ่าน Array</span>
+<span class="kw">const</span> <span class="var">items</span> <span class="op">=</span> [<span class="str">"สินค้า A"</span>, <span class="str">"สินค้า B"</span>, <span class="str">"สินค้า C"</span>];
+<span class="kw">for</span> (<span class="kw">const</span> <span class="var">item</span> <span class="kw">of</span> <span class="var">items</span>) {
+  <span class="fn">console</span>.<span class="fn">log</span>(<span class="var">item</span>);
+}</pre></div>
+
+    <h3>🔁 Loop Visualizer</h3>
+    <div class="demo-area">
+      <label>วนกี่รอบ? (1–20):</label>
+      <input class="demo-input" id="loop-n" type="number" min="1" max="20" value="5" />
+      <div class="demo-row">
+        <button class="btn btn-yellow" onclick="runLoop('for')">▶ for loop</button>
+        <button class="btn btn-yellow" onclick="runLoop('while')">▶ while loop</button>
+        <button class="btn btn-yellow" onclick="runLoop('table')">📊 ตาราง</button>
+      </div>
+      <div class="demo-output" id="loop-output">ผลลัพธ์จะแสดงที่นี่...</div>
+    </div>
+
+    <div class="callout real">
+      <span class="callout-icon">🌍</span>
+      <div><strong>Real-world:</strong> Render รายการสินค้าในตะกร้า, แสดง Comment ทั้งหมด, สร้าง Pagination — ล้วนใช้ Loop</div>
+    </div>
+
+    <!-- Quiz 6 -->
+    <div class="quiz-box" id="quiz6">
+      <div class="quiz-question">❓ ข้อ 6: <code>for (let i = 0; i &lt; 3; i++)</code> วนกี่รอบ?</div>
+      <div class="quiz-options">
+        <button class="quiz-opt" onclick="answerQuiz('quiz6',this,false)">2 รอบ</button>
+        <button class="quiz-opt" onclick="answerQuiz('quiz6',this,true)">3 รอบ</button>
+        <button class="quiz-opt" onclick="answerQuiz('quiz6',this,false)">4 รอบ</button>
+        <button class="quiz-opt" onclick="answerQuiz('quiz6',this,false)">วนไม่หยุด</button>
+      </div>
+      <div class="quiz-feedback" id="quiz6-fb"></div>
+    </div>
+  </div>
+
+  <!-- ===================== SECTION 7 ===================== -->
+  <div class="section" id="s7">
+    <div class="section-header">
+      <div class="section-icon">⚙️</div>
+      <h2>7. Functions — ฟังก์ชัน</h2>
+    </div>
+
+    <p>Function คือ <strong>"สูตรอาหาร"</strong> — เขียนครั้งเดียว เรียกใช้ได้บ่อย ๆ</p>
+
+    <div class="code-block"><pre><span class="cmt">// Function Declaration</span>
+<span class="kw">function</span> <span class="fn">greet</span>(<span class="var">name</span>) {
+  <span class="kw">return</span> <span class="str">`สวัสดีครับ คุณ ${<span class="var">name</span>}!`</span>;
+}
+
+<span class="cmt">// Arrow Function (ES6) — นิยมมากใน React/Node</span>
+<span class="kw">const</span> <span class="fn">add</span> <span class="op">=</span> (<span class="var">a</span>, <span class="var">b</span>) <span class="op">=></span> <span class="var">a</span> <span class="op">+</span> <span class="var">b</span>;
+
+<span class="cmt">// Real-world: คำนวณราคาหลังลด VAT</span>
+<span class="kw">const</span> <span class="fn">calcVAT</span> <span class="op">=</span> (<span class="var">price</span>, <span class="var">vatRate</span> <span class="op">=</span> <span class="num">0.07</span>) <span class="op">=></span> {
+  <span class="kw">const</span> <span class="var">vat</span> <span class="op">=</span> <span class="var">price</span> <span class="op">*</span> <span class="var">vatRate</span>;
+  <span class="kw">return</span> {
+    <span class="var">original</span>: <span class="var">price</span>,
+    <span class="var">vat</span>: <span class="var">vat</span>.<span class="fn">toFixed</span>(<span class="num">2</span>),
+    <span class="var">total</span>: (<span class="var">price</span> <span class="op">+</span> <span class="var">vat</span>).<span class="fn">toFixed</span>(<span class="num">2</span>)
+  };
+};</pre></div>
+
+    <h3>💰 ทดลอง Function คำนวณ VAT</h3>
+    <div class="demo-area">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <div style="flex:1;min-width:120px;">
+          <label>ราคาสินค้า (บาท):</label>
+          <input class="demo-input" id="vat-price" type="number" value="100" min="0" />
+        </div>
+        <div style="flex:1;min-width:120px;">
+          <label>อัตรา VAT (%):</label>
+          <input class="demo-input" id="vat-rate" type="number" value="7" min="0" max="100" />
+        </div>
+      </div>
+      <div class="demo-row">
+        <button class="btn btn-yellow" onclick="runVAT()">💰 คำนวณ VAT</button>
+      </div>
+      <div class="demo-output" id="vat-output">ผลลัพธ์จะแสดงที่นี่...</div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">✅</span>
+      <div>Arrow Function <code>=></code> เป็นแบบที่ใช้บ่อยมากใน Modern JS, React Hooks, Node.js — ฝึกให้คุ้นเคยไว้เลย</div>
+    </div>
+
+    <!-- Quiz 7 -->
+    <div class="quiz-box" id="quiz7">
+      <div class="quiz-question">❓ ข้อ 7: Arrow Function <code>const sq = x => x * x</code> เรียกด้วย <code>sq(4)</code> ได้เท่าไหร่?</div>
+      <div class="quiz-options">
+        <button class="quiz-opt" onclick="answerQuiz('quiz7',this,false)">4</button>
+        <button class="quiz-opt" onclick="answerQuiz('quiz7',this,false)">8</button>
+        <button class="quiz-opt" onclick="answerQuiz('quiz7',this,true)">16</button>
+        <button class="quiz-opt" onclick="answerQuiz('quiz7',this,false)">Error</button>
+      </div>
+      <div class="quiz-feedback" id="quiz7-fb"></div>
+    </div>
+  </div>
+
+  <!-- ===================== SECTION 8 ===================== -->
+  <div class="section" id="s8">
+    <div class="section-header">
+      <div class="section-icon">📋</div>
+      <h2>8. Arrays — อาร์เรย์</h2>
+    </div>
+
+    <p>Array คือ <strong>"รายการ"</strong> — เก็บข้อมูลหลายชิ้นในตัวแปรเดียว เรียงตามลำดับ</p>
+
+    <div class="code-block"><pre><span class="kw">const</span> <span class="var">cart</span> <span class="op">=</span> [<span class="str">"เสื้อ"</span>, <span class="str">"กางเกง"</span>, <span class="str">"รองเท้า"</span>];
+
+<span class="cmt">// เข้าถึงด้วย index (เริ่มที่ 0)</span>
+<span class="var">cart</span>[<span class="num">0</span>]   <span class="cmt">// "เสื้อ"</span>
+<span class="var">cart</span>[<span class="num">2</span>]   <span class="cmt">// "รองเท้า"</span>
+
+<span class="cmt">// Methods ที่ใช้บ่อย</span>
+<span class="var">cart</span>.<span class="fn">push</span>(<span class="str">"หมวก"</span>);     <span class="cmt">// เพิ่มท้าย</span>
+<span class="var">cart</span>.<span class="fn">pop</span>();            <span class="cmt">// ลบตัวท้าย</span>
+<span class="var">cart</span>.<span class="fn">length</span>;          <span class="cmt">// จำนวน = 4</span>
+
+<span class="cmt">// Modern Array Methods</span>
+<span class="kw">const</span> <span class="var">prices</span> <span class="op">=</span> [<span class="num">100</span>, <span class="num">200</span>, <span class="num">50</span>, <span class="num">300</span>];
+<span class="kw">const</span> <span class="var">total</span> <span class="op">=</span> <span class="var">prices</span>.<span class="fn">reduce</span>((<span class="var">sum</span>, <span class="var">p</span>) <span class="op">=></span> <span class="var">sum</span> <span class="op">+</span> <span class="var">p</span>, <span class="num">0</span>);  <span class="cmt">// 650</span>
+<span class="kw">const</span> <span class="var">cheap</span> <span class="op">=</span> <span class="var">prices</span>.<span class="fn">filter</span>(<span class="var">p</span> <span class="op">=></span> <span class="var">p</span> <span class="op"><</span> <span class="num">200</span>);            <span class="cmt">// [100, 50]</span>
+<span class="kw">const</span> <span class="var">doubled</span> <span class="op">=</span> <span class="var">prices</span>.<span class="fn">map</span>(<span class="var">p</span> <span class="op">=></span> <span class="var">p</span> <span class="op">*</span> <span class="num">2</span>);               <span class="cmt">// [200,400,100,600]</span></pre></div>
+
+    <h3>🛒 ทดลอง Shopping Cart</h3>
+    <div class="demo-area">
+      <label>เพิ่มสินค้า:</label>
+      <div style="display:flex;gap:8px;">
+        <input class="demo-input" id="cart-item" type="text" placeholder="ชื่อสินค้า เช่น เสื้อยืด" maxlength="30" style="flex:1;" />
+        <button class="btn btn-yellow" onclick="addToCart()">+ เพิ่ม</button>
+      </div>
+      <div class="demo-row" style="margin-top:12px;">
+        <button class="btn btn-outline" onclick="removeLastCart()">- ลบท้าย</button>
+        <button class="btn btn-red" onclick="clearCart()">🗑 ล้างตะกร้า</button>
+      </div>
+      <div class="demo-output" id="cart-output">ตะกร้าว่างเปล่า</div>
+    </div>
+
+    <!-- Quiz 8 -->
+    <div class="quiz-box" id="quiz8">
+      <div class="quiz-question">❓ ข้อ 8: <code>["a","b","c"][1]</code> ได้ค่าอะไร?</div>
+      <div class="quiz-options">
+        <button class="quiz-opt" onclick="answerQuiz('quiz8',this,false)">"a"</button>
+        <button class="quiz-opt" onclick="answerQuiz('quiz8',this,true)">"b"</button>
+        <button class="quiz-opt" onclick="answerQuiz('quiz8',this,false)">"c"</button>
+        <button class="quiz-opt" onclick="answerQuiz('quiz8',this,false)">undefined</button>
+      </div>
+      <div class="quiz-feedback" id="quiz8-fb"></div>
+    </div>
+  </div>
+
+  <!-- ===================== SECTION 9 ===================== -->
+  <div class="section" id="s9">
+    <div class="section-header">
+      <div class="section-icon">🗂️</div>
+      <h2>9. Objects — ออบเจ็กต์</h2>
+    </div>
+
+    <p>Object เก็บข้อมูลแบบ <strong>Key–Value</strong> — เหมือน "โปรไฟล์" ที่รวมข้อมูลทุกอย่างของสิ่งหนึ่ง</p>
+
+    <div class="code-block"><pre><span class="cmt">// สร้าง Object</span>
+<span class="kw">const</span> <span class="var">user</span> <span class="op">=</span> {
+  <span class="var">id</span>: <span class="num">1</span>,
+  <span class="var">name</span>: <span class="str">"สมชาย"</span>,
+  <span class="var">email</span>: <span class="str">"somchai@example.com"</span>,
+  <span class="var">isAdmin</span>: <span class="kw">false</span>,
+  <span class="var">cart</span>: [<span class="str">"เสื้อ"</span>, <span class="str">"กางเกง"</span>],       <span class="cmt">// Array ใน Object ได้!</span>
+  <span class="fn">greet</span>() {                          <span class="cmt">// Method ใน Object</span>
+    <span class="kw">return</span> <span class="str">`สวัสดีครับ ${<span class="kw">this</span>.<span class="var">name</span>}`</span>;
+  }
+};
+
+<span class="cmt">// เข้าถึงข้อมูล</span>
+<span class="var">user</span>.<span class="var">name</span>        <span class="cmt">// "สมชาย"</span>
+<span class="var">user</span>[<span class="str">"email"</span>]    <span class="cmt">// "somchai@example.com"</span>
+
+<span class="cmt">// Destructuring — ดึงค่ามาเป็นตัวแปร</span>
+<span class="kw">const</span> { <span class="var">name</span>, <span class="var">email</span> } <span class="op">=</span> <span class="var">user</span>;
+
+<span class="cmt">// Spread — คัดลอก Object</span>
+<span class="kw">const</span> <span class="var">updatedUser</span> <span class="op">=</span> { ...<span class="var">user</span>, <span class="var">isAdmin</span>: <span class="kw">true</span> };</pre></div>
+
+    <h3>👤 ทดลองสร้าง User Profile</h3>
+    <div class="demo-area">
+      <div style="display:grid;gap:8px;grid-template-columns:1fr 1fr;">
+        <div>
+          <label>ชื่อ:</label>
+          <input class="demo-input" id="obj-name" type="text" placeholder="สมชาย" maxlength="30" />
+        </div>
+        <div>
+          <label>อายุ:</label>
+          <input class="demo-input" id="obj-age" type="number" placeholder="25" min="1" max="120" />
+        </div>
+        <div>
+          <label>อาชีพ:</label>
+          <input class="demo-input" id="obj-job" type="text" placeholder="Developer" maxlength="30" />
+        </div>
+        <div>
+          <label>Admin?</label>
+          <select class="demo-input" id="obj-admin">
+            <option value="false">ไม่ใช่</option>
+            <option value="true">ใช่</option>
+          </select>
+        </div>
+      </div>
+      <div class="demo-row">
+        <button class="btn btn-yellow" onclick="buildObject()">🗂 สร้าง Object</button>
+      </div>
+      <div class="demo-output" id="obj-output">ผลลัพธ์จะแสดงที่นี่...</div>
+    </div>
+
+    <!-- Quiz 9 -->
+    <div class="quiz-box" id="quiz9">
+      <div class="quiz-question">❓ ข้อ 9: เข้าถึง property <code>name</code> ของ Object <code>user</code> ได้อย่างไร?</div>
+      <div class="quiz-options">
+        <button class="quiz-opt" onclick="answerQuiz('quiz9',this,false)">user[name]</button>
+        <button class="quiz-opt" onclick="answerQuiz('quiz9',this,true)">user.name</button>
+        <button class="quiz-opt" onclick="answerQuiz('quiz9',this,false)">user->name</button>
+        <button class="quiz-opt" onclick="answerQuiz('quiz9',this,false)">name.user</button>
+      </div>
+      <div class="quiz-feedback" id="quiz9-fb"></div>
+    </div>
+  </div>
+
+  <!-- ===================== SECTION 10 ===================== -->
+  <div class="section" id="s10">
+    <div class="section-header">
+      <div class="section-icon">🖥️</div>
+      <h2>10. DOM Basics — ควบคุมหน้าเว็บ</h2>
+    </div>
+
+    <p>DOM (Document Object Model) คือ API ที่ให้ JavaScript <strong>ควบคุม HTML</strong> ได้ — เปลี่ยนข้อความ, สี, ซ่อน/แสดง Element</p>
+
+    <div class="code-block"><pre><span class="cmt">// เลือก Element</span>
+<span class="kw">const</span> <span class="var">btn</span> <span class="op">=</span> <span class="fn">document</span>.<span class="fn">getElementById</span>(<span class="str">"myBtn"</span>);
+<span class="kw">const</span> <span class="var">title</span> <span class="op">=</span> <span class="fn">document</span>.<span class="fn">querySelector</span>(<span class="str">".title"</span>);
+
+<span class="cmt">// เปลี่ยนข้อความ</span>
+<span class="var">title</span>.<span class="var">textContent</span> <span class="op">=</span> <span class="str">"ข้อความใหม่!"</span>;
+
+<span class="cmt">// เปลี่ยนสไตล์</span>
+<span class="var">btn</span>.<span class="var">style</span>.<span class="var">backgroundColor</span> <span class="op">=</span> <span class="str">"#f7df1e"</span>;
+<span class="var">btn</span>.<span class="var">style</span>.<span class="var">color</span> <span class="op">=</span> <span class="str">"black"</span>;
+
+<span class="cmt">// Event Listener — รอรับ Event</span>
+<span class="var">btn</span>.<span class="fn">addEventListener</span>(<span class="str">"click"</span>, () <span class="op">=></span> {
+  <span class="fn">alert</span>(<span class="str">"ถูกกดแล้ว!"</span>);
+});
+
+<span class="cmt">// Real-world: toggle dark/light mode</span>
+<span class="fn">document</span>.<span class="var">body</span>.<span class="var">classList</span>.<span class="fn">toggle</span>(<span class="str">"dark-mode"</span>);</pre></div>
+
+    <h3>🎨 DOM Playground — ทดลองควบคุม Element</h3>
+    <div class="demo-area">
+      <div id="dom-target" style="background:#1a1a2e;border:2px solid #3a3a6a;border-radius:10px;padding:20px;text-align:center;margin-bottom:12px;transition:all 0.3s;font-size:1.1rem;font-weight:700;color:var(--text);">
+        🎯 ฉันคือ DOM Element — ลองควบคุมฉันดู!
+      </div>
+      <label>เปลี่ยนข้อความ:</label>
+      <input class="demo-input" id="dom-text" type="text" placeholder="พิมพ์ข้อความใหม่..." maxlength="60" style="margin-bottom:10px;" />
+      <div class="demo-row">
+        <button class="btn btn-yellow" onclick="domSetText()">📝 เปลี่ยนข้อความ</button>
+        <button class="btn btn-outline" onclick="domToggleColor()">🎨 เปลี่ยนสี</button>
+        <button class="btn btn-outline" onclick="domToggleHide()">👁 ซ่อน/แสดง</button>
+        <button class="btn btn-green" onclick="domReset()">🔄 รีเซ็ต</button>
+      </div>
+    </div>
+
+    <div class="callout real">
+      <span class="callout-icon">🌍</span>
+      <div><strong>Real-world:</strong> Notification badge บน icon, Loading spinner, Modal popup, Live search filter — ทั้งหมดนี้ใช้ DOM Manipulation</div>
+    </div>
+
+    <!-- Quiz 10 -->
+    <div class="quiz-box" id="quiz10">
+      <div class="quiz-question">❓ ข้อ 10: ใช้คำสั่งอะไรเลือก Element ที่มี id="header"?</div>
+      <div class="quiz-options">
+        <button class="quiz-opt" onclick="answerQuiz('quiz10',this,false)">document.select("header")</button>
+        <button class="quiz-opt" onclick="answerQuiz('quiz10',this,false)">document.getElement("header")</button>
+        <button class="quiz-opt" onclick="answerQuiz('quiz10',this,true)">document.getElementById("header")</button>
+        <button class="quiz-opt" onclick="answerQuiz('quiz10',this,false)">document.find("#header")</button>
+      </div>
+      <div class="quiz-feedback" id="quiz10-fb"></div>
+    </div>
+  </div>
+
+  <!-- ===================== CHECKPOINT ===================== -->
+  <div class="checkpoint" id="checkpoint">
+    <div class="checkpoint-title">✅ Checkpoint — วัดความเข้าใจตัวเอง</div>
+    <p style="color:#9ea7c7;font-size:0.88rem;margin-bottom:14px;">กดติ๊กหัวข้อที่คุณเข้าใจแล้ว:</p>
+    <ul class="checkpoint-list" id="cpList">
+      <li class="checkpoint-item" onclick="toggleCP(this)"><span class="cp-check"></span>อธิบายว่า JavaScript ทำหน้าที่อะไรในเว็บได้</li>
+      <li class="checkpoint-item" onclick="toggleCP(this)"><span class="cp-check"></span>รู้ความแตกต่างระหว่าง let, const, var</li>
+      <li class="checkpoint-item" onclick="toggleCP(this)"><span class="cp-check"></span>บอก Data Type ทั้ง 7 ชนิดได้</li>
+      <li class="checkpoint-item" onclick="toggleCP(this)"><span class="cp-check"></span>ใช้ === แทน == และรู้ว่าทำไม</li>
+      <li class="checkpoint-item" onclick="toggleCP(this)"><span class="cp-check"></span>เขียน if/else/else if ได้</li>
+      <li class="checkpoint-item" onclick="toggleCP(this)"><span class="cp-check"></span>เขียน for loop วนได้ถูกต้อง</li>
+      <li class="checkpoint-item" onclick="toggleCP(this)"><span class="cp-check"></span>ประกาศ Function และ Arrow Function ได้</li>
+      <li class="checkpoint-item" onclick="toggleCP(this)"><span class="cp-check"></span>ใช้ push, pop, map, filter กับ Array ได้</li>
+      <li class="checkpoint-item" onclick="toggleCP(this)"><span class="cp-check"></span>สร้าง Object และเข้าถึง Property ได้</li>
+      <li class="checkpoint-item" onclick="toggleCP(this)"><span class="cp-check"></span>ใช้ querySelector และ addEventListener ได้</li>
+    </ul>
+    <div class="scoreboard" style="margin-top:18px;">
+      <div class="score-num" id="cpScore">0 / 10</div>
+      <div class="score-label">หัวข้อที่เข้าใจแล้ว</div>
+      <div id="cpMsg" style="color:var(--text-muted);font-size:0.88rem;margin-top:8px;">เริ่มติ๊กได้เลย!</div>
+    </div>
+  </div>
+
+  <!-- ===================== SUMMARY ===================== -->
+  <div class="summary" id="summary">
+    <h2>🏆 สรุปสิ่งที่เรียนรู้</h2>
+    <p style="color:#9ea7c7;margin-bottom:22px;">คุณเรียนจบ JavaScript เบื้องต้นแล้ว! นี่คือสิ่งสำคัญที่ได้เรียนรู้:</p>
+
+    <div class="summary-grid">
+      <div class="summary-card">
+        <div class="s-icon">📦</div>
+        <h4>Variables</h4>
+        <p>ใช้ <code>const</code> ก่อนเสมอ, <code>let</code> ถ้าต้องเปลี่ยนค่า, หลีกเลี่ยง <code>var</code></p>
+      </div>
+      <div class="summary-card">
+        <div class="s-icon">🔤</div>
+        <h4>Data Types</h4>
+        <p>String, Number, Boolean, Null, Undefined, Object, Symbol</p>
+      </div>
+      <div class="summary-card">
+        <div class="s-icon">🔀</div>
+        <h4>Control Flow</h4>
+        <p>if/else ตัดสินใจ, Ternary สำหรับเขียนสั้น ๆ</p>
+      </div>
+      <div class="summary-card">
+        <div class="s-icon">🔁</div>
+        <h4>Loops</h4>
+        <p>for, while, for...of — เลือกตาม use case</p>
+      </div>
+      <div class="summary-card">
+        <div class="s-icon">⚙️</div>
+        <h4>Functions</h4>
+        <p>Arrow Function เป็น Standard ของ Modern JS</p>
+      </div>
+      <div class="summary-card">
+        <div class="s-icon">📋</div>
+        <h4>Arrays</h4>
+        <p>map, filter, reduce — เครื่องมือหลักของ Data Manipulation</p>
+      </div>
+      <div class="summary-card">
+        <div class="s-icon">🗂️</div>
+        <h4>Objects</h4>
+        <p>Key-Value เก็บข้อมูลซับซ้อน, Destructuring ดึงค่าสะดวก</p>
+      </div>
+      <div class="summary-card">
+        <div class="s-icon">🖥️</div>
+        <h4>DOM</h4>
+        <p>querySelector + addEventListener = พื้นฐาน Web Interactivity</p>
+      </div>
+    </div>
+
+    <div style="background:#0a1f0a;border-radius:10px;padding:18px;margin-top:8px;">
+      <h3 style="color:var(--green);font-size:1rem;margin-bottom:10px;">🚀 ขั้นตอนต่อไป (Next Steps)</h3>
+      <ul style="color:#9ea7c7;font-size:0.92rem;padding-left:20px;line-height:2;">
+        <li>ฝึก Asynchronous JS — <strong>Promises, async/await, fetch API</strong></li>
+        <li>เรียน ES6+ Features — <strong>Modules, Spread, Destructuring</strong></li>
+        <li>เริ่มต้น Framework — <strong>React.js หรือ Vue.js</strong></li>
+        <li>Backend ด้วย <strong>Node.js + Express</strong></li>
+        <li>สร้างโปรเจ็กต์จริง — <strong>Todo App, Weather App, Shopping Cart</strong></li>
+      </ul>
+    </div>
+
+    <!-- Final Score -->
+    <div class="scoreboard" style="margin-top:24px;">
+      <div class="score-num" id="quizScore">0 / 10</div>
+      <div class="score-label">คะแนน Quiz ทั้งหมด</div>
+      <div id="quizMsg" style="color:var(--text-muted);font-size:0.9rem;margin-top:10px;"></div>
+      <button class="btn btn-yellow" style="margin-top:16px;" onclick="calcFinalScore()">📊 คำนวณคะแนนรวม</button>
+    </div>
+  </div>
+
+</main>
+
+<!-- ===== JAVASCRIPT ===== -->
+<script>
+  /* ======================================
+     PROGRESS TRACKING
+  ====================================== */
+  let quizResults = {};
+  let totalQuizzes = 10;
+
+  function updateProgress() {
+    const answered = Object.keys(quizResults).length;
+    const pct = Math.round((answered / totalQuizzes) * 100);
+    document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('progressPct').textContent = pct + '%';
+  }
+
+  /* ======================================
+     QUIZ ENGINE
+  ====================================== */
+  function answerQuiz(quizId, btn, isCorrect) {
+    // ป้องกันตอบซ้ำ
+    const box = document.getElementById(quizId);
+    if (box.dataset.answered) return;
+    box.dataset.answered = '1';
+
+    const fb = document.getElementById(quizId + '-fb');
+    const opts = box.querySelectorAll('.quiz-opt');
+
+    opts.forEach(o => {
+      o.disabled = true;
+      o.style.cursor = 'default';
+    });
+
+    if (isCorrect) {
+      btn.classList.add('correct');
+      fb.textContent = '✅ ถูกต้อง! เยี่ยมมากเลย';
+      fb.className = 'quiz-feedback show ok';
+      quizResults[quizId] = true;
+    } else {
+      btn.classList.add('wrong');
+      // หา correct answer และไฮไลต์
+      opts.forEach(o => {
+        if (o.getAttribute('onclick').includes('true')) {
+          o.classList.add('correct');
+        }
+      });
+      fb.textContent = '❌ ยังไม่ถูก — ดูคำตอบสีเขียวด้านบนนะ';
+      fb.className = 'quiz-feedback show no';
+      quizResults[quizId] = false;
+    }
+
+    updateProgress();
+  }
+
+  /* ======================================
+     SECTION 1 — Hello World
+  ====================================== */
+  function runHelloWorld() {
+    // ป้องกัน XSS โดยใช้ textContent แทน innerHTML
+    const name = document.getElementById('hw-name').value.trim();
+    const out = document.getElementById('hw-output');
+    if (!name) {
+      out.textContent = '⚠️ กรุณาใส่ชื่อก่อนนะครับ';
+      out.style.color = 'var(--orange)';
+      return;
+    }
+    out.style.color = 'var(--accent3)';
+    // แสดงผลแบบ "code output"
+    out.textContent = [
+      '> const name = "' + name + '";',
+      '> console.log("สวัสดีครับ คุณ " + name + "!");',
+      '',
+      '  สวัสดีครับ คุณ ' + name + '!',
+      '',
+      '  [โค้ดทำงานสำเร็จ ✅]'
+    ].join('\n');
+  }
+
+  function clearHW() {
+    document.getElementById('hw-name').value = '';
+    document.getElementById('hw-output').textContent = 'ผลลัพธ์จะแสดงที่นี่...';
+    document.getElementById('hw-output').style.color = '';
+  }
+
+  /* ======================================
+     SECTION 2 — Variables
+  ====================================== */
+  function runVarDemo() {
+    const varName = document.getElementById('var-name-in').value.trim();
+    const varVal = document.getElementById('var-val-in').value.trim();
+    const out = document.getElementById('var-output');
+
+    if (!varName || !varVal) {
+      out.textContent = '⚠️ กรุณาใส่ทั้งชื่อตัวแปรและค่า';
+      out.style.color = 'var(--orange)';
+      return;
+    }
+
+    // ตรวจสอบชื่อตัวแปรว่า valid
+    const validName = /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(varName);
+    if (!validName) {
+      out.textContent = '⚠️ ชื่อตัวแปรต้องขึ้นต้นด้วยตัวอักษร, _ หรือ $ และไม่มีช่องว่าง';
+      out.style.color = 'var(--red)';
+      return;
+    }
+
+    // วิเคราะห์ชนิดข้อมูล
+    let displayType = '';
+    let parsedVal = varVal;
+    let useConst = true;
+
+    if (varVal === 'true' || varVal === 'false') {
+      displayType = 'boolean';
+      parsedVal = varVal;
+    } else if (varVal === 'null') {
+      displayType = 'null';
+    } else if (varVal === 'undefined') {
+      displayType = 'undefined';
+    } else if (!isNaN(varVal) && varVal !== '') {
+      displayType = 'number';
+    } else if (/^["'].*["']$/.test(varVal)) {
+      displayType = 'string';
+      parsedVal = varVal;
+    } else {
+      displayType = 'string';
+      parsedVal = '"' + varVal + '"';
+    }
+
+    out.style.color = 'var(--accent3)';
+    out.textContent = [
+      '> const ' + varName + ' = ' + parsedVal + ';',
+      '',
+      '  ชื่อตัวแปร : ' + varName,
+      '  ค่า        : ' + parsedVal,
+      '  ชนิดข้อมูล : ' + displayType,
+      '',
+      '  [ประกาศตัวแปรสำเร็จ ✅]'
+    ].join('\n');
+  }
+
+  function clearVarDemo() {
+    document.getElementById('var-name-in').value = '';
+    document.getElementById('var-val-in').value = '';
+    document.getElementById('var-output').textContent = 'ผลลัพธ์จะแสดงที่นี่...';
+    document.getElementById('var-output').style.color = '';
+  }
+
+  /* ======================================
+     SECTION 3 — Data Types
+  ====================================== */
+  function checkType() {
+    const raw = document.getElementById('type-in').value.trim();
+    const out = document.getElementById('type-output');
+    if (!raw) {
+      out.textContent = '⚠️ กรุณาใส่ค่า';
+      out.style.color = 'var(--orange)';
+      return;
+    }
+
+    let val, jsType, detail;
+    if (raw === 'null') {
+      val = null; jsType = typeof null; detail = 'null (ตั้งใจให้ว่าง)';
+    } else if (raw === 'undefined') {
+      val = undefined; jsType = 'undefined'; detail = 'undefined (ยังไม่มีค่า)';
+    } else if (raw === 'true') {
+      val = true; jsType = 'boolean'; detail = 'Boolean: true';
+    } else if (raw === 'false') {
+      val = false; jsType = 'boolean'; detail = 'Boolean: false';
+    } else if (!isNaN(raw)) {
+      val = Number(raw); jsType = 'number'; detail = 'Number: ' + val;
+    } else if (/^["'].*["']$/.test(raw)) {
+      val = raw.slice(1,-1); jsType = 'string'; detail = 'String: ' + val;
+    } else {
+      val = raw; jsType = 'string'; detail = 'String: "' + val + '"';
+    }
+
+    // Gotcha สำหรับ null
+    const note = (raw === 'null') ? '\n  ⚠️  Gotcha: typeof null === "object" (เป็น Bug เก่าของ JS)' : '';
+
+    out.style.color = 'var(--accent3)';
+    out.textContent = [
+      '> typeof ' + raw,
+      '',
+      '  ผลลัพธ์  : "' + jsType + '"',
+      '  รายละเอียด: ' + detail,
+      note
+    ].join('\n').trim();
+  }
+
+  function runStrMethod(method) {
+    const raw = document.getElementById('str-in').value;
+    const out = document.getElementById('str-output');
+    if (!raw) {
+      out.textContent = '⚠️ กรุณาใส่ข้อความก่อน';
+      out.style.color = 'var(--orange)';
+      return;
+    }
+    let result, cmd;
+    switch(method) {
+      case 'upper': result = raw.toUpperCase(); cmd = '.toUpperCase()'; break;
+      case 'lower': result = raw.toLowerCase(); cmd = '.toLowerCase()'; break;
+      case 'len':   result = raw.length; cmd = '.length'; break;
+      case 'trim':  result = raw.trim(); cmd = '.trim()'; break;
+      case 'reverse': result = raw.split('').reverse().join(''); cmd = '.split("").reverse().join("")'; break;
+    }
+    out.style.color = 'var(--accent3)';
+    out.textContent = '> "' + raw + '"' + cmd + '\n\n  ผลลัพธ์: ' + result;
+  }
+
+  /* ======================================
+     SECTION 4 — Operators
+  ====================================== */
+  function calc(op) {
+    const a = parseFloat(document.getElementById('calc-a').value);
+    const b = parseFloat(document.getElementById('calc-b').value);
+    const out = document.getElementById('calc-output');
+
+    if (isNaN(a) || isNaN(b)) {
+      out.textContent = '⚠️ กรุณาใส่ตัวเลขให้ครบ';
+      out.style.color = 'var(--orange)';
+      return;
+    }
+
+    let result;
+    switch(op) {
+      case '+':  result = a + b; break;
+      case '-':  result = a - b; break;
+      case '*':  result = a * b; break;
+      case '/':
+        if (b === 0) {
+          out.textContent = '❌ หารด้วย 0 ไม่ได้!';
+          out.style.color = 'var(--red)';
+          return;
+        }
+        result = a / b; break;
+      case '%':  result = a % b; break;
+      case '**': result = a ** b; break;
+    }
+
+    // จัดการทศนิยม
+    result = parseFloat(result.toFixed(10));
+
+    out.style.color = 'var(--accent3)';
+    out.textContent = '> ' + a + ' ' + op + ' ' + b + '\n\n  ผลลัพธ์: ' + result;
+  }
+
+  /* ======================================
+     SECTION 5 — Control Flow
+  ====================================== */
+  function checkGrade() {
+    const score = parseFloat(document.getElementById('grade-in').value);
+    const out = document.getElementById('grade-output');
+
+    if (isNaN(score) || score < 0 || score > 100) {
+      out.textContent = '⚠️ กรุณาใส่คะแนน 0–100';
+      out.style.color = 'var(--orange)';
+      return;
+    }
+
+    let grade, msg, emoji;
+    if (score >= 80) {
+      grade = 'A'; msg = 'ยอดเยี่ยม!'; emoji = '🏆';
+    } else if (score >= 70) {
+      grade = 'B'; msg = 'ดีมาก!'; emoji = '👍';
+    } else if (score >= 60) {
+      grade = 'C'; msg = 'ผ่าน ปรับปรุงได้อีก'; emoji = '📚';
+    } else if (score >= 50) {
+      grade = 'D'; msg = 'ผ่านแบบหวุดหวิด'; emoji = '😅';
+    } else {
+      grade = 'F'; msg = 'ไม่ผ่าน ลองใหม่นะ'; emoji = '💪';
+    }
+
+    out.style.color = score >= 60 ? 'var(--green)' : 'var(--red)';
+    out.textContent = [
+      '> checkGrade(' + score + ')',
+      '',
+      '  คะแนน : ' + score,
+      '  เกรด  : ' + grade,
+      '  ' + emoji + '  ' + msg
+    ].join('\n');
+  }
+
+  /* ======================================
+     SECTION 6 — Loops
+  ====================================== */
+  function runLoop(type) {
+    const n = parseInt(document.getElementById('loop-n').value);
+    const out = document.getElementById('loop-output');
+    if (isNaN(n) || n < 1 || n > 20) {
+      out.textContent = '⚠️ ใส่จำนวน 1–20';
+      out.style.color = 'var(--orange)';
+      return;
+    }
+    out.style.color = 'var(--accent3)';
+    let lines = [];
+    if (type === 'for') {
+      lines.push('> for (let i = 1; i <= ' + n + '; i++) { console.log(i); }', '');
+      for (let i = 1; i <= n; i++) lines.push('  รอบที่ ' + i);
+    } else if (type === 'while') {
+      lines.push('> let i = 0; while (i < ' + n + ') { ... }', '');
+      for (let i = 0; i < n; i++) lines.push('  i = ' + i);
+    } else {
+      lines.push('> ตาราง multiplication (1–' + n + ')', '');
+      for (let i = 1; i <= Math.min(n, 10); i++) {
+        lines.push('  ' + i + ' × ' + n + ' = ' + (i * n));
+      }
+    }
+    out.textContent = lines.join('\n');
+  }
+
+  /* ======================================
+     SECTION 7 — Functions / VAT
+  ====================================== */
+  function runVAT() {
+    const price = parseFloat(document.getElementById('vat-price').value);
+    const rate = parseFloat(document.getElementById('vat-rate').value) / 100;
+    const out = document.getElementById('vat-output');
+
+    if (isNaN(price) || price < 0) {
+      out.textContent = '⚠️ ราคาต้องมากกว่า 0';
+      out.style.color = 'var(--orange)';
+      return;
+    }
+    if (isNaN(rate) || rate < 0 || rate > 1) {
+      out.textContent = '⚠️ อัตรา VAT ต้อง 0–100%';
+      out.style.color = 'var(--orange)';
+      return;
+    }
+
+    const vat = price * rate;
+    const total = price + vat;
+
+    out.style.color = 'var(--accent3)';
+    out.textContent = [
+      '> calcVAT(' + price + ', ' + (rate * 100) + '%)',
+      '',
+      '  ราคาก่อน VAT : ฿' + price.toFixed(2),
+      '  VAT ' + (rate * 100).toFixed(0) + '%     : ฿' + vat.toFixed(2),
+      '  ────────────────────',
+      '  ราคารวม VAT  : ฿' + total.toFixed(2)
+    ].join('\n');
+  }
+
+  /* ======================================
+     SECTION 8 — Arrays / Cart
+  ====================================== */
+  const shoppingCart = [];
+
+  function renderCart() {
+    const out = document.getElementById('cart-output');
+    if (shoppingCart.length === 0) {
+      out.textContent = 'ตะกร้าว่างเปล่า';
+      out.style.color = 'var(--text-muted)';
+      return;
+    }
+    const lines = [
+      '> cart = ' + JSON.stringify(shoppingCart),
+      '> cart.length = ' + shoppingCart.length,
+      '',
+      '  🛒 รายการในตะกร้า:'
+    ];
+    shoppingCart.forEach((item, i) => {
+      lines.push('  [' + i + '] ' + item);
+    });
+    out.style.color = 'var(--accent3)';
+    out.textContent = lines.join('\n');
+  }
+
+  function addToCart() {
+    const input = document.getElementById('cart-item');
+    const item = input.value.trim();
+    if (!item) {
+      document.getElementById('cart-output').textContent = '⚠️ กรุณาใส่ชื่อสินค้า';
+      return;
+    }
+    // Sanitize: เก็บเฉพาะ text ธรรมดา
+    const safeItem = item.replace(/[<>]/g, '');
+    shoppingCart.push(safeItem);
+    input.value = '';
+    renderCart();
+  }
+
+  function removeLastCart() {
+    if (shoppingCart.length === 0) {
+      document.getElementById('cart-output').textContent = '⚠️ ตะกร้าว่างอยู่แล้ว';
+      return;
+    }
+    const removed = shoppingCart.pop();
+    document.getElementById('cart-output').style.color = 'var(--red)';
+    setTimeout(renderCart, 300);
+  }
+
+  function clearCart() {
+    shoppingCart.length = 0;
+    renderCart();
+  }
+
+  /* ======================================
+     SECTION 9 — Objects
+  ====================================== */
+  function buildObject() {
+    const name = document.getElementById('obj-name').value.trim() || 'ไม่ระบุ';
+    const age = parseInt(document.getElementById('obj-age').value) || 0;
+    const job = document.getElementById('obj-job').value.trim() || 'ไม่ระบุ';
+    const isAdmin = document.getElementById('obj-admin').value === 'true';
+
+    const obj = { name, age, job, isAdmin };
+    const out = document.getElementById('obj-output');
+    out.style.color = 'var(--accent3)';
+    out.textContent = [
+      '> const user = {',
+      '    name    : "' + obj.name + '",',
+      '    age     : ' + obj.age + ',',
+      '    job     : "' + obj.job + '",',
+      '    isAdmin : ' + obj.isAdmin,
+      '  }',
+      '',
+      '> user.name → "' + obj.name + '"',
+      '> user.isAdmin → ' + obj.isAdmin
+    ].join('\n');
+  }
+
+  /* ======================================
+     SECTION 10 — DOM Playground
+  ====================================== */
+  const colorCycle = ['#f7df1e', '#ff6b6b', '#4ecdc4', '#a8edea', '#ff79c6', '#bd93f9'];
+  let colorIdx = 0;
+  let isHidden = false;
+  const domDefaultText = '🎯 ฉันคือ DOM Element — ลองควบคุมฉันดู!';
+
+  function domSetText() {
+    const newText = document.getElementById('dom-text').value.trim();
+    if (!newText) return;
+    const el = document.getElementById('dom-target');
+    // ใช้ textContent เพื่อป้องกัน XSS
+    el.textContent = newText;
+  }
+
+  function domToggleColor() {
+    const el = document.getElementById('dom-target');
+    colorIdx = (colorIdx + 1) % colorCycle.length;
+    el.style.borderColor = colorCycle[colorIdx];
+    el.style.color = colorCycle[colorIdx];
+    el.style.background = colorCycle[colorIdx] + '15';
+  }
+
+  function domToggleHide() {
+    const el = document.getElementById('dom-target');
+    isHidden = !isHidden;
+    el.style.opacity = isHidden ? '0' : '1';
+    el.style.transform = isHidden ? 'scale(0.9)' : 'scale(1)';
+  }
+
+  function domReset() {
+    const el = document.getElementById('dom-target');
+    el.textContent = domDefaultText;
+    el.style.borderColor = '#3a3a6a';
+    el.style.color = 'var(--text)';
+    el.style.background = '#1a1a2e';
+    el.style.opacity = '1';
+    el.style.transform = 'scale(1)';
+    isHidden = false;
+    colorIdx = 0;
+    document.getElementById('dom-text').value = '';
+  }
+
+  /* ======================================
+     CHECKPOINT
+  ====================================== */
+  function toggleCP(item) {
+    item.classList.toggle('checked');
+    if (item.classList.contains('checked')) {
+      item.querySelector('.cp-check').textContent = '✓';
+    } else {
+      item.querySelector('.cp-check').textContent = '';
+    }
+    updateCPScore();
+  }
+
+  function updateCPScore() {
+    const checked = document.querySelectorAll('.checkpoint-item.checked').length;
+    const total = document.querySelectorAll('.checkpoint-item').length;
+    document.getElementById('cpScore').textContent = checked + ' / ' + total;
+
+    const pct = checked / total;
+    let msg = '';
+    if (pct === 0) msg = 'เริ่มติ๊กได้เลย!';
+    else if (pct < 0.5) msg = '🌱 เริ่มต้นดีแล้ว ทบทวนเพิ่มอีกนิดนะ';
+    else if (pct < 0.8) msg = '💪 กำลังมาแรง! ใกล้ถึงเป้าหมายแล้ว';
+    else if (pct < 1) msg = '🔥 เกือบครบแล้ว! ไปต่อได้เลย';
+    else msg = '🏆 ยอดเยี่ยมมาก! คุณพร้อมไปต่อแล้ว!';
+
+    document.getElementById('cpMsg').textContent = msg;
+  }
+
+  /* ======================================
+     TABS
+  ====================================== */
+  function switchTab(btn, targetId) {
+    const container = btn.closest('.section');
+    container.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    container.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(targetId).classList.add('active');
+  }
+
+  /* ======================================
+     FINAL SCORE
+  ====================================== */
+  function calcFinalScore() {
+    const correct = Object.values(quizResults).filter(Boolean).length;
+    const answered = Object.keys(quizResults).length;
+    const scoreEl = document.getElementById('quizScore');
+    const msgEl = document.getElementById('quizMsg');
+
+    scoreEl.textContent = correct + ' / ' + totalQuizzes;
+
+    const pct = correct / totalQuizzes;
+    let msg = '';
+    if (answered < totalQuizzes) {
+      msg = '⚠️ ยังตอบ Quiz ไม่ครบ (' + answered + '/' + totalQuizzes + ') ลองทำให้ครบก่อนนะ';
+    } else if (pct === 1) {
+      msg = '🏆 Perfect Score! คุณเข้าใจ JavaScript เบื้องต้นอย่างสมบูรณ์แบบ!';
+      scoreEl.style.color = 'var(--green)';
+    } else if (pct >= 0.8) {
+      msg = '🌟 ยอดเยี่ยม! ความเข้าใจดีมาก พร้อมเรียนต่อแล้ว';
+      scoreEl.style.color = 'var(--green)';
+    } else if (pct >= 0.6) {
+      msg = '👍 ดีแล้ว! ทบทวนส่วนที่ผิดอีกนิด แล้วจะแข็งแกร่งขึ้น';
+    } else {
+      msg = '📚 ลองอ่านเนื้อหาอีกรอบแล้วกลับมาทำ Quiz ใหม่นะ';
+      scoreEl.style.color = 'var(--red)';
+    }
+
+    msgEl.textContent = msg;
+    scoreEl.classList.add('pop-anim');
+    setTimeout(() => scoreEl.classList.remove('pop-anim'), 500);
+  }
+
+  /* ======================================
+     KEYBOARD: Enter triggers first button in demo
+  ====================================== */
+  ['hw-name', 'grade-in', 'type-in', 'str-in', 'cart-item', 'dom-text'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        const area = el.closest('.demo-area');
+        if (area) {
+          const btn = area.querySelector('.btn-yellow');
+          if (btn) btn.click();
+        }
+      }
+    });
+  });
+</script>
+</body>
+</html>

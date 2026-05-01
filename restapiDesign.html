@@ -1,0 +1,2281 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>REST API Design — Interactive Learning</title>
+  <meta name="description" content="สื่อการสอน Interactive ระดับ Intermediate: REST API Design" />
+  <style>
+    /* =====================================================
+       CSS RESET & CUSTOM PROPERTIES
+    ===================================================== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #111318;
+      --surface: #1c1f2e;
+      --surface2: #252838;
+      --border: #2e3247;
+      --accent: #6c63ff;
+      --accent2: #00d4aa;
+      --accent3: #ff6b6b;
+      --accent4: #ffa94d;
+      --text: #f0f4f8;
+      --text-muted: #b0bcc8;
+      --success: #22c55e;
+      --error: #ef4444;
+      --warning: #f59e0b;
+      --radius: 12px;
+      --radius-sm: 8px;
+      --shadow: 0 4px 24px rgba(0,0,0,.4);
+      --transition: .2s ease;
+      --font: 'Segoe UI', 'Noto Sans Thai', system-ui, sans-serif;
+      --mono: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 16px;
+      line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* =====================================================
+       UTILITY
+    ===================================================== */
+    .hidden { display: none !important; }
+    .flex { display: flex; }
+    .items-center { align-items: center; }
+    .gap-2 { gap: .5rem; }
+    .gap-3 { gap: .75rem; }
+    .gap-4 { gap: 1rem; }
+    .mb-2 { margin-bottom: .5rem; }
+    .mb-3 { margin-bottom: .75rem; }
+    .mb-4 { margin-bottom: 1rem; }
+    .text-accent { color: var(--accent); }
+    .text-success { color: var(--success); }
+    .text-error { color: var(--error); }
+    .text-muted { color: var(--text-muted); }
+    .font-mono { font-family: var(--mono); }
+    .text-sm { font-size: .875rem; }
+    .text-xs { font-size: .75rem; }
+    .bold { font-weight: 700; }
+
+    /* =====================================================
+       LAYOUT: TOP BAR
+    ===================================================== */
+    #topbar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      background: rgba(15,17,23,.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: .6rem 1.5rem;
+      gap: 1rem;
+    }
+    #topbar .logo {
+      font-weight: 800;
+      font-size: 1.05rem;
+      color: var(--accent);
+      white-space: nowrap;
+    }
+    #topbar .logo span { color: var(--accent2); }
+
+    /* XP & progress row */
+    #hud {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex: 1;
+      justify-content: flex-end;
+    }
+    #xp-badge {
+      display: flex;
+      align-items: center;
+      gap: .4rem;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 99px;
+      padding: .25rem .75rem;
+      font-size: .85rem;
+      font-weight: 700;
+      color: var(--accent4);
+    }
+    #xp-badge .icon { font-size: 1rem; }
+    #overall-progress-wrap {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      font-size: .8rem;
+      color: var(--text-muted);
+    }
+    #overall-bar {
+      width: 120px;
+      height: 8px;
+      background: var(--surface2);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    #overall-bar-inner {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      border-radius: 99px;
+      transition: width .5s ease;
+      width: 0%;
+    }
+
+    /* =====================================================
+       MAIN WRAPPER
+    ===================================================== */
+    #app {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 5rem 1.25rem 4rem;
+    }
+
+    /* =====================================================
+       SECTION / SCREEN
+    ===================================================== */
+    .screen { display: none; animation: fadeIn .35s ease; }
+    .screen.active { display: block; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* =====================================================
+       HERO (LANDING)
+    ===================================================== */
+    #hero-section {
+      text-align: center;
+      padding: 3rem 1rem;
+    }
+    #hero-section h1 {
+      font-size: clamp(1.8rem, 5vw, 3rem);
+      font-weight: 900;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.2;
+      margin-bottom: 1rem;
+    }
+    #hero-section p {
+      font-size: 1.1rem;
+      color: var(--text-muted);
+      max-width: 560px;
+      margin: 0 auto 2rem;
+      line-height: 1.7;
+    }
+    .badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .6rem;
+      justify-content: center;
+      margin-bottom: 2.5rem;
+    }
+    .badge {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 99px;
+      padding: .3rem .9rem;
+      font-size: .8rem;
+      color: var(--text-muted);
+    }
+    .badge.hot { border-color: var(--accent); color: var(--accent); }
+
+    /* =====================================================
+       ROADMAP
+    ===================================================== */
+    #roadmap-section { padding: 1rem 0; }
+    .roadmap-title {
+      text-align: center;
+      font-size: 1.4rem;
+      font-weight: 800;
+      margin-bottom: 2rem;
+    }
+    .roadmap-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2.5rem;
+    }
+    .roadmap-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem 1rem;
+      cursor: pointer;
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+    .roadmap-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--accent);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform .3s ease;
+    }
+    .roadmap-card:hover { border-color: var(--accent); background: var(--surface2); }
+    .roadmap-card:hover::before { transform: scaleX(1); }
+    .roadmap-card.done { border-color: var(--success); }
+    .roadmap-card.done::before { background: var(--success); transform: scaleX(1); }
+    .roadmap-card .module-num {
+      font-size: .75rem;
+      color: var(--text-muted);
+      margin-bottom: .35rem;
+    }
+    .roadmap-card h3 {
+      font-size: .95rem;
+      font-weight: 700;
+      margin-bottom: .4rem;
+      color: var(--text);
+    }
+    .roadmap-card p { font-size: .78rem; color: #b8c4d0; line-height: 1.5; }
+    .roadmap-card .status-icon {
+      position: absolute;
+      top: .75rem; right: .75rem;
+      font-size: 1rem;
+    }
+
+    /* =====================================================
+       BUTTONS
+    ===================================================== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      padding: .65rem 1.5rem;
+      border-radius: var(--radius-sm);
+      border: none;
+      cursor: pointer;
+      font-family: var(--font);
+      font-size: .95rem;
+      font-weight: 600;
+      transition: var(--transition);
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+    .btn-primary:hover { background: #7c75ff; transform: translateY(-1px); }
+    .btn-secondary {
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-success {
+      background: var(--success);
+      color: #fff;
+    }
+    .btn-success:hover { background: #16a34a; }
+    .btn-sm { padding: .4rem 1rem; font-size: .83rem; }
+    .btn-row {
+      display: flex;
+      gap: .75rem;
+      flex-wrap: wrap;
+      margin-top: 1.5rem;
+    }
+
+    /* =====================================================
+       MODULE CONTENT AREA
+    ===================================================== */
+    #module-section { padding: .5rem 0; }
+    .module-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .module-header h2 {
+      font-size: 1.4rem;
+      font-weight: 800;
+    }
+    .module-header h2 span { color: var(--accent); }
+    .module-meta { font-size: .82rem; color: var(--text-muted); margin-top: .3rem; }
+
+    .module-progress {
+      width: 100%;
+      background: var(--surface2);
+      border-radius: 99px;
+      height: 6px;
+      margin-bottom: 2rem;
+      overflow: hidden;
+    }
+    .module-progress-inner {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      border-radius: 99px;
+      transition: width .4s ease;
+    }
+
+    /* =====================================================
+       CONTENT CARD
+    ===================================================== */
+    .content-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin-bottom: 1.25rem;
+    }
+    .content-card h3 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: .75rem;
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+    .content-card h3 .label {
+      font-size: .7rem;
+      font-weight: 600;
+      padding: .15rem .5rem;
+      border-radius: 99px;
+      background: var(--accent);
+      color: #fff;
+      letter-spacing: .05em;
+    }
+    .content-card p, .content-card li {
+      color: #c8d3df;
+      line-height: 1.75;
+      font-size: .95rem;
+    }
+    .content-card ul, .content-card ol {
+      padding-left: 1.25rem;
+    }
+    .content-card li + li { margin-top: .35rem; }
+
+    /* =====================================================
+       CODE BLOCK
+    ===================================================== */
+    .code-block {
+      background: #0d1117;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 1rem 1.25rem;
+      overflow-x: auto;
+      font-family: var(--mono);
+      font-size: .83rem;
+      line-height: 1.65;
+      color: #e2e8f0;
+      margin: .75rem 0;
+      position: relative;
+    }
+    .code-block .comment { color: #6b7280; }
+    .code-block .keyword { color: #c084fc; }
+    .code-block .string { color: #86efac; }
+    .code-block .number { color: #fb923c; }
+    .code-block .method { color: #60a5fa; }
+    .code-block .url { color: #fde68a; }
+
+    /* =====================================================
+       HTTP METHOD BADGES
+    ===================================================== */
+    .method-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: .2rem .6rem;
+      border-radius: 4px;
+      font-family: var(--mono);
+      font-size: .78rem;
+      font-weight: 700;
+      min-width: 64px;
+    }
+    .method-GET    { background: #166534; color: #bbf7d0; }
+    .method-POST   { background: #1e3a5f; color: #bfdbfe; }
+    .method-PUT    { background: #4a1d40; color: #fbcfe8; }
+    .method-PATCH  { background: #3d2e05; color: #fde68a; }
+    .method-DELETE { background: #450a0a; color: #fecaca; }
+
+    /* =====================================================
+       QUIZ COMPONENT
+    ===================================================== */
+    .quiz-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin-bottom: 1.25rem;
+    }
+    .quiz-question {
+      font-weight: 700;
+      margin-bottom: 1rem;
+      font-size: 1rem;
+      line-height: 1.5;
+    }
+    .quiz-question .q-num {
+      color: var(--accent);
+      font-size: .85rem;
+      display: block;
+      margin-bottom: .25rem;
+    }
+    .quiz-options { display: flex; flex-direction: column; gap: .6rem; }
+    .quiz-option {
+      display: flex;
+      align-items: flex-start;
+      gap: .75rem;
+      padding: .9rem 1rem;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: var(--transition);
+      font-size: .92rem;
+      line-height: 1.6;
+      color: #d8e2ec;
+    }
+    .quiz-option:hover:not(.disabled) { border-color: var(--accent); }
+    .quiz-option.selected { border-color: var(--accent); background: rgba(108,99,255,.1); }
+    .quiz-option.correct  { border-color: var(--success); background: rgba(34,197,94,.1); }
+    .quiz-option.wrong    { border-color: var(--error);   background: rgba(239,68,68,.1); }
+    .quiz-option.disabled { cursor: default; }
+    .quiz-option .opt-key {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      min-width: 24px;
+      border-radius: 50%;
+      background: var(--border);
+      font-size: .75rem;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+    .quiz-option.correct .opt-key { background: var(--success); color: #fff; }
+    .quiz-option.wrong   .opt-key { background: var(--error);   color: #fff; }
+
+    .quiz-feedback {
+      margin-top: 1rem;
+      padding: .9rem 1rem;
+      border-radius: var(--radius-sm);
+      font-size: .88rem;
+      line-height: 1.6;
+      display: none;
+    }
+    .quiz-feedback.show { display: block; }
+    .quiz-feedback.correct-fb {
+      background: rgba(34,197,94,.1);
+      border: 1px solid var(--success);
+      color: #86efac;
+    }
+    .quiz-feedback.wrong-fb {
+      background: rgba(239,68,68,.1);
+      border: 1px solid var(--error);
+      color: #fca5a5;
+    }
+    .quiz-feedback .fb-title { font-weight: 700; margin-bottom: .3rem; }
+
+    /* =====================================================
+       DRAG & DROP / MATCHING
+    ===================================================== */
+    .matching-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin: 1rem 0;
+    }
+    @media (max-width: 540px) {
+      .matching-grid { grid-template-columns: 1fr; }
+    }
+    .match-item {
+      padding: .75rem 1rem;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      cursor: grab;
+      font-size: .88rem;
+      transition: var(--transition);
+      user-select: none;
+    }
+    .match-item:active { cursor: grabbing; }
+    .match-item.dragging { opacity: .5; border-style: dashed; }
+    .match-item.correct { border-color: var(--success); background: rgba(34,197,94,.1); }
+    .match-item.wrong   { border-color: var(--error);   background: rgba(239,68,68,.1); }
+    .drop-zone {
+      min-height: 50px;
+      padding: .6rem;
+      background: var(--bg);
+      border: 2px dashed var(--border);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .82rem;
+      color: var(--text-muted);
+      transition: var(--transition);
+    }
+    .drop-zone.over { border-color: var(--accent); background: rgba(108,99,255,.08); }
+
+    /* =====================================================
+       HTTP FLOW SIMULATOR
+    ===================================================== */
+    #flow-sim {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin-bottom: 1.25rem;
+    }
+    .flow-title {
+      font-weight: 700;
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+    .flow-stage {
+      display: flex;
+      flex-direction: column;
+      gap: .75rem;
+    }
+    .flow-row {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      flex-wrap: wrap;
+    }
+    .flow-node {
+      padding: .55rem 1rem;
+      border-radius: var(--radius-sm);
+      font-size: .85rem;
+      font-family: var(--mono);
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      transition: all .3s ease;
+      position: relative;
+    }
+    .flow-node.client  { border-color: var(--accent);  color: var(--accent); }
+    .flow-node.server  { border-color: var(--accent2); color: var(--accent2); }
+    .flow-node.db      { border-color: var(--accent4); color: var(--accent4); }
+    .flow-node.active  { box-shadow: 0 0 0 3px rgba(108,99,255,.3); transform: scale(1.04); }
+    .flow-arrow { color: var(--text-muted); font-size: 1.1rem; }
+    .flow-label {
+      font-size: .75rem;
+      color: var(--text-muted);
+      margin-top: .25rem;
+      text-align: center;
+    }
+    .flow-message {
+      min-height: 40px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: .6rem 1rem;
+      font-family: var(--mono);
+      font-size: .82rem;
+      color: var(--accent2);
+      margin-top: 1rem;
+      transition: opacity .3s;
+    }
+
+    /* =====================================================
+       STATUS CODE EXPLORER
+    ===================================================== */
+    .status-explorer {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      margin-bottom: 1.25rem;
+    }
+    .status-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .5rem;
+      margin: 1rem 0;
+    }
+    .status-chip {
+      padding: .35rem .75rem;
+      border-radius: 99px;
+      font-family: var(--mono);
+      font-size: .82rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: var(--transition);
+      border: 1px solid transparent;
+    }
+    .status-chip:hover { transform: scale(1.05); }
+    .s2xx { background: #166534; color: #bbf7d0; }
+    .s3xx { background: #1e3a5f; color: #bfdbfe; }
+    .s4xx { background: #450a0a; color: #fecaca; }
+    .s5xx { background: #4a1d40; color: #f9a8d4; }
+    .status-detail {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 1rem;
+      margin-top: .75rem;
+      font-size: .88rem;
+      line-height: 1.65;
+      color: var(--text-muted);
+      min-height: 56px;
+    }
+    .status-detail strong { color: var(--text); }
+
+    /* =====================================================
+       SCENARIO CARD
+    ===================================================== */
+    .scenario {
+      background: var(--surface);
+      border: 1px solid var(--accent4);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin-bottom: 1.25rem;
+    }
+    .scenario-label {
+      font-size: .72rem;
+      font-weight: 700;
+      color: var(--accent4);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin-bottom: .6rem;
+    }
+    .scenario h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: .75rem;
+    }
+    .scenario p { color: var(--text-muted); font-size: .9rem; line-height: 1.7; }
+
+    /* =====================================================
+       FILL-IN-THE-BLANK
+    ===================================================== */
+    .fill-blank {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin-bottom: 1.25rem;
+    }
+    .blank-line {
+      font-family: var(--mono);
+      font-size: .88rem;
+      line-height: 2.2;
+      background: #0d1117;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: .75rem 1rem;
+      margin: .75rem 0;
+    }
+    .blank {
+      display: inline-block;
+      min-width: 110px;
+      border-bottom: 2px solid var(--accent);
+      padding: .1rem .4rem;
+      text-align: center;
+      cursor: pointer;
+      background: rgba(108,99,255,.08);
+      border-radius: 4px;
+      color: var(--accent);
+      font-weight: 700;
+      transition: var(--transition);
+    }
+    .blank:hover { background: rgba(108,99,255,.18); }
+    .blank.correct { border-color: var(--success); background: rgba(34,197,94,.12); color: var(--success); }
+    .blank.wrong   { border-color: var(--error);   background: rgba(239,68,68,.12);  color: var(--error); }
+    .blank-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .5rem;
+      margin: .75rem 0;
+    }
+    .blank-chip {
+      padding: .35rem .8rem;
+      border-radius: 99px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      font-family: var(--mono);
+      font-size: .82rem;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .blank-chip:hover  { border-color: var(--accent); color: var(--accent); }
+    .blank-chip.used   { opacity: .35; cursor: default; pointer-events: none; }
+
+    /* =====================================================
+       ENDPOINT BUILDER
+    ===================================================== */
+    .endpoint-builder {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin-bottom: 1.25rem;
+    }
+    .ep-row {
+      display: flex;
+      gap: .75rem;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: .75rem;
+    }
+    .ep-select {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-family: var(--font);
+      padding: .55rem .9rem;
+      font-size: .9rem;
+      cursor: pointer;
+      outline: none;
+    }
+    .ep-select:focus { border-color: var(--accent); }
+    .ep-input {
+      flex: 1;
+      min-width: 180px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-family: var(--mono);
+      padding: .55rem .9rem;
+      font-size: .88rem;
+      outline: none;
+    }
+    .ep-input:focus { border-color: var(--accent); }
+    .ep-result {
+      margin-top: .75rem;
+      padding: .9rem 1rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-family: var(--mono);
+      font-size: .85rem;
+      min-height: 50px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+    .ep-result .good { color: var(--success); }
+    .ep-result .bad  { color: var(--error);   }
+
+    /* =====================================================
+       CHECKPOINT / TOAST
+    ===================================================== */
+    #toast {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: .9rem 1.25rem;
+      font-size: .9rem;
+      max-width: 320px;
+      z-index: 200;
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      transform: translateY(120%);
+      transition: transform .3s ease;
+    }
+    #toast.show { transform: translateY(0); }
+    #toast .toast-icon { font-size: 1.4rem; }
+    #toast .toast-text strong { display: block; font-weight: 700; margin-bottom: .15rem; }
+    #toast .toast-text small { color: var(--text-muted); font-size: .8rem; }
+
+    /* =====================================================
+       SUMMARY SCREEN
+    ===================================================== */
+    #summary-section {
+      text-align: center;
+      padding: 2rem 1rem;
+    }
+    #summary-section h2 {
+      font-size: 1.8rem;
+      font-weight: 900;
+      margin-bottom: 1rem;
+    }
+    .summary-stat {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem 2rem;
+      margin: .5rem;
+    }
+    .summary-stat .val {
+      font-size: 2.5rem;
+      font-weight: 900;
+      color: var(--accent);
+    }
+    .summary-stat .lbl { font-size: .82rem; color: var(--text-muted); margin-top: .2rem; }
+    .next-steps-list {
+      text-align: left;
+      max-width: 500px;
+      margin: 2rem auto 0;
+    }
+    .next-steps-list li {
+      color: var(--text-muted);
+      font-size: .9rem;
+      padding: .5rem 0;
+      padding-left: .5rem;
+      border-left: 2px solid var(--accent);
+      margin-bottom: .5rem;
+    }
+    .next-steps-list li strong { color: var(--text); }
+
+    /* =====================================================
+       PRE-ASSESSMENT
+    ===================================================== */
+    #pre-section {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 1rem 0;
+    }
+    #pre-section h2 {
+      font-size: 1.35rem;
+      font-weight: 800;
+      margin-bottom: .5rem;
+    }
+    #pre-section p { color: var(--text-muted); font-size: .9rem; margin-bottom: 1.75rem; }
+    .pre-bar-wrap {
+      background: var(--surface2);
+      border-radius: 99px;
+      height: 6px;
+      margin-bottom: 1.5rem;
+      overflow: hidden;
+    }
+    .pre-bar { height: 100%; background: var(--accent4); border-radius: 99px; transition: width .4s; }
+    .pre-result {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      margin-top: 1.25rem;
+      font-size: .9rem;
+      line-height: 1.65;
+      color: var(--text-muted);
+    }
+    .pre-result .score-label { font-weight: 700; color: var(--accent); font-size: 1.1rem; }
+
+    /* =====================================================
+       HINT BOX
+    ===================================================== */
+    .hint-box {
+      margin-top: .75rem;
+      background: rgba(255,169,77,.06);
+      border: 1px solid rgba(255,169,77,.3);
+      border-radius: var(--radius-sm);
+      padding: .75rem 1rem;
+      font-size: .85rem;
+      color: var(--accent4);
+      display: none;
+    }
+    .hint-box.show { display: block; }
+    .hint-toggle {
+      background: none;
+      border: 1px dashed rgba(255,169,77,.4);
+      color: var(--accent4);
+      font-size: .8rem;
+      padding: .3rem .75rem;
+      border-radius: 99px;
+      cursor: pointer;
+      margin-top: .6rem;
+      transition: var(--transition);
+    }
+    .hint-toggle:hover { background: rgba(255,169,77,.08); }
+
+    /* =====================================================
+       ANIMATED DIAGRAM
+    ===================================================== */
+    .anim-diagram {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin-bottom: 1.25rem;
+      overflow-x: auto;
+    }
+    .restful-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .85rem;
+    }
+    .restful-table th {
+      background: var(--surface2);
+      padding: .6rem 1rem;
+      text-align: left;
+      border: 1px solid var(--border);
+      font-weight: 700;
+      color: var(--text);
+    }
+    .restful-table td {
+      padding: .6rem 1rem;
+      border: 1px solid var(--border);
+      color: #c0cad6;
+      vertical-align: top;
+    }
+    .restful-table tr:hover td { background: rgba(108,99,255,.05); }
+
+    /* =====================================================
+       RESPONSIVE TWEAKS
+    ===================================================== */
+    @media (max-width: 640px) {
+      #app { padding: 4.5rem .85rem 3rem; }
+      .module-header { flex-direction: column; }
+      .roadmap-grid { grid-template-columns: 1fr 1fr; }
+      #overall-bar { width: 80px; }
+      .flow-row { justify-content: center; }
+    }
+    @media (max-width: 380px) {
+      .roadmap-grid { grid-template-columns: 1fr; }
+    }
+
+    /* =====================================================
+       SCROLLBAR
+    ===================================================== */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+  </style>
+</head>
+<body>
+
+<!-- =====================================================
+     TOP HUD BAR
+===================================================== -->
+<header id="topbar" role="banner">
+  <div class="logo">REST<span>API</span> Design</div>
+  <nav id="hud" aria-label="Progress HUD">
+    <div id="xp-badge" aria-label="XP คะแนนที่ได้รับ">
+      <span class="icon" aria-hidden="true">⚡</span>
+      <span id="xp-display">0 XP</span>
+    </div>
+    <div id="overall-progress-wrap" aria-label="ความคืบหน้ารวม">
+      <div id="overall-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+        <div id="overall-bar-inner"></div>
+      </div>
+      <span id="overall-pct">0%</span>
+    </div>
+  </nav>
+</header>
+
+<!-- =====================================================
+     TOAST NOTIFICATION
+===================================================== -->
+<div id="toast" role="status" aria-live="polite" aria-atomic="true">
+  <span class="toast-icon" id="toast-icon">🎉</span>
+  <div class="toast-text">
+    <strong id="toast-title">ยินดีด้วย!</strong>
+    <small id="toast-msg">คุณได้รับ 10 XP</small>
+  </div>
+</div>
+
+<!-- =====================================================
+     MAIN APP
+===================================================== -->
+<main id="app" role="main">
+
+  <!-- ==================== HERO SCREEN ==================== -->
+  <section id="hero-section" class="screen active" aria-label="หน้าหลัก">
+    <h1>REST API Design<br>Masterclass</h1>
+    <p>เรียนรู้การออกแบบ REST API แบบ Professional ผ่าน Interactive Modules, Flow Simulator และ Real-world Scenarios</p>
+    <div class="badge-row">
+      <span class="badge hot">⚡ Intermediate</span>
+      <span class="badge">🎯 6 Modules</span>
+      <span class="badge">🧩 Quiz + Scenario</span>
+      <span class="badge">🏆 XP System</span>
+      <span class="badge">🔀 HTTP Flow Sim</span>
+    </div>
+    <button class="btn btn-primary" onclick="showScreen('pre-section')" aria-label="เริ่มเรียนพร้อม Pre-assessment">
+      🚀 เริ่มเรียนเลย
+    </button>
+    &nbsp;
+    <button class="btn btn-secondary" onclick="showScreen('roadmap-section')" aria-label="ดู Roadmap">
+      🗺️ ดู Roadmap
+    </button>
+  </section>
+
+  <!-- ==================== PRE-ASSESSMENT ==================== -->
+  <section id="pre-section" class="screen" aria-label="Pre-assessment">
+    <div id="pre-section-inner">
+      <h2>🔍 Pre-assessment</h2>
+      <p>ทำแบบทดสอบสั้น ๆ เพื่อวัดระดับความรู้เดิม — ไม่มีผล ใช้เพื่อปรับเนื้อหาให้เหมาะสม</p>
+      <div class="pre-bar-wrap"><div class="pre-bar" id="pre-bar" style="width:0%"></div></div>
+      <div id="pre-quiz-area"></div>
+      <div id="pre-result" class="pre-result hidden"></div>
+      <div class="btn-row" id="pre-nav"></div>
+    </div>
+  </section>
+
+  <!-- ==================== ROADMAP ==================== -->
+  <section id="roadmap-section" class="screen" aria-label="Learning Roadmap">
+    <h2 class="roadmap-title">🗺️ Learning Roadmap</h2>
+    <div class="roadmap-grid" id="roadmap-grid" role="list"></div>
+    <div style="text-align:center;">
+      <button class="btn btn-secondary" onclick="showScreen('hero-section')">← กลับหน้าหลัก</button>
+    </div>
+  </section>
+
+  <!-- ==================== MODULE CONTENT ==================== -->
+  <section id="module-section" class="screen" aria-label="เนื้อหา Module">
+    <div class="module-header">
+      <div>
+        <h2 id="mod-title"><span id="mod-num">M1</span> — <span id="mod-name">…</span></h2>
+        <p class="module-meta" id="mod-meta"></p>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="showScreen('roadmap-section')">← Roadmap</button>
+    </div>
+    <div class="module-progress">
+      <div class="module-progress-inner" id="mod-progress-bar" style="width:0%"></div>
+    </div>
+    <div id="module-content"></div>
+  </section>
+
+  <!-- ==================== SUMMARY ==================== -->
+  <section id="summary-section" class="screen" aria-label="สรุปผลการเรียน">
+    <h2>🏅 สรุปการเรียนรู้</h2>
+    <p class="text-muted mb-4">คุณเสร็จสิ้นทุก Module เรียบร้อยแล้ว!</p>
+    <div>
+      <div class="summary-stat"><span class="val" id="sum-xp">0</span><span class="lbl">XP รวม</span></div>
+      <div class="summary-stat"><span class="val" id="sum-mods">0</span><span class="lbl">Modules</span></div>
+      <div class="summary-stat"><span class="val" id="sum-q">0</span><span class="lbl">คำถาม</span></div>
+    </div>
+    <h3 style="margin-top:2.5rem;margin-bottom:.75rem;font-size:1.1rem;">📖 สิ่งที่คุณเรียนรู้วันนี้</h3>
+    <ul class="next-steps-list">
+      <li><strong>REST Principles</strong> — Stateless, Uniform Interface, Resource-based</li>
+      <li><strong>URL Design</strong> — Naming conventions, versioning, hierarchy</li>
+      <li><strong>HTTP Methods & Status Codes</strong> — ใช้ให้ถูกต้องตามความหมาย</li>
+      <li><strong>Request / Response Structure</strong> — Headers, Body, JSON best practices</li>
+      <li><strong>Authentication</strong> — Basic Auth, API Key, Bearer JWT</li>
+      <li><strong>Error Handling</strong> — Consistent error response format</li>
+    </ul>
+    <h3 style="margin-top:2rem;margin-bottom:.75rem;font-size:1.1rem;">🚀 Next Steps</h3>
+    <ul class="next-steps-list">
+      <li><strong>OpenAPI / Swagger</strong> — เขียน API Specification มาตรฐาน</li>
+      <li><strong>Rate Limiting & Throttling</strong> — ป้องกัน API Abuse</li>
+      <li><strong>HATEOAS</strong> — Hypermedia as the Engine of Application State</li>
+      <li><strong>GraphQL</strong> — ทางเลือกอื่นนอกจาก REST</li>
+      <li><strong>API Testing</strong> — Postman, Insomnia, Jest supertest</li>
+    </ul>
+    <div class="btn-row" style="justify-content:center;margin-top:2rem;">
+      <button class="btn btn-primary" onclick="restartAll()">🔄 เรียนใหม่</button>
+      <button class="btn btn-secondary" onclick="showScreen('roadmap-section')">📋 ดู Roadmap</button>
+    </div>
+  </section>
+
+</main>
+
+<!-- =====================================================
+     JAVASCRIPT — ENGINE
+===================================================== -->
+<script>
+/* =====================================================
+   STATE MANAGEMENT
+===================================================== */
+const state = {
+  xp: 0,
+  modulesCompleted: new Set(),
+  questionsAnswered: 0,
+  currentModule: null,
+  currentStep: 0,
+  preScore: 0
+};
+
+/* =====================================================
+   UTILITY FUNCTIONS
+===================================================== */
+
+/** Switch visible screen */
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (id === 'roadmap-section') renderRoadmap();
+  if (id === 'summary-section') renderSummary();
+}
+
+/** Add XP and show toast */
+function addXP(amount, title, msg) {
+  state.xp += amount;
+  updateHUD();
+  showToast('⚡', title || `+${amount} XP!`, msg || `คะแนนสะสม: ${state.xp} XP`);
+}
+
+/** Update top HUD bar */
+function updateHUD() {
+  document.getElementById('xp-display').textContent = `${state.xp} XP`;
+  const total = MODULES.length;
+  const done = state.modulesCompleted.size;
+  const pct = Math.round((done / total) * 100);
+  document.getElementById('overall-bar-inner').style.width = pct + '%';
+  document.getElementById('overall-pct').textContent = pct + '%';
+  document.getElementById('overall-bar').setAttribute('aria-valuenow', pct);
+}
+
+/** Show toast notification */
+let toastTimer;
+function showToast(icon, title, msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-icon').textContent = icon;
+  document.getElementById('toast-title').textContent = title;
+  document.getElementById('toast-msg').textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3200);
+}
+
+/** Toggle hint visibility */
+function toggleHint(id) {
+  const el = document.getElementById(id);
+  el.classList.toggle('show');
+}
+
+/* =====================================================
+   MODULE DATA DEFINITIONS
+===================================================== */
+const MODULES = [
+  {
+    id: 'm1',
+    num: 'M1',
+    name: 'REST คืออะไร?',
+    objective: 'เข้าใจหลักการ 6 ข้อของ REST Architecture',
+    xp: 50,
+    build: buildM1
+  },
+  {
+    id: 'm2',
+    num: 'M2',
+    name: 'URL & Resource Design',
+    objective: 'ออกแบบ URL และตั้งชื่อ Resource ให้ถูกต้อง',
+    xp: 60,
+    build: buildM2
+  },
+  {
+    id: 'm3',
+    num: 'M3',
+    name: 'HTTP Methods & Status Codes',
+    objective: 'เลือกใช้ HTTP Method และ Status Code ได้ถูกต้อง',
+    xp: 70,
+    build: buildM3
+  },
+  {
+    id: 'm4',
+    num: 'M4',
+    name: 'HTTP Flow Simulator',
+    objective: 'เข้าใจ Request/Response Lifecycle ผ่าน Simulation',
+    xp: 60,
+    build: buildM4
+  },
+  {
+    id: 'm5',
+    num: 'M5',
+    name: 'Authentication Patterns',
+    objective: 'เข้าใจรูปแบบ Authentication ที่ใช้ใน REST API',
+    xp: 70,
+    build: buildM5
+  },
+  {
+    id: 'm6',
+    num: 'M6',
+    name: 'Error Handling & Best Practices',
+    objective: 'ออกแบบ Error Response และ Best Practices สำหรับ Production',
+    xp: 80,
+    build: buildM6
+  }
+];
+
+/* =====================================================
+   ROADMAP RENDERER
+===================================================== */
+function renderRoadmap() {
+  const grid = document.getElementById('roadmap-grid');
+  grid.innerHTML = '';
+  MODULES.forEach((m, i) => {
+    const done = state.modulesCompleted.has(m.id);
+    const card = document.createElement('div');
+    card.className = 'roadmap-card' + (done ? ' done' : '');
+    card.setAttribute('role', 'listitem');
+    card.setAttribute('tabindex', '0');
+    card.setAttribute('aria-label', `${m.num}: ${m.name}`);
+    card.innerHTML = `
+      <div class="module-num">${m.num} · ${m.xp} XP</div>
+      <h3>${m.name}</h3>
+      <p>${m.objective}</p>
+      <span class="status-icon">${done ? '✅' : '▶️'}</span>
+    `;
+    card.addEventListener('click', () => openModule(i));
+    card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') openModule(i); });
+    grid.appendChild(card);
+  });
+}
+
+/* =====================================================
+   MODULE OPENER
+===================================================== */
+function openModule(idx) {
+  state.currentModule = idx;
+  state.currentStep = 0;
+  const m = MODULES[idx];
+  document.getElementById('mod-num').textContent = m.num;
+  document.getElementById('mod-name').textContent = m.name;
+  document.getElementById('mod-meta').textContent = `🎯 ${m.objective}  |  ⚡ ${m.xp} XP`;
+  showScreen('module-section');
+  m.build();
+}
+
+/** Update module progress bar based on step/total */
+function setModProgress(step, total) {
+  const pct = Math.round((step / total) * 100);
+  document.getElementById('mod-progress-bar').style.width = pct + '%';
+}
+
+/** Complete current module */
+function completeModule() {
+  const m = MODULES[state.currentModule];
+  if (!state.modulesCompleted.has(m.id)) {
+    state.modulesCompleted.add(m.id);
+    addXP(m.xp, `✅ Module ${m.num} เสร็จแล้ว!`, `+${m.xp} XP — ยอดเยี่ยม!`);
+    updateHUD();
+  }
+  setModProgress(1, 1);
+
+  // check if all modules done
+  if (state.modulesCompleted.size === MODULES.length) {
+    setTimeout(() => showScreen('summary-section'), 1200);
+  } else {
+    const next = state.currentModule + 1 < MODULES.length ? state.currentModule + 1 : null;
+    const nextHtml = next !== null
+      ? `<button class="btn btn-primary" onclick="openModule(${next})">▶️ Module ถัดไป: ${MODULES[next].name}</button>`
+      : '';
+    document.getElementById('module-content').innerHTML += `
+      <div class="content-card" style="border-color:var(--success);text-align:center;padding:2rem;">
+        <div style="font-size:2.5rem;margin-bottom:.75rem;">🎉</div>
+        <h3 style="justify-content:center;font-size:1.2rem;">Module สำเร็จ!</h3>
+        <p style="margin-bottom:1.25rem;">คุณผ่าน Module นี้แล้ว — ทำได้ดีมาก!</p>
+        <div class="btn-row" style="justify-content:center;">
+          ${nextHtml}
+          <button class="btn btn-secondary" onclick="showScreen('roadmap-section')">📋 กลับ Roadmap</button>
+        </div>
+      </div>
+    `;
+  }
+}
+
+/* =====================================================
+   QUIZ HELPER
+===================================================== */
+let quizAnswered = {};
+
+/**
+ * Render a multiple-choice quiz
+ * @param {string} containerId - DOM id to render into
+ * @param {object} q - question object { id, question, options:[], correct, explain, hint }
+ */
+function renderQuiz(containerId, q) {
+  const wrap = document.getElementById(containerId);
+  if (!wrap) return;
+  wrap.innerHTML = `
+    <div class="quiz-wrap" id="qw-${q.id}">
+      <div class="quiz-question">
+        <span class="q-num">❓ คำถาม</span>
+        ${q.question}
+      </div>
+      <div class="quiz-options" role="group" aria-label="ตัวเลือก">
+        ${q.options.map((opt, i) => `
+          <button class="quiz-option" role="radio" aria-checked="false"
+            onclick="answerQuiz('${q.id}', ${i}, ${q.correct}, '${escHtml(q.explain)}', this)"
+            aria-label="${opt}">
+            <span class="opt-key">${String.fromCharCode(65+i)}</span>
+            <span>${opt}</span>
+          </button>
+        `).join('')}
+      </div>
+      ${q.hint ? `
+        <button class="hint-toggle" onclick="toggleHint('hint-${q.id}')" aria-expanded="false">💡 แสดง Hint</button>
+        <div class="hint-box" id="hint-${q.id}" role="note">${q.hint}</div>
+      ` : ''}
+      <div class="quiz-feedback" id="fb-${q.id}" role="alert"></div>
+    </div>
+  `;
+}
+
+function escHtml(str) {
+  return str.replace(/'/g, '&#39;');
+}
+
+function answerQuiz(qid, chosen, correct, explain, btn) {
+  if (quizAnswered[qid]) return;
+  quizAnswered[qid] = true;
+  state.questionsAnswered++;
+
+  const wrap = document.getElementById(`qw-${qid}`);
+  const opts = wrap.querySelectorAll('.quiz-option');
+  opts.forEach((o, i) => {
+    o.classList.add('disabled');
+    o.setAttribute('aria-checked', i === chosen ? 'true' : 'false');
+    if (i === correct) o.classList.add('correct');
+    if (i === chosen && chosen !== correct) o.classList.add('wrong');
+  });
+
+  const isCorrect = chosen === correct;
+  const fb = document.getElementById(`fb-${qid}`);
+  fb.classList.add('show', isCorrect ? 'correct-fb' : 'wrong-fb');
+  fb.innerHTML = isCorrect
+    ? `<div class="fb-title">✅ ถูกต้อง!</div>${explain}`
+    : `<div class="fb-title">❌ ยังไม่ถูก — ลองดูอีกครั้ง</div>${explain}`;
+
+  if (isCorrect) {
+    addXP(10, '✅ ตอบถูก!', 'เยี่ยม! +10 XP');
+  } else {
+    showToast('💪', 'ยังไม่ถูกนะ', 'อ่านคำอธิบายแล้วลองอีกครั้ง');
+  }
+}
+
+/* =====================================================
+   FILL-IN-THE-BLANK HELPER
+===================================================== */
+let blankSelected = null;
+
+function selectBlank(el) {
+  document.querySelectorAll('.blank').forEach(b => b.style.outline = '');
+  el.style.outline = '2px solid var(--accent)';
+  blankSelected = el;
+}
+
+function fillBlank(chip) {
+  if (!blankSelected || blankSelected.dataset.filled === 'true') return;
+  const val = chip.textContent.trim();
+  const correct = blankSelected.dataset.answer;
+  blankSelected.textContent = val;
+  blankSelected.dataset.filled = 'true';
+  blankSelected.style.outline = '';
+  chip.classList.add('used');
+  if (val === correct) {
+    blankSelected.classList.add('correct');
+    addXP(10, '✅ ถูกต้อง!', `"${val}" ใช่แล้ว! +10 XP`);
+  } else {
+    blankSelected.classList.add('wrong');
+    showToast('💡', 'ยังไม่ถูก', `ลองดูว่า "${correct}" เหมาะสมกว่าไหม`);
+  }
+  blankSelected = null;
+}
+
+/* =====================================================
+   MODULE 1 — REST คืออะไร?
+===================================================== */
+function buildM1() {
+  const container = document.getElementById('module-content');
+  setModProgress(0, 4);
+  container.innerHTML = `
+    <!-- Content Card: REST Intro -->
+    <div class="content-card">
+      <h3>🌐 REST (Representational State Transfer) คืออะไร?</h3>
+      <p>REST คือ <strong>architectural style</strong> สำหรับการออกแบบ distributed hypermedia system เสนอโดย Roy Fielding ในปี 2000</p>
+      <p style="margin-top:.6rem;">แนวคิดหลักคือ ทุกอย่างใน API คือ <strong>Resource</strong> และ Resource จะถูก access ผ่าน <strong>Uniform Interface</strong></p>
+    </div>
+
+    <!-- Animated Concept: 6 Constraints -->
+    <div class="anim-diagram">
+      <h3 style="font-weight:700;margin-bottom:1rem;">📐 6 Constraints ของ REST</h3>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:.85rem;">
+        ${[
+          ['🔗 Client-Server', 'แยก UI ออกจาก Data Storage ทำให้ทั้งสองฝั่ง evolve ได้อิสระ'],
+          ['🔒 Stateless', 'แต่ละ Request ต้องมีข้อมูลครบในตัวเอง Server ไม่เก็บ Session'],
+          ['💾 Cacheable', 'Response ต้องบอกได้ว่า Cacheable หรือไม่ เพื่อเพิ่ม performance'],
+          ['🏗️ Layered System', 'Client ไม่รู้ว่าเชื่อมต่อกับ Server จริงหรือ Proxy/Load Balancer'],
+          ['🎯 Uniform Interface', 'Interface มาตรฐาน: Resource + HTTP Methods + Representations'],
+          ['💻 Code on Demand', '(Optional) Server ส่ง Executable Code ได้ เช่น JavaScript']
+        ].map(([t,d]) => `
+          <div class="content-card" style="margin:0;padding:1rem;">
+            <h3 style="font-size:.9rem;">${t}</h3>
+            <p style="font-size:.82rem;margin-top:.35rem;">${d}</p>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+
+    <!-- Analogy -->
+    <div class="scenario">
+      <div class="scenario-label">🌍 Real-world Analogy</div>
+      <h3>REST เหมือน Restaurant</h3>
+      <p>คิดว่า API เหมือนร้านอาหาร: <strong>Menu</strong> = API Documentation, <strong>Order</strong> = HTTP Request, <strong>Waiter</strong> = Server, <strong>Kitchen</strong> = Database — คุณ (Client) ไม่จำเป็นต้องรู้ว่า Kitchen ทำงานยังไง</p>
+    </div>
+
+    <!-- Quiz 1 -->
+    <div id="q1-container"></div>
+    <div id="q2-container" style="margin-top:1rem;"></div>
+
+    <div class="btn-row">
+      <button class="btn btn-success" onclick="finishM1()">✅ Module นี้เสร็จแล้ว →</button>
+    </div>
+  `;
+
+  // Render quizzes
+  renderQuiz('q1-container', {
+    id: 'q1',
+    question: 'ข้อใดอธิบาย Constraint "Stateless" ใน REST ได้ถูกต้องที่สุด?',
+    options: [
+      'Server บันทึก Session ของทุก Client เพื่อความสะดวก',
+      'แต่ละ Request ต้องมีข้อมูลทั้งหมดที่จำเป็น ไม่อาศัย Context จาก Request ก่อนหน้า',
+      'Client ไม่มี State ใด ๆ เลย',
+      'ทุก Response ต้องไม่มีข้อมูล State'
+    ],
+    correct: 1,
+    explain: 'Stateless หมายถึง Server ไม่จำ State ระหว่าง Request ทำให้ Server Scalable ได้ง่ายขึ้น แต่ละ Request ต้องพกข้อมูลครบ เช่น Token ใน Authorization Header',
+    hint: 'คิดถึง HTTP ที่เป็น Stateless Protocol โดยธรรมชาติ'
+  });
+
+  renderQuiz('q2-container', {
+    id: 'q2',
+    question: 'ข้อใดคือประโยชน์หลักของ Layered System Constraint?',
+    options: [
+      'ทำให้ Client ต้องเขียน Code น้อยลง',
+      'ทำให้ Response เร็วขึ้นเสมอ',
+      'ซ่อน Infrastructure จาก Client ทำให้ใส่ Load Balancer/Proxy ได้โดยไม่กระทบ Client',
+      'บังคับให้ใช้ HTTPS'
+    ],
+    correct: 2,
+    explain: 'Layered System ทำให้ระบบ scale ได้โดยใส่ Intermediary (Proxy, CDN, Load Balancer) โดยที่ Client ไม่รู้ — เป็นหัวใจของ REST ที่ทำให้ deploy ง่าย',
+    hint: 'นึกถึง Nginx อยู่หน้า Node.js Server'
+  });
+
+  setModProgress(2, 4);
+}
+
+function finishM1() { completeModule(); }
+
+/* =====================================================
+   MODULE 2 — URL & Resource Design
+===================================================== */
+function buildM2() {
+  const container = document.getElementById('module-content');
+  setModProgress(0, 5);
+  container.innerHTML = `
+    <!-- URL Design Rules -->
+    <div class="content-card">
+      <h3>🔗 URL Design Principles</h3>
+      <ul>
+        <li>ใช้ <strong>Noun</strong> ไม่ใช่ Verb: <code class="font-mono">/users</code> ✅  ไม่ใช่ <code class="font-mono">/getUsers</code> ❌</li>
+        <li>ใช้ <strong>Plural</strong> สำหรับ Collection: <code class="font-mono">/articles</code> ✅  <code class="font-mono">/article</code> ❌</li>
+        <li>ใช้ <strong>lowercase</strong> และ hyphens: <code class="font-mono">/blog-posts</code> ✅  <code class="font-mono">/BlogPosts</code> ❌</li>
+        <li>แสดง <strong>Hierarchy</strong> ผ่าน Path: <code class="font-mono">/users/{id}/orders</code></li>
+        <li>ใส่ <strong>Version</strong> ใน URL หรือ Header: <code class="font-mono">/v1/users</code></li>
+      </ul>
+    </div>
+
+    <!-- Resource Hierarchy Diagram -->
+    <div class="anim-diagram">
+      <h3 style="font-weight:700;margin-bottom:1rem;">🗂️ Resource Hierarchy ตัวอย่าง E-Commerce API</h3>
+      <div class="code-block">
+<span class="comment"># Collection</span>
+<span class="url">GET /v1/products</span>          <span class="comment">→ รายการสินค้าทั้งหมด</span>
+
+<span class="comment"># Single Resource</span>
+<span class="url">GET /v1/products/42</span>        <span class="comment">→ สินค้า id=42</span>
+
+<span class="comment"># Nested Resource</span>
+<span class="url">GET /v1/products/42/reviews</span> <span class="comment">→ รีวิวของสินค้า 42</span>
+
+<span class="comment"># Query Parameters (Filtering)</span>
+<span class="url">GET /v1/products?category=shoes&amp;sort=price&amp;order=asc</span>
+
+<span class="comment"># Query Parameters (Pagination)</span>
+<span class="url">GET /v1/products?page=2&amp;limit=20</span>
+      </div>
+    </div>
+
+    <!-- Endpoint Builder Interactive -->
+    <div class="endpoint-builder">
+      <h3 style="font-weight:700;margin-bottom:1rem;">🛠️ Endpoint Builder — ลองสร้างเอง</h3>
+      <div class="ep-row">
+        <select class="ep-select" id="ep-method" onchange="evalEndpoint()">
+          <option>GET</option><option>POST</option><option>PUT</option>
+          <option>PATCH</option><option>DELETE</option>
+        </select>
+        <input class="ep-input" id="ep-path" placeholder="/v1/users/{id}/orders"
+          oninput="evalEndpoint()" value="/v1/users">
+      </div>
+      <div class="ep-result" id="ep-result" aria-live="polite">พิมพ์ Path แล้วกด Evaluate</div>
+    </div>
+
+    <!-- Fill in the Blank -->
+    <div class="fill-blank">
+      <h3 style="font-weight:700;margin-bottom:.75rem;">✏️ เติมคำให้ถูกต้อง</h3>
+      <p class="text-muted text-sm mb-3">คลิกเลือก Blank แล้วคลิก Option ด้านล่างเพื่อเติม</p>
+      <div class="blank-line">
+        GET &nbsp;
+        <span class="blank" data-answer="/v1/products" onclick="selectBlank(this)">/v1/products</span>
+        &nbsp; — ดึงรายการสินค้าทั้งหมด
+      </div>
+      <div class="blank-line">
+        POST &nbsp;
+        <span class="blank" data-answer="/v1/orders" onclick="selectBlank(this)">___</span>
+        &nbsp; — สร้าง Order ใหม่
+      </div>
+      <div class="blank-line">
+        DELETE &nbsp;
+        <span class="blank" data-answer="/v1/users/{id}" onclick="selectBlank(this)">___</span>
+        &nbsp; — ลบผู้ใช้
+      </div>
+      <div class="blank-options">
+        <button class="blank-chip" onclick="fillBlank(this)">/v1/orders</button>
+        <button class="blank-chip" onclick="fillBlank(this)">/v1/users/{id}</button>
+        <button class="blank-chip" onclick="fillBlank(this)">/deleteUser</button>
+        <button class="blank-chip" onclick="fillBlank(this)">/v1/products</button>
+        <button class="blank-chip" onclick="fillBlank(this)">/createOrder</button>
+      </div>
+    </div>
+
+    <!-- Quiz -->
+    <div id="q3-container"></div>
+
+    <div class="btn-row" style="margin-top:1.5rem;">
+      <button class="btn btn-success" onclick="completeModule()">✅ Module นี้เสร็จแล้ว →</button>
+    </div>
+  `;
+
+  // Mark first blank as pre-filled/correct
+  const blanks = document.querySelectorAll('.blank');
+  blanks[0].classList.add('correct');
+  blanks[0].dataset.filled = 'true';
+
+  renderQuiz('q3-container', {
+    id: 'q3',
+    question: 'URL ใดต่อไปนี้ออกแบบตาม REST Conventions ได้ดีที่สุด?',
+    options: [
+      '/api/GetUserById/123',
+      '/api/v1/users/123',
+      '/api/v1/user/123',
+      '/api/v1/fetchUser?id=123'
+    ],
+    correct: 1,
+    explain: '/api/v1/users/123 ถูกต้องเพราะ: ใช้ Plural (users), มี Version (/v1), ใช้ Noun ไม่ใช่ Verb, และ Resource ID อยู่ใน Path',
+    hint: 'REST URL ควรเป็น Noun, Plural, Lowercase และมี Versioning'
+  });
+
+  setModProgress(2, 5);
+  evalEndpoint();
+}
+
+/** Evaluate endpoint and give feedback */
+function evalEndpoint() {
+  const method = document.getElementById('ep-method').value;
+  const path   = document.getElementById('ep-path').value.trim();
+  const result = document.getElementById('ep-result');
+
+  const issues = [];
+  const good   = [];
+
+  if (/[A-Z]/.test(path)) issues.push('❌ URL ควรเป็น lowercase ทั้งหมด');
+  else good.push('✅ Lowercase ถูกต้อง');
+
+  if (/^\/v\d/.test(path)) good.push('✅ มี Versioning (/v1, /v2 …)');
+  else issues.push('⚠️ ควรใส่ Version เช่น /v1/...');
+
+  if (/get|post|delete|create|update|fetch/i.test(path))
+    issues.push('❌ URL ไม่ควรมี Verb (get, create, delete …) ให้ใช้ HTTP Method แทน');
+  else good.push('✅ ไม่มี Verb ใน URL');
+
+  if (path.includes('_')) issues.push('⚠️ ควรใช้ hyphen (-) แทน underscore (_)');
+
+  const all = [...good, ...issues];
+  result.innerHTML = all.map(l =>
+    `<div class="${l.startsWith('✅') ? 'good' : 'bad'}">${l}</div>`
+  ).join('');
+}
+
+/* =====================================================
+   MODULE 3 — HTTP Methods & Status Codes
+===================================================== */
+function buildM3() {
+  const container = document.getElementById('module-content');
+  setModProgress(0, 5);
+  container.innerHTML = `
+    <!-- Methods Table -->
+    <div class="anim-diagram">
+      <h3 style="font-weight:700;margin-bottom:1rem;">⚡ HTTP Methods Reference</h3>
+      <div style="overflow-x:auto;">
+        <table class="restful-table" aria-label="HTTP Methods">
+          <thead>
+            <tr>
+              <th>Method</th><th>ความหมาย</th><th>Idempotent?</th><th>Safe?</th><th>Use Case</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${[
+              ['GET',    'ดึงข้อมูล',   'Yes','Yes','ดึง Resource'],
+              ['POST',   'สร้างใหม่',   'No', 'No', 'Create Resource'],
+              ['PUT',    'แทนที่ทั้งหมด','Yes','No', 'Replace Resource'],
+              ['PATCH',  'แก้ไขบางส่วน','No', 'No', 'Update fields'],
+              ['DELETE', 'ลบ',          'Yes','No', 'Remove Resource']
+            ].map(([m,d,ide,safe,use]) => `
+              <tr>
+                <td><span class="method-badge method-${m}">${m}</span></td>
+                <td>${d}</td>
+                <td>${ide === 'Yes' ? '✅' : '❌'}</td>
+                <td>${safe === 'Yes' ? '✅' : '❌'}</td>
+                <td>${use}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Status Code Explorer -->
+    <div class="status-explorer">
+      <h3 style="font-weight:700;">🔢 Status Code Explorer — คลิกเพื่อดูรายละเอียด</h3>
+      <div class="status-grid" id="status-chips" role="group" aria-label="HTTP Status Codes"></div>
+      <div class="status-detail" id="status-detail" aria-live="polite">คลิก Status Code เพื่อดูความหมาย</div>
+    </div>
+
+    <!-- Scenario: Method Selection -->
+    <div class="scenario">
+      <div class="scenario-label">🌍 Real-world Scenario</div>
+      <h3>ระบบ E-Commerce: เลือก Method ให้ถูกต้อง</h3>
+      <p>ลูกค้า Update เฉพาะ <code class="font-mono">shipping_address</code> ใน Order — ควรใช้ Method ใด?</p>
+    </div>
+
+    <div id="q4-container"></div>
+    <div id="q5-container" style="margin-top:1rem;"></div>
+
+    <div class="btn-row" style="margin-top:1.5rem;">
+      <button class="btn btn-success" onclick="completeModule()">✅ Module นี้เสร็จแล้ว →</button>
+    </div>
+  `;
+
+  // Render status chips
+  const statusData = {
+    '200 OK':                  { cls:'s2xx', desc:'<strong>Success.</strong> Request สำเร็จ ใช้กับ GET, PUT, PATCH response ทั่วไป' },
+    '201 Created':             { cls:'s2xx', desc:'<strong>Created.</strong> Resource ถูกสร้างสำเร็จ — ใช้กับ POST และควร return Location header' },
+    '204 No Content':          { cls:'s2xx', desc:'<strong>No Content.</strong> สำเร็จแต่ไม่มี Body เช่น DELETE สำเร็จ' },
+    '301 Moved Permanently':   { cls:'s3xx', desc:'<strong>Redirect.</strong> Resource ย้ายถาวร Browser/Client ควร Update URL' },
+    '304 Not Modified':        { cls:'s3xx', desc:'<strong>Not Modified.</strong> Cache ยังใช้ได้ Response ไม่มี Body ประหยัด Bandwidth' },
+    '400 Bad Request':         { cls:'s4xx', desc:'<strong>Client Error.</strong> Request Format ผิด, Validation fail — ควรส่ง error detail ใน Body' },
+    '401 Unauthorized':        { cls:'s4xx', desc:'<strong>Auth Required.</strong> ยังไม่ได้ Login — ต่างจาก 403 ที่ Login แล้วแต่ไม่มีสิทธิ์' },
+    '403 Forbidden':           { cls:'s4xx', desc:'<strong>No Permission.</strong> Login แล้วแต่ไม่มีสิทธิ์ เช่น User ธรรมดา access admin endpoint' },
+    '404 Not Found':           { cls:'s4xx', desc:'<strong>Not Found.</strong> Resource ไม่มีอยู่ ระวัง: ไม่ควรใช้ 404 แทน 403 เพื่อซ่อน endpoint' },
+    '409 Conflict':            { cls:'s4xx', desc:'<strong>Conflict.</strong> มี Resource อยู่แล้ว เช่น email ซ้ำตอน register' },
+    '422 Unprocessable Entity':{ cls:'s4xx', desc:'<strong>Validation Error.</strong> Format ถูกต้องแต่ข้อมูล Invalid เช่น อายุเป็นลบ' },
+    '429 Too Many Requests':   { cls:'s4xx', desc:'<strong>Rate Limited.</strong> Client ส่ง Request เกิน limit — ควรใส่ Retry-After header' },
+    '500 Internal Server Error':{ cls:'s5xx', desc:'<strong>Server Error.</strong> Bug หรือ unexpected error — ไม่ควร leak stack trace ใน Production' },
+    '502 Bad Gateway':         { cls:'s5xx', desc:'<strong>Bad Gateway.</strong> Proxy/Gateway ได้รับ response ผิดพลาดจาก upstream' },
+    '503 Service Unavailable': { cls:'s5xx', desc:'<strong>Service Down.</strong> Server ไม่พร้อม เช่น Maintenance หรือ Overload' }
+  };
+
+  const chipsContainer = document.getElementById('status-chips');
+  Object.entries(statusData).forEach(([code, info]) => {
+    const chip = document.createElement('button');
+    chip.className = `status-chip ${info.cls}`;
+    chip.textContent = code;
+    chip.setAttribute('aria-label', `Status ${code}`);
+    chip.addEventListener('click', () => {
+      document.getElementById('status-detail').innerHTML = info.desc;
+    });
+    chipsContainer.appendChild(chip);
+  });
+
+  renderQuiz('q4-container', {
+    id: 'q4',
+    question: 'ลูกค้า Update เฉพาะ shipping_address ใน Order ที่มีอยู่แล้ว — ควรใช้ Method และ Status Code ใด?',
+    options: [
+      'POST /orders/{id} → 201 Created',
+      'PUT /orders/{id} → 200 OK (แต่ต้องส่งข้อมูลทั้งหมดด้วย)',
+      'PATCH /orders/{id} → 200 OK',
+      'GET /orders/{id}/update → 200 OK'
+    ],
+    correct: 2,
+    explain: 'PATCH ใช้สำหรับ Partial Update ส่งเฉพาะ field ที่ต้องการแก้ไข ส่วน PUT ต้องส่ง Resource ทั้งหมด การใช้ GET สำหรับ Mutation ผิด REST principle',
+    hint: 'PATCH = Partial, PUT = Replace All'
+  });
+
+  renderQuiz('q5-container', {
+    id: 'q5',
+    question: 'API รับ email ซ้ำตอน Register ควร return Status Code อะไร?',
+    options: ['400 Bad Request', '404 Not Found', '409 Conflict', '500 Internal Server Error'],
+    correct: 2,
+    explain: '409 Conflict เหมาะเมื่อ Resource ที่พยายามสร้างซ้ำกับที่มีอยู่ เช่น email ซ้ำ, username ซ้ำ — 400 ใช้สำหรับ Format/Validation error ทั่วไป',
+    hint: 'ถามตัวเองว่า "เกิด Conflict กับ Resource ที่มีอยู่ไหม?"'
+  });
+
+  setModProgress(2, 5);
+}
+
+/* =====================================================
+   MODULE 4 — HTTP FLOW SIMULATOR
+===================================================== */
+function buildM4() {
+  const container = document.getElementById('module-content');
+  setModProgress(0, 3);
+
+  const flows = [
+    {
+      label: 'GET /v1/products/42',
+      steps: [
+        { msg: '📤 Client ส่ง: GET /v1/products/42 HTTP/1.1\nHost: api.shop.com\nAuthorization: Bearer eyJ…', active: 'client' },
+        { msg: '🔍 Server รับ Request, Validate Token, Route ไปยัง ProductController.getById(42)', active: 'server' },
+        { msg: '💾 DB Query: SELECT * FROM products WHERE id = 42', active: 'db' },
+        { msg: '✅ DB ส่ง Row กลับ → Server สร้าง JSON Response', active: 'server' },
+        { msg: '📥 Client รับ:\nHTTP/1.1 200 OK\nContent-Type: application/json\n\n{ "id": 42, "name": "Nike Air", "price": 3500 }', active: 'client' }
+      ]
+    },
+    {
+      label: 'POST /v1/orders (Create Order)',
+      steps: [
+        { msg: '📤 Client ส่ง: POST /v1/orders HTTP/1.1\nContent-Type: application/json\nAuthorization: Bearer eyJ…\n\n{ "product_id": 42, "qty": 2 }', active: 'client' },
+        { msg: '🔐 Server: Authenticate → Validate Body (qty > 0, product exists)', active: 'server' },
+        { msg: '💾 DB: BEGIN TRANSACTION\nINSERT INTO orders (user_id, product_id, qty) VALUES (7, 42, 2)', active: 'db' },
+        { msg: '💾 DB: COMMIT → Return new order id=99', active: 'db' },
+        { msg: '📥 Client รับ:\nHTTP/1.1 201 Created\nLocation: /v1/orders/99\n\n{ "id": 99, "status": "pending" }', active: 'client' }
+      ]
+    },
+    {
+      label: 'DELETE /v1/orders/99',
+      steps: [
+        { msg: '📤 Client: DELETE /v1/orders/99\nAuthorization: Bearer eyJ…', active: 'client' },
+        { msg: '🔐 Server: Auth Check → Permission Check (owner or admin?)', active: 'server' },
+        { msg: '💾 DB: DELETE FROM orders WHERE id = 99 AND user_id = 7', active: 'db' },
+        { msg: '📥 Client รับ:\nHTTP/1.1 204 No Content\n(ไม่มี Response Body)', active: 'client' }
+      ]
+    }
+  ];
+
+  let simFlow = 0;
+  let simStep = 0;
+  let simRunning = false;
+
+  container.innerHTML = `
+    <div id="flow-sim">
+      <div class="flow-title">🔀 HTTP Flow Simulator</div>
+
+      <!-- Flow selector -->
+      <div style="display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1.25rem;" role="group" aria-label="เลือก Scenario">
+        ${flows.map((f, i) => `
+          <button class="btn btn-secondary btn-sm" id="flow-btn-${i}"
+            onclick="selectFlow(${i})">${f.label}</button>
+        `).join('')}
+      </div>
+
+      <!-- Nodes -->
+      <div class="flow-row">
+        <div class="flow-node client" id="fn-client">CLIENT</div>
+        <div class="flow-arrow">⇄</div>
+        <div class="flow-node server" id="fn-server">SERVER</div>
+        <div class="flow-arrow">⇄</div>
+        <div class="flow-node db" id="fn-db">DATABASE</div>
+      </div>
+
+      <!-- Message display -->
+      <div class="flow-message" id="flow-msg" style="white-space:pre-wrap;font-size:.8rem;">เลือก Scenario แล้วกด "เริ่ม Simulate"</div>
+
+      <!-- Controls -->
+      <div class="btn-row" style="margin-top:.75rem;">
+        <button class="btn btn-primary btn-sm" id="sim-play-btn" onclick="simPlay()">▶️ เริ่ม</button>
+        <button class="btn btn-secondary btn-sm" onclick="simReset()">↺ Reset</button>
+      </div>
+      <div id="sim-step-label" class="text-xs text-muted" style="margin-top:.5rem;"></div>
+    </div>
+
+    <!-- Concept card -->
+    <div class="content-card">
+      <h3>📋 Anatomy of HTTP Request</h3>
+      <div class="code-block">
+<span class="method" style="color:#60a5fa;">POST</span> <span class="url">/v1/products</span> HTTP/1.1
+Host: api.example.com
+<span class="keyword">Authorization:</span> <span class="string">Bearer eyJhbGciOiJIUzI1NiJ9…</span>
+<span class="keyword">Content-Type:</span> <span class="string">application/json</span>
+<span class="keyword">Accept:</span> <span class="string">application/json</span>
+<span class="keyword">X-Request-ID:</span> <span class="number">a1b2c3d4</span>
+
+{
+  <span class="string">"name"</span>: <span class="string">"Nike Air Force"</span>,
+  <span class="string">"price"</span>: <span class="number">3500</span>,
+  <span class="string">"category"</span>: <span class="string">"shoes"</span>
+}
+      </div>
+    </div>
+
+    <div id="q6-container"></div>
+
+    <div class="btn-row" style="margin-top:1.5rem;">
+      <button class="btn btn-success" onclick="completeModule()">✅ Module นี้เสร็จแล้ว →</button>
+    </div>
+  `;
+
+  // Expose sim functions via closure
+  window.selectFlow = function(i) {
+    simFlow = i;
+    simStep = 0;
+    simRunning = false;
+    flows.forEach((_, j) => {
+      document.getElementById(`flow-btn-${j}`).classList.toggle('btn-primary', j === i);
+      document.getElementById(`flow-btn-${j}`).classList.toggle('btn-secondary', j !== i);
+    });
+    document.getElementById('flow-msg').textContent = `Scenario: ${flows[i].label}\nกด "เริ่ม" เพื่อดู Flow ทีละขั้นตอน`;
+    document.getElementById('sim-step-label').textContent = '';
+    ['fn-client','fn-server','fn-db'].forEach(n => document.getElementById(n).classList.remove('active'));
+    document.getElementById('sim-play-btn').textContent = '▶️ เริ่ม';
+  };
+
+  window.simPlay = function() {
+    const flow = flows[simFlow];
+    if (simStep >= flow.steps.length) { simReset(); return; }
+    const s = flow.steps[simStep];
+    document.getElementById('flow-msg').textContent = s.msg;
+    ['fn-client','fn-server','fn-db'].forEach(n => document.getElementById(n).classList.remove('active'));
+    document.getElementById(`fn-${s.active}`).classList.add('active');
+    document.getElementById('sim-step-label').textContent = `Step ${simStep + 1} / ${flow.steps.length}`;
+    simStep++;
+    if (simStep >= flow.steps.length) {
+      document.getElementById('sim-play-btn').textContent = '↺ Reset';
+      addXP(5, '🔀 Flow เสร็จสิ้น', '+5 XP');
+    }
+  };
+
+  window.simReset = function() {
+    simStep = 0;
+    document.getElementById('flow-msg').textContent = `Scenario: ${flows[simFlow].label}\nกด "เริ่ม" เพื่อดู Flow ทีละขั้นตอน`;
+    document.getElementById('sim-step-label').textContent = '';
+    document.getElementById('sim-play-btn').textContent = '▶️ เริ่ม';
+    ['fn-client','fn-server','fn-db'].forEach(n => document.getElementById(n).classList.remove('active'));
+  };
+
+  selectFlow(0);
+
+  renderQuiz('q6-container', {
+    id: 'q6',
+    question: 'Header ใดที่ Client ควรส่งเพื่อบอก Server ว่า Request Body เป็น JSON?',
+    options: [
+      'Accept: application/json',
+      'Content-Type: application/json',
+      'X-Data-Format: json',
+      'Authorization: json'
+    ],
+    correct: 1,
+    explain: 'Content-Type บอก Server ว่า Body ที่ส่งไปเป็น Format อะไร ส่วน Accept บอก Server ว่า Client ต้องการรับ Response ในรูปแบบใด — ทั้งสองอาจต้องใช้คู่กัน',
+    hint: 'Content-Type = "ฉันส่งอะไรไป", Accept = "ฉันต้องการรับอะไรกลับ"'
+  });
+
+  setModProgress(1, 3);
+}
+
+/* =====================================================
+   MODULE 5 — AUTHENTICATION PATTERNS
+===================================================== */
+function buildM5() {
+  const container = document.getElementById('module-content');
+  setModProgress(0, 4);
+  container.innerHTML = `
+    <!-- Auth Overview -->
+    <div class="content-card">
+      <h3>🔐 Authentication vs Authorization</h3>
+      <ul>
+        <li><strong>Authentication (AuthN)</strong> — "คุณคือใคร?" ตรวจสอบตัวตน</li>
+        <li><strong>Authorization (AuthZ)</strong> — "คุณทำอะไรได้บ้าง?" ตรวจสอบสิทธิ์</li>
+      </ul>
+      <p style="margin-top:.75rem;">REST API ส่วนมากใช้ <strong>JWT (Bearer Token)</strong> เป็นกลไกหลัก ร่วมกับ OAuth 2.0 flow</p>
+    </div>
+
+    <!-- Auth Patterns Diagram -->
+    <div class="anim-diagram">
+      <h3 style="font-weight:700;margin-bottom:1rem;">🔑 Auth Pattern เปรียบเทียบ</h3>
+      <div style="overflow-x:auto;">
+        <table class="restful-table" aria-label="Authentication Patterns">
+          <thead>
+            <tr><th>Pattern</th><th>Header ที่ใช้</th><th>ข้อดี</th><th>ข้อเสีย</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Basic Auth</strong></td>
+              <td><code class="font-mono">Authorization: Basic base64(user:pass)</code></td>
+              <td>ง่าย</td>
+              <td>ไม่ Secure ถ้าไม่ใช้ HTTPS, ส่ง credentials ทุก request</td>
+            </tr>
+            <tr>
+              <td><strong>API Key</strong></td>
+              <td><code class="font-mono">X-API-Key: abc123</code> หรือ Query Param</td>
+              <td>ง่าย, ใช้กับ Machine-to-Machine</td>
+              <td>ถ้าหายยากจะ revoke, ไม่มี Expiry โดยธรรมชาติ</td>
+            </tr>
+            <tr>
+              <td><strong>Bearer JWT</strong></td>
+              <td><code class="font-mono">Authorization: Bearer eyJ…</code></td>
+              <td>Stateless, มี Expiry, Payload มีข้อมูล</td>
+              <td>ไม่สามารถ Revoke ก่อน Expire (ต้องทำ Blacklist)</td>
+            </tr>
+            <tr>
+              <td><strong>OAuth 2.0</strong></td>
+              <td>Bearer Token จาก Authorization Server</td>
+              <td>Standard, Delegated Auth, Scopes</td>
+              <td>ซับซ้อน, ต้องใช้ Authorization Server</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- JWT Structure -->
+    <div class="content-card">
+      <h3>🧩 JWT Structure</h3>
+      <div class="code-block">
+<span class="comment"># JWT = 3 ส่วนคั่นด้วย dot (.)</span>
+
+<span class="string">header</span>.<span class="keyword">payload</span>.<span class="number">signature</span>
+
+<span class="comment"># Header (Base64URL)</span>
+{ <span class="string">"alg"</span>: <span class="string">"HS256"</span>, <span class="string">"typ"</span>: <span class="string">"JWT"</span> }
+
+<span class="comment"># Payload (Base64URL) — ไม่ควรใส่ข้อมูล Sensitive!</span>
+{
+  <span class="string">"sub"</span>: <span class="string">"user_id_123"</span>,
+  <span class="string">"role"</span>: <span class="string">"admin"</span>,
+  <span class="string">"iat"</span>: <span class="number">1714567890</span>,
+  <span class="string">"exp"</span>: <span class="number">1714571490</span>  <span class="comment">// หมดอายุใน 1 ชั่วโมง</span>
+}
+
+<span class="comment"># Signature — ใช้ verify ว่า Token ไม่ถูก Tamper</span>
+HMACSHA256(base64url(header)+"."+base64url(payload), secret)
+      </div>
+    </div>
+
+    <!-- Scenario -->
+    <div class="scenario">
+      <div class="scenario-label">🌍 Real-world Scenario</div>
+      <h3>Mobile App: Login Flow ด้วย JWT</h3>
+      <p>
+        1. App ส่ง <code class="font-mono">POST /v1/auth/login</code> พร้อม credentials<br>
+        2. Server verify → Return <code class="font-mono">access_token</code> (15 นาที) + <code class="font-mono">refresh_token</code> (7 วัน)<br>
+        3. App เก็บ Token ใน <strong>Secure Storage</strong> (ไม่ใช่ localStorage!)<br>
+        4. ทุก Request ส่ง <code class="font-mono">Authorization: Bearer {access_token}</code><br>
+        5. เมื่อ access_token หมดอายุ ใช้ refresh_token ขอ token ใหม่
+      </p>
+    </div>
+
+    <div id="q7-container"></div>
+    <div id="q8-container" style="margin-top:1rem;"></div>
+
+    <div class="btn-row" style="margin-top:1.5rem;">
+      <button class="btn btn-success" onclick="completeModule()">✅ Module นี้เสร็จแล้ว →</button>
+    </div>
+  `;
+
+  renderQuiz('q7-container', {
+    id: 'q7',
+    question: 'ข้อใดคือปัญหาหลักของ JWT เมื่อเทียบกับ Session-based Auth?',
+    options: [
+      'JWT ขนาดใหญ่เกินไปจนใส่ Header ไม่ได้',
+      'JWT ไม่สามารถ Revoke ก่อน Expire ได้โดยง่าย ต้องทำ Token Blacklist',
+      'JWT เข้ารหัส Payload จึงอ่านข้อมูลไม่ได้',
+      'JWT ต้องใช้ Database ทุก Request'
+    ],
+    correct: 1,
+    explain: 'JWT เป็น Stateless — Server ไม่เก็บอะไร ดังนั้นถ้า Logout หรือ Token ถูก Compromise จะ Revoke ยาก ต้องทำ Blacklist ใน Redis หรือเปลี่ยน Secret (ส่งผลทุก Token)',
+    hint: 'ข้อดีของ Stateless คือ Scale ง่าย แต่ข้อเสียคือ…?'
+  });
+
+  renderQuiz('q8-container', {
+    id: 'q8',
+    question: 'ควรเก็บ JWT refresh_token ไว้ที่ใดใน Browser?',
+    options: [
+      'localStorage',
+      'sessionStorage',
+      'HttpOnly Cookie',
+      'URL Query Parameter'
+    ],
+    correct: 2,
+    explain: 'HttpOnly Cookie ปลอดภัยที่สุดเพราะ JavaScript อ่านไม่ได้ ป้องกัน XSS ส่วน localStorage/sessionStorage เสี่ยง XSS และ URL Parameter เปิดเผยใน Browser History',
+    hint: 'ข้อมูล Sensitive ควรป้องกัน XSS ซึ่ง JavaScript เข้าถึงไม่ได้'
+  });
+
+  setModProgress(2, 4);
+}
+
+/* =====================================================
+   MODULE 6 — ERROR HANDLING & BEST PRACTICES
+===================================================== */
+function buildM6() {
+  const container = document.getElementById('module-content');
+  setModProgress(0, 5);
+  container.innerHTML = `
+    <!-- Error Response Structure -->
+    <div class="content-card">
+      <h3>❌ Error Response Format มาตรฐาน</h3>
+      <p class="mb-3">Consistent error format ช่วยให้ Client จัดการ Error ได้ง่ายขึ้น</p>
+      <div class="code-block">
+<span class="comment">// ❌ Bad — ข้อมูลไม่พอ, inconsistent</span>
+HTTP/1.1 400
+{ <span class="string">"error"</span>: <span class="string">"bad"</span> }
+
+<span class="comment">// ✅ Good — Consistent, Detailed, Actionable</span>
+HTTP/1.1 422 Unprocessable Entity
+Content-Type: application/problem+json
+
+{
+  <span class="string">"type"</span>:     <span class="string">"https://api.shop.com/errors/validation"</span>,
+  <span class="string">"title"</span>:    <span class="string">"Validation Failed"</span>,
+  <span class="string">"status"</span>:   <span class="number">422</span>,
+  <span class="string">"detail"</span>:   <span class="string">"One or more fields are invalid"</span>,
+  <span class="string">"instance"</span>: <span class="string">"/v1/orders"</span>,
+  <span class="string">"errors"</span>: [
+    { <span class="string">"field"</span>: <span class="string">"qty"</span>, <span class="string">"message"</span>: <span class="string">"must be greater than 0"</span> },
+    { <span class="string">"field"</span>: <span class="string">"product_id"</span>, <span class="string">"message"</span>: <span class="string">"product not found"</span> }
+  ]
+}
+      </div>
+      <p class="text-muted text-sm">RFC 7807 (Problem Details for HTTP APIs) เป็น Standard ที่แนะนำ</p>
+    </div>
+
+    <!-- Best Practices Checklist -->
+    <div class="anim-diagram">
+      <h3 style="font-weight:700;margin-bottom:1rem;">✅ REST API Best Practices Checklist</h3>
+      <div id="checklist"></div>
+    </div>
+
+    <!-- Scenario -->
+    <div class="scenario">
+      <div class="scenario-label">🌍 Real-world Scenario</div>
+      <h3>Production API: สิ่งที่ต้องมีก่อน Launch</h3>
+      <p>
+        ✅ Rate Limiting (429 + Retry-After)<br>
+        ✅ CORS Policy กำหนด Origin ที่อนุญาต<br>
+        ✅ HTTPS เสมอ (ไม่มี HTTP redirect ที่รั่ว credentials)<br>
+        ✅ ไม่ Expose Stack Trace ใน 5xx Response<br>
+        ✅ Correlation/Request ID ทุก Response<br>
+        ✅ API Documentation (OpenAPI/Swagger)
+      </p>
+    </div>
+
+    <!-- Final Quiz -->
+    <div id="q9-container"></div>
+    <div id="q10-container" style="margin-top:1rem;"></div>
+
+    <div class="btn-row" style="margin-top:1.5rem;">
+      <button class="btn btn-success" onclick="completeModule()">🏆 เสร็จสิ้นทุก Module!</button>
+    </div>
+  `;
+
+  // Render checklist
+  const checkItems = [
+    ['ใช้ HTTPS เสมอ', 'ป้องกัน MITM Attack'],
+    ['Version API ตั้งแต่ต้น (/v1)', 'รองรับ Breaking Changes ในอนาคต'],
+    ['Validate Input ทุก Endpoint', 'ป้องกัน Injection และ Bad Data'],
+    ['Paginate Collection Response', 'ป้องกัน Response ขนาดยักษ์'],
+    ['ใช้ ETag / Last-Modified', 'รองรับ Conditional Requests, Cache'],
+    ['Log ทุก Request + Correlation ID', 'Debug ง่ายใน Production'],
+    ['ไม่ return sensitive data ที่ไม่จำเป็น', 'OWASP API Security Top 10'],
+    ['Document ด้วย OpenAPI Spec', 'Developer Experience ดี']
+  ];
+
+  const cl = document.getElementById('checklist');
+  checkItems.forEach(([text, detail], i) => {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:flex-start;gap:.75rem;padding:.6rem .5rem;border-bottom:1px solid var(--border);cursor:pointer;';
+    row.innerHTML = `
+      <span id="chk-${i}" style="font-size:1.1rem;min-width:1.25rem;">☐</span>
+      <div>
+        <div style="font-size:.9rem;font-weight:600;">${text}</div>
+        <div style="font-size:.78rem;color:var(--text-muted);margin-top:.15rem;">${detail}</div>
+      </div>
+    `;
+    let checked = false;
+    row.addEventListener('click', () => {
+      checked = !checked;
+      document.getElementById(`chk-${i}`).textContent = checked ? '✅' : '☐';
+      if (checked) addXP(3, '✅ Checklist!', `+3 XP`);
+    });
+    cl.appendChild(row);
+  });
+
+  renderQuiz('q9-container', {
+    id: 'q9',
+    question: 'API endpoint /v1/admin/users ควรทำอย่างไรเมื่อ user ธรรมดา (ไม่ใช่ admin) เรียก?',
+    options: [
+      'Return 404 Not Found เพื่อซ่อน endpoint',
+      'Return 200 แต่ส่ง data ว่าง',
+      'Return 403 Forbidden พร้อม error message ชัดเจน',
+      'Redirect ไปหน้า Login'
+    ],
+    correct: 2,
+    explain: '403 ถูกต้อง เพราะผู้ใช้ Authenticated แล้วแต่ไม่มีสิทธิ์ ส่วน 404 เพื่อซ่อน endpoint เป็น Security through Obscurity ซึ่งไม่ใช่ best practice — client จะสับสน',
+    hint: 'Login แล้ว แต่ไม่มีสิทธิ์ = ?'
+  });
+
+  renderQuiz('q10-container', {
+    id: 'q10',
+    question: 'ข้อใดเป็น "OWASP API Security Top 10" risk ที่พบบ่อยที่สุดใน REST API?',
+    options: [
+      'ใช้ JSON แทน XML',
+      'Broken Object Level Authorization (BOLA) — เข้าถึง Object ของ User อื่นได้',
+      'ใช้ GET แทน POST',
+      'ไม่มี Favicon'
+    ],
+    correct: 1,
+    explain: 'BOLA (หรือ IDOR) คือ การที่ User A สามารถ GET /orders/999 ซึ่งเป็นของ User B ได้ เพราะ API ไม่ตรวจ ownership — เป็น #1 ใน OWASP API Security Top 10 2023',
+    hint: 'ลองคิดว่าถ้าเปลี่ยน id ใน URL แล้วได้ข้อมูลของคนอื่นล่ะ?'
+  });
+
+  setModProgress(2, 5);
+}
+
+/* =====================================================
+   PRE-ASSESSMENT
+===================================================== */
+const PRE_QUESTIONS = [
+  {
+    id: 'p1',
+    q: 'REST ย่อมาจากอะไร?',
+    opts: ['Remote Execution State Transfer', 'Representational State Transfer', 'Resource Entity State Transfer', 'REST Endpoint Standard Transfer'],
+    ans: 1
+  },
+  {
+    id: 'p2',
+    q: 'HTTP Method ใดใช้สำหรับดึงข้อมูลโดยไม่เปลี่ยนแปลง Server State?',
+    opts: ['POST', 'PUT', 'GET', 'PATCH'],
+    ans: 2
+  },
+  {
+    id: 'p3',
+    q: 'Status Code 401 หมายความว่าอย่างไร?',
+    opts: ['Not Found', 'Authentication Required', 'Forbidden', 'Server Error'],
+    ans: 1
+  },
+  {
+    id: 'p4',
+    q: 'URL ใดออกแบบตาม REST convention ได้ดีกว่า?',
+    opts: ['/getUser/123', '/users/123', '/user_get?id=123', '/fetchUserById/123'],
+    ans: 1
+  }
+];
+
+let preStep = 0;
+let preAnswers = [];
+
+function initPre() {
+  preStep = 0;
+  preAnswers = [];
+  renderPreQuestion();
+}
+
+function renderPreQuestion() {
+  const area = document.getElementById('pre-quiz-area');
+  const nav  = document.getElementById('pre-nav');
+  const bar  = document.getElementById('pre-bar');
+  const result = document.getElementById('pre-result');
+
+  result.classList.add('hidden');
+
+  if (preStep >= PRE_QUESTIONS.length) {
+    // Show result
+    area.innerHTML = '';
+    nav.innerHTML  = '';
+    bar.style.width = '100%';
+
+    const correct = preAnswers.filter(Boolean).length;
+    const pct = Math.round((correct / PRE_QUESTIONS.length) * 100);
+    let level = pct >= 75 ? '🚀 Advanced Beginner — พร้อมเรียนทุก Module' :
+                pct >= 50 ? '📖 Intermediate — ข้ามพื้นฐานได้' :
+                            '🌱 Beginner — แนะนำเริ่ม Module 1';
+    result.classList.remove('hidden');
+    result.innerHTML = `
+      <p class="score-label">${correct}/${PRE_QUESTIONS.length} ถูก (${pct}%)</p>
+      <p style="margin-top:.4rem;">${level}</p>
+      <p style="margin-top:.4rem;font-size:.82rem;color:var(--text-muted);">ผลนี้ไม่กระทบคะแนน XP — ใช้เพื่อแนะนำแนวทางการเรียนเท่านั้น</p>
+    `;
+    nav.innerHTML = `
+      <button class="btn btn-primary" onclick="showScreen('roadmap-section')">🗺️ ไปที่ Roadmap</button>
+    `;
+    return;
+  }
+
+  const q = PRE_QUESTIONS[preStep];
+  bar.style.width = `${(preStep / PRE_QUESTIONS.length) * 100}%`;
+  area.innerHTML = `
+    <div class="quiz-wrap">
+      <div class="quiz-question">
+        <span class="q-num">คำถาม ${preStep+1} จาก ${PRE_QUESTIONS.length}</span>
+        ${q.q}
+      </div>
+      <div class="quiz-options">
+        ${q.opts.map((o, i) => `
+          <button class="quiz-option" onclick="answerPre(${i}, ${q.ans})" aria-label="${o}">
+            <span class="opt-key">${String.fromCharCode(65+i)}</span>
+            <span>${o}</span>
+          </button>
+        `).join('')}
+      </div>
+    </div>
+  `;
+  nav.innerHTML = '';
+}
+
+function answerPre(chosen, correct) {
+  preAnswers.push(chosen === correct);
+  // visual feedback
+  const opts = document.querySelectorAll('#pre-quiz-area .quiz-option');
+  opts.forEach((o, i) => {
+    o.classList.add('disabled');
+    if (i === correct) o.classList.add('correct');
+    if (i === chosen && chosen !== correct) o.classList.add('wrong');
+  });
+  const nav = document.getElementById('pre-nav');
+  nav.innerHTML = `<button class="btn btn-primary btn-sm" onclick="preNext()">ถัดไป →</button>`;
+}
+
+function preNext() {
+  preStep++;
+  renderPreQuestion();
+}
+
+/* =====================================================
+   SUMMARY
+===================================================== */
+function renderSummary() {
+  document.getElementById('sum-xp').textContent   = state.xp;
+  document.getElementById('sum-mods').textContent = state.modulesCompleted.size;
+  document.getElementById('sum-q').textContent    = state.questionsAnswered;
+}
+
+/* =====================================================
+   RESTART
+===================================================== */
+function restartAll() {
+  state.xp = 0;
+  state.modulesCompleted.clear();
+  state.questionsAnswered = 0;
+  quizAnswered = {};
+  updateHUD();
+  showScreen('hero-section');
+}
+
+/* =====================================================
+   BOOT
+===================================================== */
+document.addEventListener('DOMContentLoaded', () => {
+  updateHUD();
+  // Init pre-assessment on show
+  const observer = new MutationObserver(() => {
+    const pre = document.getElementById('pre-section');
+    if (pre.classList.contains('active') && !pre.dataset.init) {
+      pre.dataset.init = 'true';
+      initPre();
+    }
+  });
+  observer.observe(document.getElementById('pre-section'), { attributes: true, attributeFilter: ['class'] });
+});
+</script>
+</body>
+</html>

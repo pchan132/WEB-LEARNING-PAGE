@@ -1,0 +1,1842 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>REST API Design — Interactive Intermediate</title>
+  <style>
+    /* ========== CSS RESET & VARIABLES ========== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #232636;
+      --border: #2e3250;
+      --accent: #6c8ef5;
+      --accent2: #a78bfa;
+      --green: #34d399;
+      --red: #f87171;
+      --yellow: #fbbf24;
+      --text: #e2e8f0;
+      --text-muted: #94a3b8;
+      --radius: 12px;
+      --shadow: 0 4px 24px rgba(0,0,0,.45);
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+    }
+
+    /* ========== HEADER ========== */
+    header {
+      background: linear-gradient(135deg, #1e2140 0%, #2d1f5e 100%);
+      padding: 48px 24px 40px;
+      text-align: center;
+      border-bottom: 2px solid var(--border);
+    }
+    header .badge {
+      display: inline-block;
+      background: var(--accent2);
+      color: #fff;
+      font-size: .75rem;
+      font-weight: 700;
+      letter-spacing: .08em;
+      padding: 4px 14px;
+      border-radius: 999px;
+      margin-bottom: 16px;
+      text-transform: uppercase;
+    }
+    header h1 {
+      font-size: clamp(1.8rem, 5vw, 3rem);
+      font-weight: 800;
+      background: linear-gradient(90deg, #6c8ef5, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    header p { color: var(--text-muted); margin-top: 10px; font-size: 1rem; }
+
+    /* ========== PROGRESS BAR ========== */
+    #progress-wrap {
+      background: var(--surface);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      border-bottom: 1px solid var(--border);
+    }
+    #progress-wrap span { font-size: .85rem; color: var(--text-muted); white-space: nowrap; }
+    #progress-bar-outer {
+      flex: 1;
+      height: 8px;
+      background: var(--border);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    #progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      border-radius: 999px;
+      transition: width .4s ease;
+    }
+    #progress-pct { font-size: .85rem; font-weight: 700; color: var(--accent); }
+
+    /* ========== NAV TABS ========== */
+    #tab-nav {
+      display: flex;
+      overflow-x: auto;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 16px;
+      scrollbar-width: none;
+    }
+    #tab-nav::-webkit-scrollbar { display: none; }
+    .tab-btn {
+      flex-shrink: 0;
+      padding: 14px 20px;
+      font-size: .9rem;
+      font-weight: 600;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      transition: all .2s;
+    }
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .tab-btn .num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      background: var(--border);
+      font-size: .7rem;
+      margin-right: 6px;
+    }
+    .tab-btn.done .num { background: var(--green); color: #000; }
+
+    /* ========== MAIN LAYOUT ========== */
+    main { max-width: 900px; margin: 0 auto; padding: 32px 20px 80px; }
+
+    /* ========== SECTION PANELS ========== */
+    .panel { display: none; }
+    .panel.active { display: block; animation: fadeIn .3s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ========== TYPOGRAPHY ========== */
+    h2 { font-size: 1.6rem; font-weight: 800; margin-bottom: 8px; }
+    h3 { font-size: 1.1rem; font-weight: 700; margin: 24px 0 10px; color: var(--accent2); }
+    p { color: var(--text-muted); margin-bottom: 12px; }
+    ul { padding-left: 20px; color: var(--text-muted); margin-bottom: 12px; }
+    li { margin-bottom: 6px; }
+    strong { color: var(--text); }
+
+    /* ========== CARD ========== */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      margin-bottom: 20px;
+    }
+    .card-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* ========== CODE BLOCK ========== */
+    pre {
+      background: #0d0f18;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      overflow-x: auto;
+      font-size: .85rem;
+      line-height: 1.6;
+      margin: 10px 0;
+    }
+    code { font-family: 'Cascadia Code', 'Fira Code', monospace; }
+    .kw { color: #a78bfa; }
+    .str { color: #34d399; }
+    .cm { color: #64748b; font-style: italic; }
+    .num { color: #fbbf24; }
+    .fn { color: #6c8ef5; }
+    .key { color: #f472b6; }
+
+    /* ========== METHOD BADGE ========== */
+    .method {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 5px;
+      font-size: .8rem;
+      font-weight: 700;
+      font-family: monospace;
+    }
+    .GET    { background: #064e3b; color: #34d399; }
+    .POST   { background: #1e3a5f; color: #60a5fa; }
+    .PUT    { background: #451a03; color: #fb923c; }
+    .PATCH  { background: #3b1f02; color: #fbbf24; }
+    .DELETE { background: #450a0a; color: #f87171; }
+
+    /* ========== STATUS BADGE ========== */
+    .status {
+      display: inline-block;
+      padding: 2px 9px;
+      border-radius: 5px;
+      font-size: .8rem;
+      font-weight: 700;
+      font-family: monospace;
+    }
+    .s2xx { background: #064e3b; color: #34d399; }
+    .s3xx { background: #1e3a5f; color: #60a5fa; }
+    .s4xx { background: #451a03; color: #fb923c; }
+    .s5xx { background: #450a0a; color: #f87171; }
+
+    /* ========== TABLE ========== */
+    .resp-table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: .875rem; }
+    .resp-table th {
+      background: var(--surface2);
+      padding: 10px 14px;
+      text-align: left;
+      color: var(--text-muted);
+      font-weight: 600;
+      border-bottom: 1px solid var(--border);
+    }
+    .resp-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); }
+
+    /* ========== QUIZ ========== */
+    .quiz-option {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--surface2);
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: all .2s;
+      font-size: .95rem;
+      user-select: none;
+    }
+    .quiz-option:hover { border-color: var(--accent); }
+    .quiz-option.correct { border-color: var(--green); background: rgba(52,211,153,.08); color: var(--green); }
+    .quiz-option.wrong   { border-color: var(--red);   background: rgba(248,113,113,.08); color: var(--red); }
+    .quiz-option.disabled { pointer-events: none; opacity: .6; }
+    .quiz-feedback {
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: .9rem;
+      margin-top: 10px;
+      display: none;
+    }
+    .quiz-feedback.show { display: block; }
+    .quiz-feedback.ok  { background: rgba(52,211,153,.1); border: 1px solid var(--green); color: var(--green); }
+    .quiz-feedback.err { background: rgba(248,113,113,.1); border: 1px solid var(--red);   color: var(--red); }
+
+    /* ========== BUTTONS ========== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 22px;
+      border-radius: 8px;
+      border: none;
+      font-size: .9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: #5a7de0; }
+    .btn-ghost { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+    .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-green { background: var(--green); color: #000; }
+    .btn-green:hover { background: #2dba87; }
+    .btn-sm { padding: 6px 14px; font-size: .82rem; }
+
+    /* ========== API SIMULATOR ========== */
+    .sim-wrap {
+      background: #0d0f18;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin: 16px 0;
+    }
+    .sim-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+    .sim-method-select {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: .85rem;
+      cursor: pointer;
+    }
+    .sim-url {
+      flex: 1;
+      min-width: 180px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: .85rem;
+    }
+    .sim-body { padding: 14px 16px; }
+    .sim-body textarea {
+      width: 100%;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: monospace;
+      font-size: .82rem;
+      border-radius: 6px;
+      padding: 10px;
+      resize: vertical;
+      min-height: 70px;
+    }
+    .sim-response {
+      padding: 14px 16px;
+      border-top: 1px solid var(--border);
+      font-family: monospace;
+      font-size: .82rem;
+      white-space: pre-wrap;
+      min-height: 60px;
+      color: var(--green);
+    }
+    .sim-status-bar {
+      display: flex;
+      gap: 14px;
+      padding: 8px 16px;
+      background: var(--surface2);
+      border-top: 1px solid var(--border);
+      font-size: .78rem;
+      color: var(--text-muted);
+    }
+    .sim-status-bar span b { color: var(--text); }
+
+    /* ========== DRAG-DROP / SORT CHALLENGE ========== */
+    .sortable-list { list-style: none; padding: 0; }
+    .sortable-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--surface2);
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      padding: 11px 16px;
+      margin-bottom: 8px;
+      cursor: grab;
+      font-size: .9rem;
+      transition: border-color .2s;
+    }
+    .sortable-item:active { cursor: grabbing; }
+    .sortable-item.dragging { opacity: .4; }
+    .sortable-item.over { border-color: var(--accent); }
+    .sort-grip { color: var(--text-muted); font-size: 1.2rem; }
+
+    /* ========== URL BUILDER ========== */
+    .url-builder {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin: 14px 0;
+    }
+    .url-builder label { font-size: .85rem; color: var(--text-muted); display: block; margin-bottom: 4px; }
+    .url-builder input, .url-builder select {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: .9rem;
+      margin-bottom: 12px;
+    }
+    .url-result {
+      background: #0d0f18;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-family: monospace;
+      font-size: .9rem;
+      color: var(--accent);
+      word-break: break-all;
+    }
+
+    /* ========== SCENARIO CARDS ========== */
+    .scenario-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 14px;
+      margin: 16px 0;
+    }
+    .scenario-card {
+      background: var(--surface2);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .scenario-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+    .scenario-card.selected { border-color: var(--accent2); background: rgba(167,139,250,.05); }
+    .scenario-card .sc-title { font-weight: 700; margin-bottom: 8px; font-size: .95rem; }
+    .scenario-card .sc-desc  { font-size: .82rem; color: var(--text-muted); }
+
+    /* ========== CHECKPOINT ========== */
+    .checkpoint {
+      background: linear-gradient(135deg, rgba(108,142,245,.08), rgba(167,139,250,.08));
+      border: 1px solid rgba(108,142,245,.3);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      margin: 24px 0;
+    }
+    .checkpoint-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--accent2);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .check-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 10px;
+      font-size: .9rem;
+    }
+    .check-item input[type=checkbox] { margin-top: 3px; accent-color: var(--green); width: 16px; height: 16px; cursor: pointer; flex-shrink: 0; }
+    .check-item label { cursor: pointer; color: var(--text-muted); transition: color .2s; }
+    .check-item input:checked + label { color: var(--green); }
+
+    /* ========== SUMMARY ========== */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 14px;
+      margin: 20px 0;
+    }
+    .summary-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      text-align: center;
+    }
+    .summary-item .icon { font-size: 2rem; margin-bottom: 8px; }
+    .summary-item .title { font-weight: 700; font-size: .9rem; margin-bottom: 6px; }
+    .summary-item .desc { font-size: .8rem; color: var(--text-muted); }
+
+    /* ========== SCORE ========== */
+    #score-display {
+      text-align: center;
+      padding: 28px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin: 20px 0;
+    }
+    #score-display .score-num {
+      font-size: 3.5rem;
+      font-weight: 900;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    #score-display p { font-size: 1rem; color: var(--text-muted); margin-top: 8px; }
+
+    /* ========== NEXT BUTTON ========== */
+    .nav-row { display: flex; justify-content: space-between; align-items: center; margin-top: 32px; gap: 12px; flex-wrap: wrap; }
+
+    /* ========== TOOLTIP ========== */
+    [data-tip] { position: relative; cursor: help; border-bottom: 1px dashed var(--accent); }
+    [data-tip]::after {
+      content: attr(data-tip);
+      position: absolute;
+      bottom: calc(100% + 6px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1e2140;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: .78rem;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s;
+      z-index: 200;
+    }
+    [data-tip]:hover::after { opacity: 1; }
+
+    /* ========== RESPONSIVE ========== */
+    @media (max-width: 600px) {
+      header { padding: 32px 16px 28px; }
+      main { padding: 20px 14px 60px; }
+      .nav-row { flex-direction: column; align-items: stretch; }
+      .nav-row .btn { justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ======================================================
+     HEADER
+====================================================== -->
+<header>
+  <div class="badge">⚡ Intermediate Level</div>
+  <h1>REST API Design</h1>
+  <p>เรียนรู้การออกแบบ REST API ที่ถูกต้อง เข้าใจง่าย และใช้งานได้จริง</p>
+</header>
+
+<!-- ======================================================
+     STICKY PROGRESS
+====================================================== -->
+<div id="progress-wrap">
+  <span>ความคืบหน้า</span>
+  <div id="progress-bar-outer"><div id="progress-bar"></div></div>
+  <span id="progress-pct">0%</span>
+</div>
+
+<!-- ======================================================
+     TAB NAVIGATION
+====================================================== -->
+<nav id="tab-nav" aria-label="บทเรียน">
+  <button class="tab-btn active" data-tab="0"><span class="num">1</span>HTTP Methods</button>
+  <button class="tab-btn" data-tab="1"><span class="num">2</span>URL Design</button>
+  <button class="tab-btn" data-tab="2"><span class="num">3</span>Status Codes</button>
+  <button class="tab-btn" data-tab="3"><span class="num">4</span>Request/Response</button>
+  <button class="tab-btn" data-tab="4"><span class="num">5</span>API Simulator</button>
+  <button class="tab-btn" data-tab="5"><span class="num">6</span>Real-world</button>
+  <button class="tab-btn" data-tab="6"><span class="num">7</span>Quiz</button>
+  <button class="tab-btn" data-tab="7"><span class="num">8</span>สรุป</button>
+</nav>
+
+<!-- ======================================================
+     MAIN
+====================================================== -->
+<main>
+
+  <!-- ===== TAB 0: HTTP Methods ===== -->
+  <section class="panel active" id="tab-0">
+    <h2>🔧 HTTP Methods</h2>
+    <p>HTTP Methods บอก <strong>ว่าเราต้องการทำอะไร</strong> กับ resource นั้น ๆ ในแต่ละ request</p>
+
+    <div class="card">
+      <div class="card-title">📋 5 Methods หลักที่ต้องรู้</div>
+      <table class="resp-table">
+        <thead><tr><th>Method</th><th>ทำอะไร</th><th>Idempotent?</th><th>Safe?</th></tr></thead>
+        <tbody>
+          <tr><td><span class="method GET">GET</span></td><td>อ่านข้อมูล</td><td>✅ ใช่</td><td>✅ ใช่</td></tr>
+          <tr><td><span class="method POST">POST</span></td><td>สร้างข้อมูลใหม่</td><td>❌ ไม่</td><td>❌ ไม่</td></tr>
+          <tr><td><span class="method PUT">PUT</span></td><td>แทนที่ข้อมูลทั้งหมด</td><td>✅ ใช่</td><td>❌ ไม่</td></tr>
+          <tr><td><span class="method PATCH">PATCH</span></td><td>แก้ไขบางส่วน</td><td>⚠️ ขึ้นกับ impl</td><td>❌ ไม่</td></tr>
+          <tr><td><span class="method DELETE">DELETE</span></td><td>ลบข้อมูล</td><td>✅ ใช่</td><td>❌ ไม่</td></tr>
+        </tbody>
+      </table>
+      <p style="margin-top:10px; font-size:.82rem;">
+        💡 <strong data-tip="เรียกซ้ำหลายครั้ง ผลลัพธ์เหมือนเดิม">Idempotent</strong> =
+        เรียกซ้ำกี่ครั้งก็ได้ผลเหมือนเดิม |
+        <strong data-tip="ไม่เปลี่ยนแปลงข้อมูลบน server">Safe</strong> =
+        ไม่เปลี่ยนข้อมูลบน server
+      </p>
+    </div>
+
+    <h3>🎮 Interactive: เลือก Method ให้ถูกต้อง</h3>
+    <p>ลากหรือกดเลือก Method ที่เหมาะกับแต่ละ action</p>
+
+    <div id="method-challenge"></div>
+    <div id="method-feedback" class="quiz-feedback"></div>
+
+    <h3>📝 ตัวอย่างโค้ด Express.js</h3>
+    <pre><code><span class="cm">// ออกแบบ Route สำหรับ User resource</span>
+<span class="kw">const</span> express = <span class="fn">require</span>(<span class="str">'express'</span>)
+<span class="kw">const</span> router = express.<span class="fn">Router</span>()
+
+<span class="cm">// GET  — ดึงรายการ users ทั้งหมด</span>
+router.<span class="fn">get</span>(<span class="str">'/users'</span>, getAllUsers)
+
+<span class="cm">// GET  — ดึง user คนเดียวด้วย id</span>
+router.<span class="fn">get</span>(<span class="str">'/users/:id'</span>, getUserById)
+
+<span class="cm">// POST — สร้าง user ใหม่</span>
+router.<span class="fn">post</span>(<span class="str">'/users'</span>, createUser)
+
+<span class="cm">// PUT  — อัปเดตข้อมูลทั้งหมดของ user</span>
+router.<span class="fn">put</span>(<span class="str">'/users/:id'</span>, replaceUser)
+
+<span class="cm">// PATCH — แก้ไขแค่บางฟิลด์ของ user</span>
+router.<span class="fn">patch</span>(<span class="str">'/users/:id'</span>, updateUser)
+
+<span class="cm">// DELETE — ลบ user</span>
+router.<span class="fn">delete</span>(<span class="str">'/users/:id'</span>, deleteUser)
+</code></pre>
+
+    <div class="checkpoint">
+      <div class="checkpoint-title">🏁 Checkpoint 1 — คุณเข้าใจแล้วหรือยัง?</div>
+      <div class="check-item"><input type="checkbox" id="c1a"><label for="c1a">ฉันบอกได้ว่า GET, POST, PUT, PATCH, DELETE ต่างกันยังไง</label></div>
+      <div class="check-item"><input type="checkbox" id="c1b"><label for="c1b">ฉันเข้าใจความหมายของ Idempotent</label></div>
+      <div class="check-item"><input type="checkbox" id="c1c"><label for="c1c">ฉันรู้ว่าควรใช้ PATCH แทน PUT เมื่อไหร่</label></div>
+    </div>
+
+    <div class="nav-row">
+      <div></div>
+      <button class="btn btn-primary" onclick="goTab(1)">ต่อไป: URL Design →</button>
+    </div>
+  </section>
+
+  <!-- ===== TAB 1: URL Design ===== -->
+  <section class="panel" id="tab-1">
+    <h2>🔗 URL Design (Naming Conventions)</h2>
+    <p>URL ที่ดีทำให้ API <strong>อ่านรู้เรื่อง ไม่ต้องอ่าน Docs ก็เดาได้</strong></p>
+
+    <div class="card">
+      <div class="card-title">✅ กฎที่ดีของ URL</div>
+      <ul>
+        <li>ใช้ <strong>คำนาม (noun)</strong> ไม่ใช่กริยา: <code>/users</code> ✅ ไม่ใช่ <code>/getUsers</code> ❌</li>
+        <li>ใช้ <strong>พหูพจน์ (plural)</strong>: <code>/products</code> ✅ ไม่ใช่ <code>/product</code></li>
+        <li>ใช้ <strong>kebab-case</strong> ถ้ามีหลายคำ: <code>/blog-posts</code></li>
+        <li>ใช้ <strong>nested resource</strong> สำหรับความสัมพันธ์: <code>/users/42/orders</code></li>
+        <li><strong>ไม่ต้อง</strong>ใส่ version ใน URL ถ้าไม่จำเป็น แต่ถ้าใส่ให้ใช้ <code>/v1/...</code></li>
+        <li>ใช้ <strong>query string</strong> สำหรับ filter, sort, paginate</li>
+      </ul>
+    </div>
+
+    <h3>🛠️ URL Builder — ลองสร้าง URL เอง</h3>
+    <div class="url-builder">
+      <label>Resource หลัก</label>
+      <input type="text" id="ub-resource" value="products" oninput="buildUrl()" placeholder="เช่น products">
+      <label>ID (ถ้าต้องการ resource เดียว)</label>
+      <input type="text" id="ub-id" value="" oninput="buildUrl()" placeholder="เช่น 42 (ว่างถ้าต้องการทั้งหมด)">
+      <label>Nested resource (ถ้ามี)</label>
+      <input type="text" id="ub-nested" value="" oninput="buildUrl()" placeholder="เช่น reviews">
+      <label>Filter/Sort (query string)</label>
+      <input type="text" id="ub-query" value="" oninput="buildUrl()" placeholder="เช่น category=shoes&sort=price&page=1">
+      <label>Version prefix</label>
+      <select id="ub-version" onchange="buildUrl()">
+        <option value="">ไม่ใส่ version</option>
+        <option value="/v1">v1</option>
+        <option value="/v2">v2</option>
+      </select>
+      <div class="url-result" id="ub-result">/products</div>
+    </div>
+
+    <h3>❌ vs ✅ ตัวอย่าง URL ที่ดีและไม่ดี</h3>
+    <div id="url-good-bad"></div>
+
+    <h3>🎯 Challenge: เรียง URL จาก Bad → Good</h3>
+    <p>ลากเรียงข้อความในกล่องด้านล่างให้ถูกต้อง (URL ที่ดีควรอยู่ด้านบน)</p>
+    <ul class="sortable-list" id="url-sort-list"></ul>
+    <button class="btn btn-ghost btn-sm" onclick="checkUrlSort()" style="margin-top:8px">ตรวจคำตอบ</button>
+    <div id="url-sort-feedback" class="quiz-feedback" style="margin-top:8px"></div>
+
+    <div class="checkpoint">
+      <div class="checkpoint-title">🏁 Checkpoint 2 — URL Design</div>
+      <div class="check-item"><input type="checkbox" id="c2a"><label for="c2a">ฉันรู้ว่าควรใช้คำนามและ plural ใน URL</label></div>
+      <div class="check-item"><input type="checkbox" id="c2b"><label for="c2b">ฉันเข้าใจ nested resource เช่น /users/:id/posts</label></div>
+      <div class="check-item"><input type="checkbox" id="c2c"><label for="c2c">ฉันรู้ว่า query string ใช้สำหรับอะไร</label></div>
+    </div>
+
+    <div class="nav-row">
+      <button class="btn btn-ghost" onclick="goTab(0)">← กลับ</button>
+      <button class="btn btn-primary" onclick="goTab(2)">ต่อไป: Status Codes →</button>
+    </div>
+  </section>
+
+  <!-- ===== TAB 2: Status Codes ===== -->
+  <section class="panel" id="tab-2">
+    <h2>📡 HTTP Status Codes</h2>
+    <p>Status Code คือ <strong>การสื่อสารจาก Server ถึง Client</strong> ว่าเกิดอะไรขึ้นกับ Request ของคุณ</p>
+
+    <div class="card">
+      <div class="card-title">🗂️ กลุ่มหลัก 5 กลุ่ม</div>
+      <table class="resp-table">
+        <thead><tr><th>กลุ่ม</th><th>ความหมาย</th><th>ตัวอย่าง</th></tr></thead>
+        <tbody>
+          <tr><td><span class="status s2xx">2xx</span></td><td>สำเร็จ</td><td>200 OK, 201 Created, 204 No Content</td></tr>
+          <tr><td><span class="status s3xx">3xx</span></td><td>Redirect</td><td>301 Moved Permanently, 304 Not Modified</td></tr>
+          <tr><td><span class="status s4xx">4xx</span></td><td>Client Error</td><td>400 Bad Request, 401, 403, 404, 422, 429</td></tr>
+          <tr><td><span class="status s5xx">5xx</span></td><td>Server Error</td><td>500 Internal Server Error, 503 Unavailable</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>🎯 Match Status Code — จับคู่ให้ถูก</h3>
+    <p>กดสถานการณ์ แล้วเลือก Status Code ที่ถูกต้อง</p>
+    <div id="status-quiz-wrap"></div>
+
+    <h3>🔍 Status Code Reference ที่ใช้บ่อย</h3>
+    <div id="status-ref"></div>
+
+    <div class="checkpoint">
+      <div class="checkpoint-title">🏁 Checkpoint 3 — Status Codes</div>
+      <div class="check-item"><input type="checkbox" id="c3a"><label for="c3a">ฉันรู้ว่าต้องใช้ 201 แทน 200 เมื่อสร้างข้อมูลใหม่</label></div>
+      <div class="check-item"><input type="checkbox" id="c3b"><label for="c3b">ฉันรู้ความต่างระหว่าง 401 (Unauthorized) และ 403 (Forbidden)</label></div>
+      <div class="check-item"><input type="checkbox" id="c3c"><label for="c3c">ฉันรู้ว่า 422 ต่างจาก 400 ยังไง</label></div>
+    </div>
+
+    <div class="nav-row">
+      <button class="btn btn-ghost" onclick="goTab(1)">← กลับ</button>
+      <button class="btn btn-primary" onclick="goTab(3)">ต่อไป: Request/Response →</button>
+    </div>
+  </section>
+
+  <!-- ===== TAB 3: Request / Response Structure ===== -->
+  <section class="panel" id="tab-3">
+    <h2>📦 Request & Response Structure</h2>
+    <p>การออกแบบ body ของ request และ response ให้ <strong>สม่ำเสมอ (consistent)</strong> คือหัวใจของ API ที่ดี</p>
+
+    <div class="card">
+      <div class="card-title">📤 Request Headers ที่สำคัญ</div>
+      <table class="resp-table">
+        <thead><tr><th>Header</th><th>ค่าตัวอย่าง</th><th>ใช้ทำอะไร</th></tr></thead>
+        <tbody>
+          <tr><td><code>Content-Type</code></td><td>application/json</td><td>บอกว่า body เป็น JSON</td></tr>
+          <tr><td><code>Authorization</code></td><td>Bearer &lt;token&gt;</td><td>ส่ง JWT token เพื่อ auth</td></tr>
+          <tr><td><code>Accept</code></td><td>application/json</td><td>บอกว่าอยากได้ response เป็น JSON</td></tr>
+          <tr><td><code>X-Request-ID</code></td><td>uuid-string</td><td>ติดตาม request สำหรับ debug</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>📐 Response Body มาตรฐาน</h3>
+    <p>การกำหนด format ที่สม่ำเสมอช่วยให้ Frontend ทำงานง่ายขึ้นมาก</p>
+
+    <pre><code><span class="cm">// ✅ Response สำเร็จ (Single resource)</span>
+{
+  <span class="key">"success"</span>: <span class="kw">true</span>,
+  <span class="key">"data"</span>: {
+    <span class="key">"id"</span>: <span class="num">42</span>,
+    <span class="key">"name"</span>: <span class="str">"สมชาย ใจดี"</span>,
+    <span class="key">"email"</span>: <span class="str">"somchai@example.com"</span>
+  }
+}
+
+<span class="cm">// ✅ Response สำเร็จ (List + Pagination)</span>
+{
+  <span class="key">"success"</span>: <span class="kw">true</span>,
+  <span class="key">"data"</span>: [...],
+  <span class="key">"meta"</span>: {
+    <span class="key">"page"</span>: <span class="num">1</span>,
+    <span class="key">"limit"</span>: <span class="num">20</span>,
+    <span class="key">"total"</span>: <span class="num">150</span>,
+    <span class="key">"totalPages"</span>: <span class="num">8</span>
+  }
+}
+
+<span class="cm">// ✅ Response เมื่อเกิด Error</span>
+{
+  <span class="key">"success"</span>: <span class="kw">false</span>,
+  <span class="key">"error"</span>: {
+    <span class="key">"code"</span>: <span class="str">"VALIDATION_ERROR"</span>,
+    <span class="key">"message"</span>: <span class="str">"email ไม่ถูกต้อง"</span>,
+    <span class="key">"details"</span>: [
+      { <span class="key">"field"</span>: <span class="str">"email"</span>, <span class="key">"issue"</span>: <span class="str">"invalid format"</span> }
+    ]
+  }
+}
+</code></pre>
+
+    <h3>🎮 สร้าง Response Object — Interactive</h3>
+    <div class="card" style="margin-bottom:0">
+      <p style="margin-bottom:10px">กรอกข้อมูลแล้วกด <strong>สร้าง Response</strong> เพื่อดูตัวอย่าง JSON response ที่ได้</p>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px">
+        <div>
+          <label style="font-size:.82rem; color:var(--text-muted); display:block; margin-bottom:4px">Status</label>
+          <select id="resp-status" style="width:100%; background:var(--surface2); border:1px solid var(--border); color:var(--text); padding:8px; border-radius:6px; font-size:.9rem;">
+            <option value="200">200 OK</option>
+            <option value="201">201 Created</option>
+            <option value="400">400 Bad Request</option>
+            <option value="401">401 Unauthorized</option>
+            <option value="404">404 Not Found</option>
+            <option value="422">422 Unprocessable</option>
+            <option value="500">500 Server Error</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:.82rem; color:var(--text-muted); display:block; margin-bottom:4px">Resource Name</label>
+          <input type="text" id="resp-resource" value="user" style="width:100%; background:var(--surface2); border:1px solid var(--border); color:var(--text); padding:8px; border-radius:6px; font-size:.9rem;">
+        </div>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="generateResponse()">▶ สร้าง Response</button>
+      <pre id="resp-output" style="margin-top:12px; display:none"><code id="resp-code"></code></pre>
+    </div>
+
+    <div class="checkpoint">
+      <div class="checkpoint-title">🏁 Checkpoint 4 — Request/Response</div>
+      <div class="check-item"><input type="checkbox" id="c4a"><label for="c4a">ฉันรู้ว่าต้องส่ง Content-Type: application/json เสมอเมื่อส่ง JSON body</label></div>
+      <div class="check-item"><input type="checkbox" id="c4b"><label for="c4b">ฉันออกแบบ error response ที่มี field: code, message, details ได้</label></div>
+      <div class="check-item"><input type="checkbox" id="c4c"><label for="c4c">ฉันเข้าใจว่า pagination ควรส่ง meta.total และ meta.page มาด้วย</label></div>
+    </div>
+
+    <div class="nav-row">
+      <button class="btn btn-ghost" onclick="goTab(2)">← กลับ</button>
+      <button class="btn btn-primary" onclick="goTab(4)">ต่อไป: API Simulator →</button>
+    </div>
+  </section>
+
+  <!-- ===== TAB 4: API Simulator ===== -->
+  <section class="panel" id="tab-4">
+    <h2>🚀 API Simulator</h2>
+    <p>จำลอง REST API ของ <strong>ร้านขายของออนไลน์</strong> — กดส่ง request แล้วดูผลลัพธ์จริง</p>
+
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-title">📚 Endpoints ที่ใช้ได้</div>
+      <table class="resp-table" style="font-size:.82rem">
+        <thead><tr><th>Method</th><th>URL</th><th>คำอธิบาย</th></tr></thead>
+        <tbody id="sim-endpoint-table"></tbody>
+      </table>
+    </div>
+
+    <div class="sim-wrap">
+      <div class="sim-toolbar">
+        <select class="sim-method-select" id="sim-method">
+          <option>GET</option><option>POST</option><option>PUT</option>
+          <option>PATCH</option><option>DELETE</option>
+        </select>
+        <input class="sim-url" id="sim-url" value="/api/products" type="text" spellcheck="false">
+        <button class="btn btn-green btn-sm" onclick="sendRequest()">▶ Send</button>
+      </div>
+      <div class="sim-body">
+        <p style="font-size:.78rem; color:var(--text-muted); margin-bottom:6px">Request Body (JSON — ใช้กับ POST/PUT/PATCH)</p>
+        <textarea id="sim-body-input" placeholder='{ "name": "Nike Air Max", "price": 3500 }'></textarea>
+      </div>
+      <div class="sim-response" id="sim-response">// กด Send เพื่อส่ง request...</div>
+      <div class="sim-status-bar">
+        <span>Status: <b id="sim-status-val">—</b></span>
+        <span>Time: <b id="sim-time-val">—</b></span>
+        <span>Size: <b id="sim-size-val">—</b></span>
+      </div>
+    </div>
+
+    <h3>💡 ลอง Scenario เหล่านี้</h3>
+    <div class="scenario-grid" id="sim-scenarios"></div>
+
+    <div class="checkpoint">
+      <div class="checkpoint-title">🏁 Checkpoint 5 — API Simulator</div>
+      <div class="check-item"><input type="checkbox" id="c5a"><label for="c5a">ฉันลอง GET /api/products และดู response แล้ว</label></div>
+      <div class="check-item"><input type="checkbox" id="c5b"><label for="c5b">ฉันลอง POST สร้างสินค้าใหม่แล้ว</label></div>
+      <div class="check-item"><input type="checkbox" id="c5c"><label for="c5c">ฉันเห็นว่า DELETE คืน 204 (ไม่มี body) แล้ว</label></div>
+    </div>
+
+    <div class="nav-row">
+      <button class="btn btn-ghost" onclick="goTab(3)">← กลับ</button>
+      <button class="btn btn-primary" onclick="goTab(5)">ต่อไป: Real-world →</button>
+    </div>
+  </section>
+
+  <!-- ===== TAB 5: Real-world Scenarios ===== -->
+  <section class="panel" id="tab-5">
+    <h2>🌍 Real-world Scenarios</h2>
+    <p>สถานการณ์จริงที่นักพัฒนามือใหม่มักเจอ — คลิกแต่ละ scenario เพื่อดูวิธีแก้ที่ถูกต้อง</p>
+
+    <div id="scenario-cards-wrap"></div>
+
+    <h3>⚠️ Anti-patterns ที่ควรหลีกเลี่ยง</h3>
+    <div id="antipatterns-wrap"></div>
+
+    <div class="checkpoint">
+      <div class="checkpoint-title">🏁 Checkpoint 6 — Real-world</div>
+      <div class="check-item"><input type="checkbox" id="c6a"><label for="c6a">ฉันรู้ว่า Authentication ควรใช้ JWT + Authorization header</label></div>
+      <div class="check-item"><input type="checkbox" id="c6b"><label for="c6b">ฉันเข้าใจการทำ Pagination ด้วย query string</label></div>
+      <div class="check-item"><input type="checkbox" id="c6c"><label for="c6c">ฉันรู้ว่าต้อง versioning API ก่อน breaking change</label></div>
+    </div>
+
+    <div class="nav-row">
+      <button class="btn btn-ghost" onclick="goTab(4)">← กลับ</button>
+      <button class="btn btn-primary" onclick="goTab(6)">ต่อไป: Quiz →</button>
+    </div>
+  </section>
+
+  <!-- ===== TAB 6: Quiz ===== -->
+  <section class="panel" id="tab-6">
+    <h2>🧠 Final Quiz</h2>
+    <p>ทดสอบความเข้าใจทั้งหมด — <strong>10 ข้อ</strong> ครอบคลุมทุกหัวข้อที่เรียนมา</p>
+
+    <div id="quiz-container"></div>
+
+    <div id="quiz-result" style="display:none">
+      <div id="score-display">
+        <div class="score-num" id="score-num">0/10</div>
+        <p id="score-msg"></p>
+      </div>
+      <button class="btn btn-ghost" onclick="restartQuiz()">🔄 ทำใหม่</button>
+    </div>
+
+    <div class="nav-row">
+      <button class="btn btn-ghost" onclick="goTab(5)">← กลับ</button>
+      <button class="btn btn-primary" onclick="goTab(7)">ต่อไป: สรุป →</button>
+    </div>
+  </section>
+
+  <!-- ===== TAB 7: Summary ===== -->
+  <section class="panel" id="tab-7">
+    <h2>🎓 สรุปสิ่งที่เรียนรู้</h2>
+    <p>คุณเรียนรู้การออกแบบ REST API ระดับ Intermediate ครบแล้ว! นี่คือสิ่งสำคัญที่ต้องจำ</p>
+
+    <div class="summary-grid">
+      <div class="summary-item">
+        <div class="icon">🔧</div>
+        <div class="title">HTTP Methods</div>
+        <div class="desc">GET อ่าน • POST สร้าง • PUT แทนที่ • PATCH แก้บางส่วน • DELETE ลบ</div>
+      </div>
+      <div class="summary-item">
+        <div class="icon">🔗</div>
+        <div class="title">URL Design</div>
+        <div class="desc">คำนาม + plural + kebab-case + nested resource + query string</div>
+      </div>
+      <div class="summary-item">
+        <div class="icon">📡</div>
+        <div class="title">Status Codes</div>
+        <div class="desc">2xx สำเร็จ • 4xx client error • 5xx server error — ใช้ให้ถูกต้อง</div>
+      </div>
+      <div class="summary-item">
+        <div class="icon">📦</div>
+        <div class="title">Response Format</div>
+        <div class="desc">สม่ำเสมอ มี success flag, data, error object และ meta pagination</div>
+      </div>
+      <div class="summary-item">
+        <div class="icon">🔐</div>
+        <div class="title">Authentication</div>
+        <div class="desc">JWT Bearer token ใน Authorization header — ไม่ใส่ใน URL</div>
+      </div>
+      <div class="summary-item">
+        <div class="icon">📈</div>
+        <div class="title">Versioning</div>
+        <div class="desc">/v1/ ใน URL path หรือ Accept header — ทำก่อน breaking change</div>
+      </div>
+    </div>
+
+    <h3>📚 Best Practices Checklist สำหรับ Production</h3>
+    <div class="card">
+      <div id="final-checklist"></div>
+    </div>
+
+    <h3>🚀 ขั้นตอนถัดไปที่แนะนำ</h3>
+    <div class="card">
+      <ul>
+        <li>📖 ศึกษา <strong>OpenAPI / Swagger</strong> สำหรับ document API</li>
+        <li>🔐 เรียนรู้ <strong>OAuth 2.0</strong> และ <strong>JWT</strong> อย่างลึกขึ้น</li>
+        <li>⚡ ลอง implement <strong>Rate Limiting</strong> และ <strong>Caching</strong></li>
+        <li>🧪 เขียน <strong>Integration Test</strong> สำหรับ API endpoints</li>
+        <li>🌐 ศึกษา <strong>GraphQL</strong> เป็น alternative ถัดไป</li>
+      </ul>
+    </div>
+
+    <div id="completion-banner" style="
+      text-align:center;
+      padding:32px;
+      background: linear-gradient(135deg, rgba(108,142,245,.1), rgba(167,139,250,.1));
+      border:1px solid rgba(108,142,245,.3);
+      border-radius:var(--radius);
+      margin-top:24px;
+    ">
+      <div style="font-size:3rem; margin-bottom:12px">🏆</div>
+      <div style="font-size:1.4rem; font-weight:800; color:var(--accent2); margin-bottom:8px">ยินดีด้วย!</div>
+      <p>คุณเรียนครบ REST API Design — Intermediate Level แล้ว</p>
+      <p style="margin-top:8px; font-size:.85rem">คะแนน Quiz ของคุณ: <strong id="final-score" style="color:var(--accent)">—</strong></p>
+    </div>
+
+    <div class="nav-row">
+      <button class="btn btn-ghost" onclick="goTab(6)">← กลับ</button>
+      <button class="btn btn-primary" onclick="goTab(0)">🔄 เรียนใหม่ตั้งแต่ต้น</button>
+    </div>
+  </section>
+
+</main>
+
+<!-- ======================================================
+     JAVASCRIPT
+====================================================== -->
+<script>
+/* ============================================================
+   STATE
+============================================================ */
+let currentTab = 0;               // tab ที่แสดงอยู่
+const TOTAL_TABS = 8;
+const tabDone = new Array(TOTAL_TABS).fill(false);  // ติดตาม tab ที่ผ่านแล้ว
+let quizScore = 0;                // คะแนน quiz
+let quizAnswered = 0;             // จำนวนข้อที่ตอบแล้ว
+const TOTAL_QUIZ = 10;
+
+/* ============================================================
+   PROGRESS
+============================================================ */
+function updateProgress() {
+  const done = tabDone.filter(Boolean).length;
+  const pct = Math.round((done / TOTAL_TABS) * 100);
+  document.getElementById('progress-bar').style.width = pct + '%';
+  document.getElementById('progress-pct').textContent = pct + '%';
+}
+
+/* ============================================================
+   TAB NAVIGATION
+============================================================ */
+function goTab(idx) {
+  // ซ่อน panel เดิม
+  document.getElementById('tab-' + currentTab).classList.remove('active');
+  document.querySelectorAll('.tab-btn')[currentTab].classList.remove('active');
+
+  // mark เดิมว่าผ่านแล้ว
+  tabDone[currentTab] = true;
+  document.querySelectorAll('.tab-btn')[currentTab].classList.add('done');
+
+  currentTab = idx;
+
+  // แสดง panel ใหม่
+  document.getElementById('tab-' + currentTab).classList.add('active');
+  const tabs = document.querySelectorAll('.tab-btn');
+  tabs[currentTab].classList.add('active');
+  tabs[currentTab].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  updateProgress();
+}
+
+// คลิกปุ่ม tab
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => goTab(+btn.dataset.tab));
+});
+
+/* ============================================================
+   TAB 0: HTTP METHOD CHALLENGE
+============================================================ */
+const methodChallenges = [
+  { action: 'ดึงรายการสินค้าทั้งหมด', answer: 'GET',    opts: ['GET','POST','PUT','DELETE'] },
+  { action: 'สร้างบัญชีผู้ใช้ใหม่',    answer: 'POST',   opts: ['GET','POST','PATCH','DELETE'] },
+  { action: 'ลบรีวิวของลูกค้า',         answer: 'DELETE', opts: ['POST','PUT','PATCH','DELETE'] },
+  { action: 'เปลี่ยนเฉพาะ email ของ user', answer: 'PATCH', opts: ['GET','POST','PUT','PATCH'] },
+  { action: 'แทนที่ข้อมูล product ทั้งก้อน', answer: 'PUT', opts: ['POST','PUT','PATCH','GET'] },
+];
+
+let methodAnswers = {};
+
+function renderMethodChallenge() {
+  const wrap = document.getElementById('method-challenge');
+  wrap.innerHTML = '';
+  methodChallenges.forEach((q, i) => {
+    const div = document.createElement('div');
+    div.className = 'card';
+    div.style.marginBottom = '12px';
+    div.innerHTML = `
+      <div style="font-size:.9rem; font-weight:600; margin-bottom:10px; color:var(--text)">
+        ${i+1}. ${q.action}
+      </div>
+      <div style="display:flex; flex-wrap:wrap; gap:8px">
+        ${q.opts.map(m => `
+          <button class="method ${m}" style="cursor:pointer; font-size:.85rem; padding:6px 14px; border:2px solid transparent; border-radius:6px; transition:all .2s"
+            onclick="checkMethod(${i}, '${m}', this, '${q.answer}')">
+            ${m}
+          </button>
+        `).join('')}
+      </div>
+      <div id="method-fb-${i}" style="font-size:.82rem; margin-top:6px; min-height:18px"></div>
+    `;
+    wrap.appendChild(div);
+  });
+}
+
+function checkMethod(qi, chosen, btn, correct) {
+  if (methodAnswers[qi] !== undefined) return; // ตอบแล้ว
+  methodAnswers[qi] = chosen;
+
+  const fb = document.getElementById('method-fb-' + qi);
+  const parent = btn.closest('.card').querySelectorAll('button');
+
+  parent.forEach(b => {
+    b.style.pointerEvents = 'none';
+    if (b.textContent.trim() === correct) {
+      b.style.borderColor = 'var(--green)';
+      b.style.boxShadow = '0 0 0 2px rgba(52,211,153,.3)';
+    }
+  });
+
+  if (chosen === correct) {
+    fb.style.color = 'var(--green)';
+    fb.textContent = '✅ ถูกต้อง!';
+  } else {
+    btn.style.borderColor = 'var(--red)';
+    fb.style.color = 'var(--red)';
+    fb.textContent = `❌ ไม่ถูก — คำตอบที่ถูกคือ ${correct}`;
+  }
+}
+
+renderMethodChallenge();
+
+/* ============================================================
+   TAB 1: URL Builder
+============================================================ */
+function buildUrl() {
+  const ver      = document.getElementById('ub-version').value;
+  const resource = document.getElementById('ub-resource').value.trim() || 'resource';
+  const id       = document.getElementById('ub-id').value.trim();
+  const nested   = document.getElementById('ub-nested').value.trim();
+  const query    = document.getElementById('ub-query').value.trim();
+
+  let url = ver + '/' + resource;
+  if (id)     url += '/' + id;
+  if (nested) url += '/' + nested;
+  if (query)  url += '?' + query;
+
+  document.getElementById('ub-result').textContent = url;
+}
+
+// Good vs Bad URL examples
+const urlExamples = [
+  { bad: '/getUsers',          good: '/users',              why: 'ใช้คำนาม ไม่ใช่กริยา' },
+  { bad: '/user/profile',      good: '/users/:id/profile',  why: 'ระบุ id ของ resource ชัดเจน' },
+  { bad: '/deletePost?id=5',   good: '/posts/5 (DELETE)',   why: 'ใช้ HTTP Method ไม่ใส่ action ใน URL' },
+  { bad: '/Products_List',     good: '/products',           why: 'lowercase + plural + no underscore' },
+  { bad: '/users/searchByEmail', good: '/users?email=x@x.com', why: 'ใช้ query string แทน action path' },
+];
+
+const urlGoodBad = document.getElementById('url-good-bad');
+urlExamples.forEach(ex => {
+  urlGoodBad.innerHTML += `
+    <div class="card" style="margin-bottom:10px">
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:8px">
+        <div>
+          <div style="font-size:.75rem; color:var(--red); font-weight:700; margin-bottom:4px">❌ ไม่ดี</div>
+          <code style="color:var(--red); font-size:.88rem">${ex.bad}</code>
+        </div>
+        <div>
+          <div style="font-size:.75rem; color:var(--green); font-weight:700; margin-bottom:4px">✅ ดีกว่า</div>
+          <code style="color:var(--green); font-size:.88rem">${ex.good}</code>
+        </div>
+      </div>
+      <div style="font-size:.8rem; color:var(--text-muted)">💡 ${ex.why}</div>
+    </div>
+  `;
+});
+
+// Drag-and-drop sort challenge
+const sortItems = [
+  { text: '/deleteUser?id=3',      isGood: false },
+  { text: '/users/3 (DELETE)',      isGood: true  },
+  { text: '/GetAllProducts',        isGood: false },
+  { text: '/products',              isGood: true  },
+  { text: '/create_order',          isGood: false },
+  { text: '/orders (POST)',         isGood: true  },
+];
+
+// สลับลำดับแบบสุ่มครั้งแรก
+let sortData = [...sortItems].sort(() => Math.random() - 0.5);
+
+function renderSortList() {
+  const list = document.getElementById('url-sort-list');
+  list.innerHTML = '';
+  sortData.forEach((item, i) => {
+    const li = document.createElement('li');
+    li.className = 'sortable-item';
+    li.draggable = true;
+    li.dataset.index = i;
+    li.innerHTML = `<span class="sort-grip">⠿</span><code>${item.text}</code>`;
+
+    li.addEventListener('dragstart', e => {
+      li.classList.add('dragging');
+      e.dataTransfer.setData('text/plain', i);
+    });
+    li.addEventListener('dragend', () => li.classList.remove('dragging'));
+    li.addEventListener('dragover', e => { e.preventDefault(); li.classList.add('over'); });
+    li.addEventListener('dragleave', () => li.classList.remove('over'));
+    li.addEventListener('drop', e => {
+      e.preventDefault();
+      li.classList.remove('over');
+      const from = +e.dataTransfer.getData('text/plain');
+      const to   = +li.dataset.index;
+      if (from !== to) {
+        [sortData[from], sortData[to]] = [sortData[to], sortData[from]];
+        renderSortList();
+      }
+    });
+
+    list.appendChild(li);
+  });
+}
+
+function checkUrlSort() {
+  const fb = document.getElementById('url-sort-feedback');
+  // ตรวจว่า good items อยู่เหนือ bad items ทั้งหมดหรือไม่
+  const firstBadIdx = sortData.findIndex(x => !x.isGood);
+  const allGoodAbove = sortData.every((x, i) => {
+    if (x.isGood) return i < firstBadIdx || firstBadIdx === -1;
+    return true;
+  });
+
+  // นับ URL ดีที่อยู่ด้านบนครึ่งหนึ่ง
+  const goodCount = sortData.filter(x => x.isGood).length;
+  let correctPos = 0;
+  for (let i = 0; i < goodCount; i++) {
+    if (sortData[i].isGood) correctPos++;
+  }
+
+  fb.classList.add('show');
+  if (correctPos === goodCount) {
+    fb.className = 'quiz-feedback show ok';
+    fb.textContent = '✅ ถูกต้อง! URL ที่ดีอยู่ด้านบนทั้งหมด';
+  } else {
+    fb.className = 'quiz-feedback show err';
+    fb.textContent = `❌ ยังไม่ถูก — ลอง drag URL ที่ดี (✅) ให้อยู่ด้านบน URL ที่ไม่ดี (❌) ทั้งหมด`;
+  }
+}
+
+renderSortList();
+
+/* ============================================================
+   TAB 2: Status Code Quiz
+============================================================ */
+const statusQuestions = [
+  { scene: 'Login สำเร็จ พร้อมส่ง token กลับ', answer: 200, opts: [200, 201, 204, 401] },
+  { scene: 'สร้าง user ใหม่สำเร็จ',              answer: 201, opts: [200, 201, 202, 204] },
+  { scene: 'ลบ post สำเร็จ (ไม่ต้องส่งอะไรกลับ)', answer: 204, opts: [200, 201, 204, 404] },
+  { scene: 'ผู้ใช้ไม่ได้ login แต่พยายาม access', answer: 401, opts: [400, 401, 403, 404] },
+  { scene: 'ผู้ใช้ login แล้ว แต่ไม่มีสิทธิ์ access resource นั้น', answer: 403, opts: [401, 403, 404, 422] },
+  { scene: 'ข้อมูลที่ส่งมา format ผิด ไม่ใช่ JSON', answer: 400, opts: [400, 401, 422, 500] },
+  { scene: 'Validation ล้มเหลว เช่น email ซ้ำ', answer: 422, opts: [400, 409, 422, 500] },
+];
+
+const statusRef = [
+  { code: 200, label: 'OK',                   desc: 'Request สำเร็จ ส่งข้อมูลกลับ' },
+  { code: 201, label: 'Created',              desc: 'สร้าง resource ใหม่สำเร็จ ส่ง resource กลับ' },
+  { code: 204, label: 'No Content',           desc: 'สำเร็จ แต่ไม่มี body ส่งกลับ (เช่น DELETE)' },
+  { code: 400, label: 'Bad Request',          desc: 'Request format ผิด หรือ parameter ขาด' },
+  { code: 401, label: 'Unauthorized',         desc: 'ยังไม่ได้ authenticate (ไม่มี token)' },
+  { code: 403, label: 'Forbidden',            desc: 'Authenticate แล้ว แต่ไม่มีสิทธิ์' },
+  { code: 404, label: 'Not Found',            desc: 'ไม่พบ resource ที่ขอ' },
+  { code: 409, label: 'Conflict',             desc: 'ข้อมูลชนกัน เช่น email ซ้ำ' },
+  { code: 422, label: 'Unprocessable Entity', desc: 'Validation error — ข้อมูลถูก format แต่ invalid' },
+  { code: 429, label: 'Too Many Requests',    desc: 'Rate limit เกิน' },
+  { code: 500, label: 'Internal Server Error',desc: 'Server พัง — ไม่ควรให้ client เห็น detail' },
+  { code: 503, label: 'Service Unavailable',  desc: 'Server หยุดชั่วคราว / maintenance' },
+];
+
+const statusAnswered = {};
+
+function renderStatusQuiz() {
+  const wrap = document.getElementById('status-quiz-wrap');
+  wrap.innerHTML = '';
+  statusQuestions.forEach((q, i) => {
+    const div = document.createElement('div');
+    div.className = 'card';
+    div.style.marginBottom = '12px';
+    div.innerHTML = `
+      <div style="font-size:.9rem; font-weight:600; margin-bottom:10px">${i+1}. ${q.scene}</div>
+      <div style="display:flex; flex-wrap:wrap; gap:8px">
+        ${q.opts.map(c => {
+          const cls = c >= 500 ? 's5xx' : c >= 400 ? 's4xx' : c >= 300 ? 's3xx' : 's2xx';
+          return `<button class="status ${cls}" style="cursor:pointer; font-size:.85rem; padding:7px 16px; border:2px solid transparent; border-radius:6px; transition:all .2s"
+            onclick="checkStatus(${i}, ${c}, this, ${q.answer})">${c}</button>`;
+        }).join('')}
+      </div>
+      <div id="status-fb-${i}" style="font-size:.82rem; margin-top:6px; min-height:18px"></div>
+    `;
+    wrap.appendChild(div);
+  });
+
+  // Reference cards
+  const refWrap = document.getElementById('status-ref');
+  refWrap.innerHTML = '<div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:10px">' +
+    statusRef.map(s => {
+      const cls = s.code >= 500 ? 's5xx' : s.code >= 400 ? 's4xx' : s.code >= 300 ? 's3xx' : 's2xx';
+      return `<div style="background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:12px">
+        <div style="margin-bottom:6px"><span class="status ${cls}">${s.code}</span> <strong style="font-size:.85rem">${s.label}</strong></div>
+        <div style="font-size:.78rem; color:var(--text-muted)">${s.desc}</div>
+      </div>`;
+    }).join('') + '</div>';
+}
+
+function checkStatus(qi, chosen, btn, correct) {
+  if (statusAnswered[qi] !== undefined) return;
+  statusAnswered[qi] = chosen;
+
+  const parent = btn.closest('.card').querySelectorAll('button');
+  parent.forEach(b => {
+    b.style.pointerEvents = 'none';
+    if (+b.textContent.trim() === correct) b.style.borderColor = 'var(--green)';
+  });
+
+  const fb = document.getElementById('status-fb-' + qi);
+  if (chosen === correct) {
+    fb.style.color = 'var(--green)';
+    fb.textContent = '✅ ถูกต้อง!';
+  } else {
+    btn.style.borderColor = 'var(--red)';
+    fb.style.color = 'var(--red)';
+    fb.textContent = `❌ คำตอบที่ถูกคือ ${correct}`;
+  }
+}
+
+renderStatusQuiz();
+
+/* ============================================================
+   TAB 3: Generate Response
+============================================================ */
+function generateResponse() {
+  const status   = +document.getElementById('resp-status').value;
+  const resource = document.getElementById('resp-resource').value.trim() || 'item';
+  let obj;
+
+  if (status < 300) {
+    if (status === 201) {
+      obj = {
+        success: true,
+        data: { id: Math.floor(Math.random()*900+100), name: `New ${resource}`, createdAt: new Date().toISOString() }
+      };
+    } else if (status === 204) {
+      obj = null; // no body
+    } else {
+      obj = {
+        success: true,
+        data: { id: 42, name: `Sample ${resource}`, updatedAt: new Date().toISOString() }
+      };
+    }
+  } else {
+    const errMap = {
+      400: { code: 'BAD_REQUEST',     message: 'Request ไม่ถูกต้อง' },
+      401: { code: 'UNAUTHORIZED',    message: 'กรุณา login ก่อน' },
+      404: { code: 'NOT_FOUND',       message: `ไม่พบ ${resource} ที่ระบุ` },
+      422: { code: 'VALIDATION_ERROR',message: 'ข้อมูลไม่ผ่าน validation',
+             details: [{ field: 'email', issue: 'รูปแบบ email ไม่ถูกต้อง' }] },
+      500: { code: 'SERVER_ERROR',    message: 'เกิดข้อผิดพลาดภายใน server' },
+    };
+    obj = { success: false, error: errMap[status] || { code: 'ERROR', message: 'เกิดข้อผิดพลาด' } };
+  }
+
+  const pre  = document.getElementById('resp-output');
+  const code = document.getElementById('resp-code');
+  pre.style.display = 'block';
+  code.textContent = status === 204 ? '// 204 No Content — ไม่มี body' : JSON.stringify(obj, null, 2);
+}
+
+/* ============================================================
+   TAB 4: API Simulator (in-memory mock)
+============================================================ */
+// ข้อมูลจำลอง in-memory
+const db = {
+  products: [
+    { id: 1, name: 'Nike Air Max 90',    price: 4500, category: 'shoes',  stock: 15 },
+    { id: 2, name: 'Adidas Ultraboost',  price: 5200, category: 'shoes',  stock: 8  },
+    { id: 3, name: 'Sony WH-1000XM5',   price: 9900, category: 'audio',  stock: 3  },
+    { id: 4, name: 'Apple AirPods Pro',  price: 8500, category: 'audio',  stock: 20 },
+    { id: 5, name: 'Levi\'s 501 Jeans', price: 2200, category: 'apparel',stock: 50 },
+  ],
+  nextId: 6,
+};
+
+const simEndpoints = [
+  { method:'GET',    url:'/api/products',       desc:'ดึงสินค้าทั้งหมด' },
+  { method:'GET',    url:'/api/products/:id',   desc:'ดึงสินค้าชิ้นเดียว' },
+  { method:'POST',   url:'/api/products',       desc:'เพิ่มสินค้าใหม่' },
+  { method:'PATCH',  url:'/api/products/:id',   desc:'แก้ไขข้อมูลสินค้า' },
+  { method:'DELETE', url:'/api/products/:id',   desc:'ลบสินค้า' },
+];
+
+// render endpoint table
+const tbody = document.getElementById('sim-endpoint-table');
+simEndpoints.forEach(e => {
+  tbody.innerHTML += `<tr>
+    <td><span class="method ${e.method}">${e.method}</span></td>
+    <td><code>${e.url}</code></td>
+    <td style="color:var(--text-muted)">${e.desc}</td>
+  </tr>`;
+});
+
+// Scenario shortcuts
+const scenarios = [
+  { label:'GET สินค้าทั้งหมด',    method:'GET',    url:'/api/products',   body:'' },
+  { label:'GET สินค้า id=2',       method:'GET',    url:'/api/products/2', body:'' },
+  { label:'POST เพิ่มสินค้าใหม่',  method:'POST',   url:'/api/products',
+    body:'{\n  "name": "New Balance 574",\n  "price": 3800,\n  "category": "shoes",\n  "stock": 10\n}' },
+  { label:'PATCH แก้ราคา id=1',    method:'PATCH',  url:'/api/products/1', body:'{\n  "price": 4999\n}' },
+  { label:'DELETE สินค้า id=3',    method:'DELETE', url:'/api/products/3', body:'' },
+  { label:'GET สินค้าที่ไม่มีอยู่', method:'GET',   url:'/api/products/99',body:'' },
+];
+
+const scenGrid = document.getElementById('sim-scenarios');
+scenarios.forEach(s => {
+  const card = document.createElement('div');
+  card.className = 'scenario-card';
+  card.innerHTML = `<div class="sc-title"><span class="method ${s.method}" style="margin-right:6px">${s.method}</span>${s.label}</div>
+    <div class="sc-desc">${s.url}</div>`;
+  card.onclick = () => {
+    document.querySelectorAll('.scenario-card').forEach(c => c.classList.remove('selected'));
+    card.classList.add('selected');
+    document.getElementById('sim-method').value = s.method;
+    document.getElementById('sim-url').value    = s.url;
+    document.getElementById('sim-body-input').value = s.body;
+  };
+  scenGrid.appendChild(card);
+});
+
+/* จำลอง REST API handler */
+function handleMockApi(method, rawUrl, body) {
+  const [pathPart, queryPart] = rawUrl.split('?');
+  const segments = pathPart.replace(/^\/api\//, '').split('/').filter(Boolean);
+  const resource = segments[0];
+  const id       = segments[1] ? +segments[1] : null;
+
+  if (resource !== 'products') return { status: 404, body: { success: false, error: { code: 'NOT_FOUND', message: 'Endpoint ไม่มีอยู่' } } };
+
+  if (method === 'GET') {
+    if (id !== null) {
+      const item = db.products.find(p => p.id === id);
+      if (!item) return { status: 404, body: { success: false, error: { code: 'NOT_FOUND', message: `ไม่พบ product id ${id}` } } };
+      return { status: 200, body: { success: true, data: item } };
+    }
+    // list with optional pagination
+    const params = new URLSearchParams(queryPart || '');
+    const page  = +params.get('page')  || 1;
+    const limit = +params.get('limit') || 10;
+    const cat   = params.get('category');
+    let list = cat ? db.products.filter(p => p.category === cat) : [...db.products];
+    const total = list.length;
+    list = list.slice((page-1)*limit, page*limit);
+    return { status: 200, body: { success: true, data: list, meta: { page, limit, total, totalPages: Math.ceil(total/limit) } } };
+  }
+
+  if (method === 'POST') {
+    let parsed;
+    try { parsed = JSON.parse(body); } catch { return { status: 400, body: { success: false, error: { code: 'BAD_REQUEST', message: 'Body ไม่ใช่ JSON ที่ถูกต้อง' } } }; }
+    if (!parsed.name || !parsed.price) return { status: 422, body: { success: false, error: { code: 'VALIDATION_ERROR', message: 'ต้องมีฟิลด์ name และ price', details: [{ field: !parsed.name ? 'name' : 'price', issue: 'required' }] } } };
+    const newItem = { id: db.nextId++, ...parsed, createdAt: new Date().toISOString() };
+    db.products.push(newItem);
+    return { status: 201, body: { success: true, data: newItem } };
+  }
+
+  if (method === 'PATCH') {
+    if (id === null) return { status: 400, body: { success: false, error: { code: 'BAD_REQUEST', message: 'ต้องระบุ id' } } };
+    const idx = db.products.findIndex(p => p.id === id);
+    if (idx === -1) return { status: 404, body: { success: false, error: { code: 'NOT_FOUND', message: `ไม่พบ product id ${id}` } } };
+    let parsed;
+    try { parsed = JSON.parse(body); } catch { return { status: 400, body: { success: false, error: { code: 'BAD_REQUEST', message: 'Body ไม่ใช่ JSON' } } }; }
+    db.products[idx] = { ...db.products[idx], ...parsed, updatedAt: new Date().toISOString() };
+    return { status: 200, body: { success: true, data: db.products[idx] } };
+  }
+
+  if (method === 'PUT') {
+    if (id === null) return { status: 400, body: { success: false, error: { code: 'BAD_REQUEST', message: 'ต้องระบุ id' } } };
+    const idx = db.products.findIndex(p => p.id === id);
+    let parsed;
+    try { parsed = JSON.parse(body); } catch { return { status: 400, body: { success: false, error: { code: 'BAD_REQUEST', message: 'Body ไม่ใช่ JSON' } } }; }
+    if (idx !== -1) {
+      db.products[idx] = { id, ...parsed, updatedAt: new Date().toISOString() };
+      return { status: 200, body: { success: true, data: db.products[idx] } };
+    } else {
+      const newItem = { id: db.nextId++, ...parsed };
+      db.products.push(newItem);
+      return { status: 201, body: { success: true, data: newItem } };
+    }
+  }
+
+  if (method === 'DELETE') {
+    if (id === null) return { status: 400, body: { success: false, error: { code: 'BAD_REQUEST', message: 'ต้องระบุ id' } } };
+    const idx = db.products.findIndex(p => p.id === id);
+    if (idx === -1) return { status: 404, body: { success: false, error: { code: 'NOT_FOUND', message: `ไม่พบ product id ${id}` } } };
+    db.products.splice(idx, 1);
+    return { status: 204, body: null }; // 204 No Content
+  }
+
+  return { status: 405, body: { success: false, error: { code: 'METHOD_NOT_ALLOWED', message: `Method ${method} ไม่รองรับ` } } };
+}
+
+function sendRequest() {
+  const method = document.getElementById('sim-method').value;
+  const url    = document.getElementById('sim-url').value.trim();
+  const body   = document.getElementById('sim-body-input').value.trim();
+
+  const t0 = Date.now();
+  // จำลอง latency เล็กน้อย
+  setTimeout(() => {
+    const { status, body: resp } = handleMockApi(method, url, body);
+    const elapsed = Date.now() - t0 + Math.round(Math.random() * 40 + 10);
+
+    const respText = resp === null ? '// 204 No Content' : JSON.stringify(resp, null, 2);
+    const size = new Blob([respText]).size;
+
+    document.getElementById('sim-response').textContent = respText;
+
+    const statusEl = document.getElementById('sim-status-val');
+    statusEl.textContent = status;
+    statusEl.style.color = status < 300 ? 'var(--green)' : status < 500 ? 'var(--yellow)' : 'var(--red)';
+
+    document.getElementById('sim-time-val').textContent = elapsed + ' ms';
+    document.getElementById('sim-size-val').textContent = size + ' B';
+  }, 80);
+}
+
+/* ============================================================
+   TAB 5: Real-world Scenarios
+============================================================ */
+const realScenarios = [
+  {
+    title: '🔐 Authentication ด้วย JWT',
+    problem: 'จะทำให้ API ปลอดภัยโดยที่ client ต้อง login ก่อนได้ยังไง?',
+    solution: `// 1. Login → รับ JWT token
+POST /auth/login
+Body: { "email": "...", "password": "..." }
+Response: { "token": "eyJhbGci..." }
+
+// 2. ทุก request ที่ต้องการ auth → ใส่ token ใน header
+Authorization: Bearer eyJhbGci...
+
+// 3. Server ตรวจสอบ token ก่อนทุก protected route
+// ถ้าไม่มี token → 401 Unauthorized
+// ถ้ามี token แต่หมดอายุ → 401 + message "Token expired"
+// ถ้ามี token แต่ไม่มีสิทธิ์ → 403 Forbidden`,
+    tip: 'ไม่ควรส่ง token ผ่าน URL query string เพราะจะถูก log ใน server'
+  },
+  {
+    title: '📄 Pagination สำหรับข้อมูลเยอะ',
+    problem: 'ถ้ามีสินค้า 100,000 รายการ ควร return ทั้งหมดหรือไม่?',
+    solution: `// ใช้ query string สำหรับ pagination
+GET /products?page=2&limit=20&sort=price&order=asc
+
+// Response ควรมี meta
+{
+  "data": [...20 items...],
+  "meta": {
+    "page": 2,
+    "limit": 20,
+    "total": 100000,
+    "totalPages": 5000
+  }
+}`,
+    tip: 'กำหนด default limit ไว้ที่ 20-50 และ maximum ที่ 100 เพื่อป้องกัน abuse'
+  },
+  {
+    title: '🔄 API Versioning',
+    problem: 'จะ update API โดยไม่ทำให้ client เก่าพัง (breaking change) ได้ยังไง?',
+    solution: `// วิธีที่ 1: Version ใน URL path (แนะนำสำหรับมือใหม่)
+/v1/users  →  version เก่า ยังใช้ได้
+/v2/users  →  version ใหม่ (เปลี่ยน response format)
+
+// วิธีที่ 2: Version ใน Header
+Accept: application/vnd.myapi.v2+json
+
+// ควรทำเมื่อ:
+// - เปลี่ยน response field ที่ client ใช้อยู่
+// - ลบ endpoint
+// - เปลี่ยน authentication method`,
+    tip: 'ประกาศ deprecation ล่วงหน้าก่อน remove version เก่า อย่างน้อย 3-6 เดือน'
+  },
+  {
+    title: '🛡️ Rate Limiting',
+    problem: 'จะป้องกัน client ส่ง request มากเกินไปในเวลาสั้น ๆ ได้ยังไง?',
+    solution: `// Server ส่ง header เหล่านี้กลับมา
+X-RateLimit-Limit: 100       // จำนวนสูงสุดต่อ window
+X-RateLimit-Remaining: 45    // เหลืออีกกี่ครั้ง
+X-RateLimit-Reset: 1716900000 // Unix timestamp ที่ reset
+
+// เมื่อเกิน limit → 429 Too Many Requests
+{
+  "success": false,
+  "error": {
+    "code": "RATE_LIMIT_EXCEEDED",
+    "message": "ส่ง request มากเกินไป กรุณารอ 60 วินาที",
+    "retryAfter": 60
+  }
+}`,
+    tip: 'ใช้ library เช่น express-rate-limit สำหรับ Node.js'
+  },
+];
+
+const antiPatterns = [
+  { bad: 'POST /getUser',              good: 'GET /users/:id',              why: 'ใช้ GET method สำหรับดึงข้อมูล' },
+  { bad: '/api/deleteProductById/5',   good: 'DELETE /api/products/5',      why: 'ใช้ HTTP Method + resource path' },
+  { bad: 'ส่ง password ใน response',   good: 'ไม่ return sensitive fields',  why: 'Filter fields ก่อน return' },
+  { bad: 'return 200 แม้ error',        good: 'return status code ที่ถูกต้อง', why: 'Client ต้องการ status code ที่ถูก' },
+  { bad: '/api/v1/getAllUsersOfAdmin',  good: '/api/v1/admin/users',         why: 'Resource noun ไม่ใช่กริยา' },
+];
+
+const scWrap = document.getElementById('scenario-cards-wrap');
+realScenarios.forEach((s, i) => {
+  const div = document.createElement('div');
+  div.className = 'card';
+  div.style.marginBottom = '14px';
+  div.innerHTML = `
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; cursor:pointer; gap:10px"
+         onclick="toggleScenario(${i})">
+      <div>
+        <div style="font-weight:700; font-size:1rem; margin-bottom:4px">${s.title}</div>
+        <div style="font-size:.85rem; color:var(--text-muted)">${s.problem}</div>
+      </div>
+      <span id="sc-icon-${i}" style="font-size:1.2rem; flex-shrink:0">▶</span>
+    </div>
+    <div id="sc-body-${i}" style="display:none; margin-top:14px">
+      <pre><code>${s.solution}</code></pre>
+      <div style="margin-top:8px; background:rgba(251,191,36,.08); border:1px solid rgba(251,191,36,.3); border-radius:8px; padding:10px; font-size:.85rem; color:var(--yellow)">
+        💡 Pro Tip: ${s.tip}
+      </div>
+    </div>
+  `;
+  scWrap.appendChild(div);
+});
+
+function toggleScenario(i) {
+  const body = document.getElementById('sc-body-' + i);
+  const icon = document.getElementById('sc-icon-' + i);
+  const isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : 'block';
+  icon.textContent = isOpen ? '▶' : '▼';
+}
+
+const apWrap = document.getElementById('antipatterns-wrap');
+antiPatterns.forEach(ap => {
+  apWrap.innerHTML += `
+    <div class="card" style="margin-bottom:10px">
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:8px">
+        <div>
+          <div style="font-size:.72rem; color:var(--red); font-weight:700; margin-bottom:4px">❌ Anti-pattern</div>
+          <code style="color:var(--red); font-size:.85rem; word-break:break-all">${ap.bad}</code>
+        </div>
+        <div>
+          <div style="font-size:.72rem; color:var(--green); font-weight:700; margin-bottom:4px">✅ Best Practice</div>
+          <code style="color:var(--green); font-size:.85rem; word-break:break-all">${ap.good}</code>
+        </div>
+      </div>
+      <div style="font-size:.8rem; color:var(--text-muted)">💡 ${ap.why}</div>
+    </div>
+  `;
+});
+
+/* ============================================================
+   TAB 6: Final Quiz
+============================================================ */
+const quizData = [
+  {
+    q: 'คุณต้องการ API ที่ "ดึงข้อมูล user id=5" — ควรใช้อะไร?',
+    opts: ['POST /users/5', 'GET /users/5', 'GET /getUser?id=5', 'FETCH /users/5'],
+    answer: 1,
+    explain: 'GET /users/5 ถูกต้อง — GET สำหรับดึงข้อมูล + resource noun + id ใน path'
+  },
+  {
+    q: 'Response ที่ถูกต้องเมื่อ POST สร้าง resource ใหม่สำเร็จควร return status code อะไร?',
+    opts: ['200 OK', '201 Created', '204 No Content', '202 Accepted'],
+    answer: 1,
+    explain: '201 Created บอกว่ามีการสร้าง resource ใหม่ ต่างจาก 200 ที่แค่บอกว่า "สำเร็จ"'
+  },
+  {
+    q: 'ความต่างระหว่าง PUT กับ PATCH คืออะไร?',
+    opts: [
+      'PUT ไว กว่า PATCH',
+      'PUT แทนที่ทั้ง resource, PATCH แก้บางฟิลด์',
+      'ใช้แทนกันได้ทุกกรณี',
+      'PATCH ใช้ได้แค่กับ string fields'
+    ],
+    answer: 1,
+    explain: 'PUT ส่ง resource ทั้งหมดไปแทนที่ ถ้าไม่ส่งฟิลด์ไหนอาจถูก clear; PATCH แก้เฉพาะฟิลด์ที่ส่งมา'
+  },
+  {
+    q: 'ผู้ใช้ login แล้ว แต่พยายาม access endpoint ที่ตัวเองไม่มีสิทธิ์ — server ควร return อะไร?',
+    opts: ['401 Unauthorized', '403 Forbidden', '404 Not Found', '400 Bad Request'],
+    answer: 1,
+    explain: '403 Forbidden = รู้จักคุณแล้ว (authenticated) แต่ไม่มีสิทธิ์ (not authorized); 401 = ยังไม่รู้จัก'
+  },
+  {
+    q: 'URL แบบใดต่อไปนี้ follow REST best practice มากที่สุด?',
+    opts: ['/getAllProducts', '/product_list', '/products', '/fetchProducts'],
+    answer: 2,
+    explain: '/products — plural noun, lowercase, ไม่มีกริยา, เดาได้ทันที'
+  },
+  {
+    q: 'DELETE ที่สำเร็จควร return status code อะไร (ไม่ต้องส่ง body)?',
+    opts: ['200 OK', '201 Created', '204 No Content', '202 Accepted'],
+    answer: 2,
+    explain: '204 No Content เหมาะที่สุด — DELETE สำเร็จแต่ไม่มีอะไรต้องส่งกลับ'
+  },
+  {
+    q: 'Pagination ควรใช้วิธีใด?',
+    opts: [
+      'GET /products/page/2/limit/20',
+      'POST /products/paginate { page:2, limit:20 }',
+      'GET /products?page=2&limit=20',
+      'GET /products (return ทั้งหมดเลย)'
+    ],
+    answer: 2,
+    explain: 'Query string คือ pattern มาตรฐานสำหรับ filtering/pagination — ไม่ควรใส่ใน path หรือ body ของ GET'
+  },
+  {
+    q: 'ควรเก็บ JWT token ใน header แบบใด?',
+    opts: [
+      'GET /api/users?token=eyJ...',
+      'Authorization: Bearer eyJ...',
+      'X-Token: eyJ...',
+      'Body: { "token": "eyJ..." }'
+    ],
+    answer: 1,
+    explain: 'Authorization: Bearer <token> เป็น standard — ห้ามใส่ token ใน URL เพราะจะถูก log'
+  },
+  {
+    q: 'เมื่อ validation ล้มเหลว (เช่น email ซ้ำ) ควร return status อะไร?',
+    opts: ['400 Bad Request', '409 Conflict', '422 Unprocessable Entity', '500 Internal Server Error'],
+    answer: 2,
+    explain: '422 Unprocessable Entity = request format ถูก แต่ข้อมูลไม่ผ่าน business validation (หลายทีมใช้ 409 สำหรับ duplicate ก็ได้)'
+  },
+  {
+    q: 'เมื่อต้องการ breaking change ใน API ควรทำอย่างไร?',
+    opts: [
+      'แก้ /v1/ ตรง ๆ เลย',
+      'สร้าง /v2/ ใหม่ แล้วค่อย ๆ deprecate /v1/',
+      'เปลี่ยน URL ให้ client update เอง',
+      'ไม่ต้อง version ถ้า document ดี'
+    ],
+    answer: 1,
+    explain: 'สร้าง version ใหม่ (/v2/) รันคู่กันไปก่อน ให้เวลา client migrate แล้วค่อย deprecate version เก่า'
+  },
+];
+
+let quizState = []; // { answered: bool, selected: number }
+
+function initQuiz() {
+  quizScore    = 0;
+  quizAnswered = 0;
+  quizState    = quizData.map(() => ({ answered: false, selected: -1 }));
+  document.getElementById('quiz-result').style.display = 'none';
+  renderQuiz();
+}
+
+function renderQuiz() {
+  const container = document.getElementById('quiz-container');
+  container.innerHTML = '';
+
+  quizData.forEach((q, qi) => {
+    const div = document.createElement('div');
+    div.className = 'card';
+    div.style.marginBottom = '20px';
+    div.id = 'quiz-q-' + qi;
+
+    div.innerHTML = `
+      <div style="font-weight:700; margin-bottom:14px; font-size:.95rem">
+        ${qi+1}. ${q.q}
+      </div>
+      <div id="quiz-opts-${qi}">
+        ${q.opts.map((opt, oi) => `
+          <div class="quiz-option ${quizState[qi].answered ? (oi===q.answer?'correct':'disabled') + (quizState[qi].selected===oi&&oi!==q.answer?' wrong':'') : ''}"
+               onclick="answerQuiz(${qi}, ${oi})">
+            <span style="font-weight:700; color:var(--text-muted); min-width:20px">${String.fromCharCode(65+oi)}.</span>
+            ${opt}
+          </div>
+        `).join('')}
+      </div>
+      <div id="quiz-exp-${qi}" class="quiz-feedback ${quizState[qi].answered ? 'show ' + (quizState[qi].selected===q.answer?'ok':'err') : ''}">
+        ${quizState[qi].answered ? (quizState[qi].selected===q.answer?'✅ ':'❌ ') + q.explain : ''}
+      </div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+function answerQuiz(qi, selected) {
+  if (quizState[qi].answered) return;
+
+  quizState[qi].answered = true;
+  quizState[qi].selected = selected;
+
+  if (selected === quizData[qi].answer) quizScore++;
+  quizAnswered++;
+
+  // อัปเดต DOM ของ question นั้น
+  const optsDiv = document.getElementById('quiz-opts-' + qi);
+  optsDiv.querySelectorAll('.quiz-option').forEach((el, oi) => {
+    el.classList.add('disabled');
+    if (oi === quizData[qi].answer) el.classList.add('correct');
+    if (oi === selected && oi !== quizData[qi].answer) el.classList.add('wrong');
+  });
+
+  const expDiv = document.getElementById('quiz-exp-' + qi);
+  expDiv.className = 'quiz-feedback show ' + (selected === quizData[qi].answer ? 'ok' : 'err');
+  expDiv.textContent = (selected === quizData[qi].answer ? '✅ ' : '❌ ') + quizData[qi].explain;
+
+  // แสดงผลเมื่อครบทุกข้อ
+  if (quizAnswered === TOTAL_QUIZ) showQuizResult();
+}
+
+function showQuizResult() {
+  document.getElementById('quiz-result').style.display = 'block';
+  document.getElementById('score-num').textContent = quizScore + '/' + TOTAL_QUIZ;
+  const pct = Math.round(quizScore / TOTAL_QUIZ * 100);
+  let msg;
+  if (pct >= 90)      msg = '🏆 ยอดเยี่ยม! คุณเข้าใจ REST API Design อย่างแข็งแกร่ง';
+  else if (pct >= 70) msg = '👍 ดีมาก! ทบทวนบางหัวข้อแล้วคุณพร้อม Production แล้ว';
+  else if (pct >= 50) msg = '📖 ผ่านได้ แต่แนะนำให้ทบทวน Status Codes และ URL Design อีกครั้ง';
+  else                msg = '💪 ลองเรียนใหม่อีกครั้ง — ทุกคนต้องเริ่มจากตรงนี้!';
+  document.getElementById('score-msg').textContent = msg;
+  document.getElementById('final-score').textContent = quizScore + '/' + TOTAL_QUIZ + ' (' + pct + '%)';
+  document.getElementById('quiz-result').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function restartQuiz() {
+  initQuiz();
+  window.scrollTo({ top: document.getElementById('tab-6').offsetTop - 100, behavior: 'smooth' });
+}
+
+initQuiz();
+
+/* ============================================================
+   TAB 7: Final Checklist
+============================================================ */
+const finalChecks = [
+  'ใช้ HTTP Method ให้ถูกต้อง (GET, POST, PUT, PATCH, DELETE)',
+  'URL ใช้คำนาม plural ตัวพิมพ์เล็ก kebab-case',
+  'Status code ถูกต้องในทุก scenario',
+  'Response format สม่ำเสมอ ทุก endpoint มี success, data/error',
+  'Error response มี code, message, details ที่ helpful',
+  'Authentication ใช้ JWT Bearer token ใน Authorization header',
+  'Pagination มี meta.total, meta.page, meta.totalPages',
+  'Versioning ด้วย /v1/ ก่อน breaking change',
+  'Rate limiting ป้องกัน abuse',
+  'ไม่ return sensitive data (password, secret) ใน response',
+  'ใช้ HTTPS เสมอใน Production',
+  'มี API Documentation (OpenAPI/Swagger)',
+];
+
+const clWrap = document.getElementById('final-checklist');
+finalChecks.forEach((item, i) => {
+  clWrap.innerHTML += `
+    <div class="check-item">
+      <input type="checkbox" id="fc-${i}">
+      <label for="fc-${i}">${item}</label>
+    </div>
+  `;
+});
+
+/* ============================================================
+   INIT
+============================================================ */
+updateProgress();
+buildUrl(); // init URL builder
+</script>
+</body>
+</html>
